@@ -1,6 +1,6 @@
 /*****************************************************************************
  * Project:     ShipFast API Protection (Server)
- * File:        server.js
+ * File:        api-server.js
  * Original:    Created on 29 Sept 2017 by Simon Rigg
  * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
  *

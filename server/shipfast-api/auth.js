@@ -11,6 +11,7 @@ const express = require('express')
 const router = express.Router()
 const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
+const crypto = require('crypto')
 
 // The array of ShipFast API keys
 var shipFastAPIKeys = [
@@ -38,6 +39,11 @@ router.use(function(req, res, next) {
     res.status(403).send()
     return
   }
+
+  // var hmac = crypto.createHmac('sha256', 'a secret');
+  // hmac.update("this is my data");
+  // var hmachex = hmac.digest('hex');
+  // console.log("hmac: ", hmachex);
 
   next()
 })

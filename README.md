@@ -10,4 +10,6 @@ Server.
 * **./app/android/kotlin** - Kotlin Android implementation
 * **./app/android/java** - Java Android implementation
 * **./app/iOS/swift** - Swift iOS implementation
-* **./server** - The Node.js server
+* **./server** - The server directory
+* **./server/shipfast-api** - The 'genuine' ShipFast API node.js server
+* **./server/shipfaster-rogue-web** - The 'rogue' ShipFaster web node.js server

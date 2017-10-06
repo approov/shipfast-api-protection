@@ -40,8 +40,9 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:text="The Cairngorm-based Reindeer Delivery Service"
+        android:text="The Super Speedy Delivery Service"
         android:textAppearance="@style/TextAppearance.AppCompat.Body1"
+        android:textStyle="italic"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/textView" />

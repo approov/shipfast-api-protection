@@ -21,29 +21,29 @@ class SummaryActivity : AppCompatActivity() {
     /** The progress bar */
     private lateinit var updateSummaryProgressBar: ProgressBar
 
-    /** The 'shipped shipments' list view */
-    private lateinit var shippedShipmentsListView: ListView
+    /** The 'delivered shipments' list view */
+    private lateinit var deliveredShipmentsListView: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_summary)
-        title = "Shipped Shipments"
+        title = "Delivered Shipments"
 
         updateSummaryProgressBar = findViewById(R.id.updateSummaryProgressBar)
-        shippedShipmentsListView = findViewById(R.id.shippedShipmentsListView)
-        updateShippedShipments()
+        deliveredShipmentsListView = findViewById(R.id.deliveredShipmentsListView)
+        updateDeliveredShipments()
     }
 
     /**
-     * Update the current shipped shipments list view by requesting data from the server.
+     * Update the current delivered shipments list view by requesting data from the server.
      */
-    private fun updateShippedShipments() {
+    private fun updateDeliveredShipments() {
 
         startProgress()
-        requestShippedShipments(this@SummaryActivity, { _, shipments ->
+        requestDeliveredShipments(this@SummaryActivity, { _, shipments ->
             stopProgress()
             runOnUiThread {
-                shippedShipmentsListView.adapter = ArrayAdapter(this@SummaryActivity, R.layout.listview_shipment, shipments)
+                deliveredShipmentsListView.adapter = ArrayAdapter(this@SummaryActivity, R.layout.listview_shipment, shipments)
             }
         })
     }

@@ -23,7 +23,7 @@ import java.io.IOException
 import java.net.URL
 
 /** The server's base URL */
-const val SERVER_BASE_URL = "http://192.168.0.200:3000" /*"http://10.0.2.2:3000"*/
+const val SERVER_BASE_URL = /*"http://192.168.0.200:3000"*/ "http://10.0.2.2:3000"
 /** The authorisation request header */
 const val AUTH_HEADER = "Authorization"
 /** The location latitude request header */
@@ -74,16 +74,16 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
 }
 
 /**
- * Request a list of shipments which have been shipped.
+ * Request a list of shipments which have been delivered.
  *
  * @param context the application context
  * @param callback the callback to invoke on success or failure
  */
-fun requestShippedShipments(context: Context, callback: (Response?, List<Shipment>?) -> Unit) {
+fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipment>?) -> Unit) {
 
     val userCredentials = loadUserCredentials(context)
     val httpClient = OkHttpClient()
-    val url = URL("$SERVER_BASE_URL/shipments/shipped")
+    val url = URL("$SERVER_BASE_URL/shipments/delivered")
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
@@ -92,14 +92,14 @@ fun requestShippedShipments(context: Context, callback: (Response?, List<Shipmen
         override fun onResponse(call: Call?, response: Response?) {
             response?.body()?.let {
                 val json = JSONArray(it.string())
-                val shippedShipments = mutableListOf<Shipment>()
+                val deliveredShipments = mutableListOf<Shipment>()
                 for (i in 0 until json.length()) {
                     val shipment = parseJSONForShipment(json.getJSONObject(i))
                     shipment?.let {
-                        shippedShipments.add(it)
+                        deliveredShipments.add(it)
                     }
                 }
-                callback(response, shippedShipments)
+                callback(response, deliveredShipments)
             }
         }
 

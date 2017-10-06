@@ -17,8 +17,8 @@ import com.google.android.gms.maps.model.LatLng
 enum class ShipmentState(val nextStateActionName: String) {
     READY("Accept"),
     ACCEPTED("Collect"),
-    COLLECTED("Ship"),
-    SHIPPED("")
+    COLLECTED("Deliver"),
+    DELIVERED("")
 }
 
 /**
@@ -48,7 +48,7 @@ class Shipment(val id: Int, val description: String, val gratuity: Double,
     val nextState: ShipmentState
         get() {
             when (state) {
-                ShipmentState.SHIPPED -> return ShipmentState.SHIPPED
+                ShipmentState.DELIVERED -> return ShipmentState.DELIVERED
                 else -> return ShipmentState.values()[state.ordinal + 1]
             }
         }

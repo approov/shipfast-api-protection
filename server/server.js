@@ -52,16 +52,16 @@ app.get('/shipments/nearest_shipment', function(req, res) {
   res.status(200).json(nearestShipment)
 })
 
-// The '/shipments/shipped' GET request route
-app.get('/shipments/shipped', function(req, res) {
+// The '/shipments/delivered' GET request route
+app.get('/shipments/delivered', function(req, res) {
 
-  console.log("/shipments/shipped from " + req.user)
+  console.log("/shipments/delivered from " + req.user)
 
-  // Calculate the array of shipped shipments
-  var shippedShipments = model.getShippedShipments()
-  console.log('\tShipped Shipments:')
-  console.log(shippedShipments)
-  res.status(200).json(shippedShipments)
+  // Calculate the array of delivered shipments
+  var deliveredShipments = model.getDeliveredShipments()
+  console.log('\tDelivered Shipments:')
+  console.log(deliveredShipments)
+  res.status(200).json(deliveredShipments)
 })
 
 // The '/shipments/:shipmentID' GET request route

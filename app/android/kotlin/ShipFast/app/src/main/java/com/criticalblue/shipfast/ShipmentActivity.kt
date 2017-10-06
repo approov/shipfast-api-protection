@@ -150,9 +150,9 @@ class ShipmentActivity : AppCompatActivity() {
 
                 stopProgress()
                 when (it.nextState) {
-                    ShipmentState.SHIPPED -> {
+                    ShipmentState.DELIVERED -> {
                         runOnUiThread {
-                            Toast.makeText(this@ShipmentActivity, "Congratulations! You've shipped ${it.description}",
+                            Toast.makeText(this@ShipmentActivity, "Congratulations! You've delivered ${it.description}",
                                     Toast.LENGTH_LONG)
                         }
                     }
@@ -160,7 +160,7 @@ class ShipmentActivity : AppCompatActivity() {
                 updateShipment()
 
                 // FIXME REMOVE AFTER TESTING
-                if (it.nextState == ShipmentState.SHIPPED) {
+                if (it.nextState == ShipmentState.DELIVERED) {
                     val intent = Intent(this@ShipmentActivity, SummaryActivity::class.java)
                     startActivity(intent)
                 }
@@ -248,7 +248,7 @@ class ShipmentActivity : AppCompatActivity() {
             }
 
             nextStateButton.text = it.state.nextStateActionName
-            nextStateButton.isEnabled = it.state != ShipmentState.SHIPPED
+            nextStateButton.isEnabled = it.state != ShipmentState.DELIVERED
             // TODO hide button
         }
     }

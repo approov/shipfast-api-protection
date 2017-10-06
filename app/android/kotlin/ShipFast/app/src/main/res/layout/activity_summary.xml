@@ -16,13 +16,13 @@
         android:layout_marginTop="8dp"
         android:visibility="invisible"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="@+id/shippedShipmentsListView"
+        app:layout_constraintEnd_toEndOf="@+id/deliveredShipmentsListView"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.498" />
 
     <ListView
-        android:id="@+id/shippedShipmentsListView"
+        android:id="@+id/deliveredShipmentsListView"
         android:layout_width="368dp"
         android:layout_height="495dp"
         android:layout_marginBottom="8dp"

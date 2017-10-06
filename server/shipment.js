@@ -12,7 +12,7 @@
     READY: 0,
     ACCEPTED: 1,
     COLLECTED: 2,
-    SHIPPED: 3
+    DELIVERED: 3
 }
 
 // The Shipment class

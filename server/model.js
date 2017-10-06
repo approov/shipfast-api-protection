@@ -121,18 +121,18 @@ const calculateNearestShipment = function(originLatitude, originLongitude) {
     return nearestShipment
 }
 
-// A function to calculate and return an array of shipments in a 'SHIPPED' state
-const getShippedShipments = function() {
+// A function to calculate and return an array of shipments in a 'DELIVERED' state
+const getDeliveredShipments = function() {
 
-    var shippedShipments = []
+    var deliveredShipments = []
     Object.entries(shipments).forEach(
         ([shipmentID, shipment]) => {
-            if (shipment.getState() == SHIPMENT_STATE.SHIPPED) {
-                shippedShipments.push(shipment)
+            if (shipment.getState() == SHIPMENT_STATE.DELIVERED) {
+                deliveredShipments.push(shipment)
             }
         }
     );
-    return shippedShipments
+    return deliveredShipments
 }
 
 // A function to return the shipment with the given ID (or 'undefined' if not found)
@@ -143,7 +143,7 @@ const getShipment = function(shipmentID) {
 // Add the model utility functions to the exports
 module.exports = {
     calculateNearestShipment: calculateNearestShipment,
-    getShippedShipments: getShippedShipments,
+    getDeliveredShipments: getDeliveredShipments,
     getShipment: getShipment,
     SHIPMENT_STATE: SHIPMENT_STATE
 }

@@ -14,8 +14,8 @@ const fs = require('fs')
 const model = require('./model')
 const auth = require('./auth')
 
-// Add the Auth0 authentication functionality to our server
-//app.use(auth)
+// Add the authentication functionality to our server
+app.use(auth)
 
 // Load the certificate and key data for our server to be hosted over HTTPS
 var options = {
@@ -31,8 +31,8 @@ app.get('/shipments/nearest_shipment', function(req, res) {
   console.log("/nearest_shipment from " + req.user)
 
   // Retrieve the location data from the request headers
-  var latitude = parseFloat(req.get('SR-Latitude'))
-  var longitude = parseFloat(req.get('SR-Longitude'))
+  var latitude = parseFloat(req.get('SF-Latitude'))
+  var longitude = parseFloat(req.get('SF-Longitude'))
   if (!latitude || !longitude) {
     console.log('\tLocation data not specified or in the wrong format')
     res.status(400).send()
@@ -111,8 +111,8 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
   }
 
   // Retrieve the location data from the request headers
-  var latitude = parseFloat(req.get('SR-Latitude'))
-  var longitude = parseFloat(req.get('SR-Longitude'))
+  var latitude = parseFloat(req.get('SF-Latitude'))
+  var longitude = parseFloat(req.get('SF-Longitude'))
   if (!latitude || !longitude) {
     console.log('\tLocation data not specified or in the wrong format')
     res.status(400).send()
@@ -121,7 +121,7 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
   console.log("\tLat=" + latitude + ", Lon=" + longitude)
 
   // Retrieve the new shipment state from the request header
-  var newState = parseInt(req.get('SR-State'))
+  var newState = parseInt(req.get('SF-State'))
   if (!newState) {
     console.log('\tShipment state not specified or in the wrong format')
     res.status(400).send()

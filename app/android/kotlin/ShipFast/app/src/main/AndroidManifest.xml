@@ -14,6 +14,8 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <uses-library android:name="com.google.android.maps"/>
+        <!--Specify the ShipFast API key-->
+        <meta-data android:name="com.criticalblue.shipfast.API_KEY" android:value="QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh"/>
         <!--Specify the Google Maps API key-->
         <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyCDlIIZ5Jm9NOLo-ZJfOVeK2nRlbR_3Uzw"/>
         <activity android:name=".LoginActivity">

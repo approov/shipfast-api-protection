@@ -12,6 +12,36 @@ const router = express.Router()
 const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
 
+// The array of ShipFast API keys
+var shipFastAPIKeys = [
+  'VGhpcyBpcyBOT1QgYSBnb29kIGtleSEhIDoo',
+  'QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh',
+  'V2hhdCBnZWVrIGNvbnZlcnRlZCB0aGlzPyE/'
+]
+
+// Verify the ShipFast API key
+router.use(function(req, res, next) {
+
+  console.log("ShipFast API key verifier invoked from " + req.user)
+  
+  // Retrieve the ShipFast API key from the request header
+  var shipFastAPIKey = req.get('SF-API_KEY')
+  if (!shipFastAPIKey) {
+    console.log('\tShipFast API key not specified or in the wrong format')
+    res.status(400).send()
+    return
+  }
+
+  // Verify the ShipFast API key
+  if (!shipFastAPIKeys.includes(shipFastAPIKey)) {
+    console.log('\tShipFast API key invalid')
+    res.status(403).send()
+    return
+  }
+
+  next()
+})
+
 // Create middleware for checking the JWT
 const checkJwt = jwt({
   // Dynamically provide a signing key based on the kid in the header and the singing keys provided by the JWKS endpoint

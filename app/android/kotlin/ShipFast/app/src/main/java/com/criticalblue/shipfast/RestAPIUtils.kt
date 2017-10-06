@@ -26,12 +26,14 @@ import java.net.URL
 const val SERVER_BASE_URL = /*"http://192.168.0.200:3000"*/ "http://10.0.2.2:3000"
 /** The authorisation request header */
 const val AUTH_HEADER = "Authorization"
+/** The ShipFast API key header */
+const val SHIPFAST_API_KEY_HEADER = "SF-API_KEY"
 /** The location latitude request header */
-const val LATITUDE_HEADER = "SR-Latitude"
+const val LATITUDE_HEADER = "SF-Latitude"
 /** The location longitude request header */
-const val LONGITUDE_HEADER = "SR-Longitude"
+const val LONGITUDE_HEADER = "SF-Longitude"
 /** The shipment state request header */
-const val SHIPMENT_STATE_HEADER = "SR-State"
+const val SHIPMENT_STATE_HEADER = "SF-State"
 
 /**
  * Request the nearest available shipment to the given location.
@@ -43,11 +45,13 @@ const val SHIPMENT_STATE_HEADER = "SR-State"
 fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (Response?, Shipment?) -> Unit) {
 
     val userCredentials = loadUserCredentials(context)
+    val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/nearest_shipment")
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .addHeader(LATITUDE_HEADER, originLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, originLocation.longitude.toString())
             .build()
@@ -59,7 +63,7 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
                 }
                 else {
                     it.body()?.let {
-                        val json = JSONObject(it.string())
+                        val json = parseJSONObject(it.string())
                         val shipment = parseJSONForShipment(json)
                         callback(response, shipment)
                     }
@@ -82,25 +86,30 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
 fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipment>?) -> Unit) {
 
     val userCredentials = loadUserCredentials(context)
+    val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/delivered")
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
+            var deliveredShipments: MutableList<Shipment>? = null
             response?.body()?.let {
-                val json = JSONArray(it.string())
-                val deliveredShipments = mutableListOf<Shipment>()
-                for (i in 0 until json.length()) {
-                    val shipment = parseJSONForShipment(json.getJSONObject(i))
-                    shipment?.let {
-                        deliveredShipments.add(it)
+                val json = parseJSONArray(it.string())
+                json?.let {
+                    deliveredShipments = mutableListOf()
+                    for (i in 0 until it.length()) {
+                        val shipment = parseJSONForShipment(it.getJSONObject(i))
+                        shipment?.let {
+                            deliveredShipments?.add(it)
+                        }
                     }
                 }
-                callback(response, deliveredShipments)
             }
+            callback(response, deliveredShipments)
         }
 
         override fun onFailure(call: Call?, e: IOException?) {
@@ -119,19 +128,22 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
 fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shipment?) -> Unit) {
 
     val userCredentials = loadUserCredentials(context)
+    val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/$shipmentID")
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
+            var shipment: Shipment? = null
             response?.body()?.let {
-                val json = JSONObject(it.string())
-                val shipment = parseJSONForShipment(json)
-                callback(response, shipment)
+                val json = parseJSONObject(it.string())
+                shipment = parseJSONForShipment(json)
             }
+            callback(response, shipment)
         }
 
         override fun onFailure(call: Call?, e: IOException?) {
@@ -153,12 +165,14 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
                                callback: (Response?, Boolean) -> Unit) {
 
     val userCredentials = loadUserCredentials(context)
+    val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/update_state/$shipmentID")
     val request = Request.Builder()
             .url(url)
             .method("POST", RequestBody.create(null, ByteArray(0)))
             .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .addHeader(LATITUDE_HEADER, currentLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, currentLocation.longitude.toString())
             .addHeader(SHIPMENT_STATE_HEADER, newState.ordinal.toString())
@@ -190,7 +204,7 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
         override fun onResponse(call: Call?, response: Response?) {
             // TODO get waypoints
             response?.body()?.let {
-                val json = JSONObject(it.string())
+                val json = parseJSONObject(it.string())
                 Log.i("SR", "$json")
                 callback(response, response?.isSuccessful ?: false)
             }
@@ -203,16 +217,43 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
 }
 
 /**
+ * Safely attempt to parse the given string as a JSON object.
+ *
+ * @param json the JSON string
+ * @return the JSON object
+ */
+fun parseJSONObject(json: String?): JSONObject? {
+
+    return if (json == null) null else try {
+        JSONObject(json)
+    }
+    catch (e: JSONException) { null }
+}
+
+/**
+ * Safely attempt to parse the given string as a JSON array.
+ *
+ * @param json the JSON string
+ * @return the JSON array
+ */
+fun parseJSONArray(json: String?): JSONArray? {
+
+    return if (json == null) null else try {
+        JSONArray(json)
+    }
+    catch (e: JSONException) { null }
+}
+
+/**
  * Parse the given JSON object into a Shipment object.
  *
  * @param json the JSON representation
  * @return the shipment
  */
-fun parseJSONForShipment(json: JSONObject): Shipment? {
+fun parseJSONForShipment(json: JSONObject?): Shipment? {
 
-    try {
-        return Shipment(
-                json.getInt("id"),
+    return if (json == null) null else try {
+        Shipment(json.getInt("id"),
                 json.getString("description"),
                 json.getDouble("gratuity"),
                 json.getString("pickupName"),
@@ -221,9 +262,18 @@ fun parseJSONForShipment(json: JSONObject): Shipment? {
                 LatLng(json.getDouble("deliveryLatitude"), json.getDouble("deliveryLongitude")),
                 ShipmentState.values().get(json.getInt("state")))
     }
-    catch (e: JSONException) {
-        return null
-    }
+    catch (e: JSONException) { null }
+}
+
+/**
+ * Load the ShipFast API key from the manifest.
+ *
+ * @param context the application context
+ * @return the ShipFast API key
+ */
+fun loadShipFastAPIKey(context: Context): String {
+    return context.packageManager.getApplicationInfo( context.packageName, PackageManager.GET_META_DATA)
+            .metaData.getString("com.criticalblue.shipfast.API_KEY")
 }
 
 /**

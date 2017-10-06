@@ -8,7 +8,6 @@
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
         <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
-        <script src="js/shipfaster.js"></script>
     </head>
     <body >
         <div class="container">
@@ -16,7 +15,7 @@
             <div class="jumbotron">
                 <h1>Welcome to ShipFaster!</h1>
                 <p>I wrked well hard to get this cool stuff to u guyz, so pls show ur appreciation and send me bitcoin by clickin da button below.<br/>Enjoy! @crackmaapi</p>
-                <p><a class="btn btn-primary btn-lg" href="#" role="button">Send Bitcoin to @crackmaapi</a></p>
+                <p><a id="send-bitcoin-button" class="btn btn-primary btn-lg" href="#" role="button">Send Bitcoin to @crackmaapi</a></p>
             </div>
 
             <form>
@@ -40,7 +39,7 @@
                             <input type="text" class="form-control" placeholder="radius u wanna search 4 shipments" aria-describedby="location-blast-radius">
                         </div>      
                         <br/>
-                        <button type="submit" class="btn btn-default">Search for Shipments!</button>
+                        <button id="search-shipments-button" type="submit" class="btn btn-default">Search for Shipments!</button>
                     </div>
                 </div>
             </form>
@@ -85,4 +84,7 @@
 
         </div>
     </body>
+    <footer>
+        <script src="js/shipfaster.js"></script>
+    </footer>
 </html>

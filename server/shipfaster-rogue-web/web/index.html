@@ -23,20 +23,28 @@
                     <div class="panel-heading">Configuration</div>
                     <div class="panel-body">
                         <div class="input-group">
+                            <span class="input-group-addon" id="server-url">ShipFast Server URL</span>
+                            <input type="text" class="form-control" id="server-url-input" placeholder="url of da ShipFast server" aria-describedby="server-url-input">
+                        </div>
+                        <div class="input-group">
                             <span class="input-group-addon" id="shipfast-api-key">ShipFast API Key</span>
-                            <input type="text" class="form-control" placeholder="stick ur ShipFast API key ere" aria-describedby="shipfast-api-key">
+                            <input type="text" class="form-control" id="shipfast-api-key-input" placeholder="stick ur ShipFast API key ere" aria-describedby="shipfast-api-key">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="user-auth-token">User Auth Token</span>
+                            <input type="text" class="form-control" id="user-auth-token-input" placeholder="stick ur auth token ere" aria-describedby="user-auth-token">
                         </div>    
                         <div class="input-group">
                             <span class="input-group-addon" id="location-latitude">Location Latitude</span>
-                            <input type="text" class="form-control" placeholder="latitude of da origin location" aria-describedby="location-latitude">
+                            <input type="text" class="form-control" id="location-latitude-input" placeholder="latitude of da origin location" aria-describedby="location-latitude">
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon" id="location-longitude">Location Longitude</span>
-                            <input type="text" class="form-control" placeholder="longitude of da origin location" aria-describedby="location-longitude">
+                            <input type="text" class="form-control" id="location-longitude-input" placeholder="longitude of da origin location" aria-describedby="location-longitude">
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon" id="location-blast-radius">Location Blast Radius</span>
-                            <input type="text" class="form-control" placeholder="radius u wanna search 4 shipments" aria-describedby="location-blast-radius">
+                            <input type="text" class="form-control" id="location-blast-radius-input" placeholder="radius u wanna search 4 shipments" aria-describedby="location-blast-radius">
                         </div>      
                         <br/>
                         <button id="search-shipments-button" type="submit" class="btn btn-default">Search for Shipments!</button>
@@ -65,7 +73,7 @@
                                     <th></th>
                                 </tr>
                             </thead>
-                            <tbody>
+                            <tbody id="results-table-body">
                                 <tr>
                                     <th scope="row">1</th> 
                                     <td>The shipment</td>

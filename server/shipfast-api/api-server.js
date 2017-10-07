@@ -11,11 +11,15 @@ const express = require('express')
 const app = express()
 const https = require('https')
 const fs = require('fs')
+const cors = require('cors')
 const model = require('./model')
 const auth = require('./auth')
 
+// Support CORS
+app.use(cors())
+
 // Add the authentication functionality to our server
-app.use(auth)
+// app.use(auth)
 
 // Load the certificate and key data for our server to be hosted over HTTPS
 var options = {

@@ -18,38 +18,70 @@
     
     $("#server-url-input").val("http://127.0.0.1:3000")
     $("#shipfast-api-key-input").val("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
-    $("#location-blast-radius-input").val("1.0")
+    $("#location-latitude-input").val("55.944614")
+    $("#location-longitude-input").val("-3.181431")
+    $("#location-blast-radius-input").val("15.0")
+    $("#location-blast-step-value-input").val("0.5")
 })
 
 $("#send-bitcoin-button").click(function() {
     alert("Pay me the money!")
 })
 
+var shipments = {}
+
 $("#search-shipments-button").click(function(event) {
     event.preventDefault()
+    shipments = {}
+
     var shipFastServerURL = $("#server-url-input").val()
     var shipFastAPIKey = $("#shipfast-api-key-input").val()
     var userAuthToken = $("#user-auth-token").val()
     var latitude = $("#location-latitude-input").val()
     var longitude = $("#location-longitude-input").val()
     var locationBlastRadius = $("#location-blast-radius-input").val()
+    var locationBlastStepValue = $("#location-blast-step-value-input").val()
 
-    alert("ShipFast Server URL: " + shipFastServerURL + "\nShipFast API Key: " + shipFastAPIKey + "\nLocation: " + latitude + "," + longitude + "\nBlast Radius: " + locationBlastRadius)
+    // alert("ShipFast Server URL: " + shipFastServerURL
+    //     + "\nShipFast API Key: " + shipFastAPIKey
+    //     + "\nLocation: " + latitude + "," + longitude + "\nBlast Radius: "
+    //     + locationBlastRadius)
+
+    var halfLBR = parseFloat(locationBlastRadius) / 2.0
+    var locStep = parseFloat(locationBlastStepValue)
+    var latStart = parseFloat(latitude) - halfLBR
+    var latEnd = parseFloat(latitude) + halfLBR
+    var lonStart = parseFloat(longitude) - halfLBR
+    var lonEnd = parseFloat(longitude) + halfLBR
+
+    for (lat = latStart; lat <= latEnd; lat += locStep) {
+        for (lon = lonStart; lon <= lonEnd; lon += locStep) {
+            $.ajax({
+                url: shipFastServerURL + "/shipments/nearest_shipment",
+                headers: {
+                    "SF-API_KEY" : shipFastAPIKey,
+                    "Authorization" : "Bearer " + userAuthToken,
+                    "SF-Latitude" : lat.toString(),
+                    "SF-Longitude" : lon.toString()
+                },
+                method: "GET",
+                success: function(json) {
+                    var shipmentID = json["id"]
+                    shipments[shipmentID] = json
+                    addShipmentsToResults()
+                }
+            })
+        }
+    }
     
-    // Authorization: Bearer <token>
-    $.ajax({
-        url: shipFastServerURL + "/shipments/nearest_shipment",
-        headers: {
-            "SF-API_KEY" : shipFastAPIKey,
-            "Authorization" : "Bearer " + userAuthToken,
-            "SF-Latitude" : latitude,
-            "SF-Longitude" : longitude
-        },
-        method: "GET",
-        success: function(json) {
-            var resultsTableBody = $("#results-table-body")
-            resultsTableBody.empty()
-        
+    // addShipmentsToResults()
+})
+
+function addShipmentsToResults() {
+    var resultsTableBody = $("#results-table-body")
+    resultsTableBody.empty()
+    Object.entries(shipments).forEach(
+        ([shipmentID, json]) => {
             var shipmentID = json["id"]
             var shipmentName = json["description"]
             var shipmentGratuity = "$" + json["gratuity"]
@@ -65,11 +97,11 @@ $("#search-shipments-button").click(function(event) {
                 + "<td>" + shipmentDelivery + "</td>"
                 + "<td>" + grabShipmentButton + "</td>"
                 + "</tr>")
-
+        
             $("#shipment-" + shipmentID).click(function(event) {
                 event.preventDefault()
                 alert("Grabbing shipment " + event.target.id)
             })
         }
-    })
-})
+    )
+}

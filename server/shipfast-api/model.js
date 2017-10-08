@@ -86,16 +86,18 @@ function populateShipments(originLatitude, originLongitude) {
     shuffleArray(SHIPMENT_DESCRIPTIONS)
 
     // Generate the sample data
+    var randMultiplier = 2.0 * LAT_LNG_OFFSET
+    var randOffset = LAT_LNG_OFFSET
     for (i = 0; i < SHIPMENT_COUNT; i++) {
         var shipmentID = i + 1
         var description = SHIPMENT_DESCRIPTIONS[i]
         var gratuity = i % 2 == 0 ? Math.floor((Rand.random() * MAX_GRATUITY) + MIN_GRATUITY) : MIN_GRATUITY
         var pickupName = PICKUP_LOCATIONS[i]
-        var pickupLatitude = originLatitude + ((Rand.random() * LAT_LNG_OFFSET) - LAT_LNG_OFFSET)
-        var pickupLongitude = originLongitude + ((Rand.random() * LAT_LNG_OFFSET) - LAT_LNG_OFFSET)
+        var pickupLatitude = originLatitude + ((Rand.random() * randMultiplier) - randOffset)
+        var pickupLongitude = originLongitude + ((Rand.random() * randMultiplier) - randOffset)
         var deliveryName = DELIVERY_LOCATIONS[i]
-        var deliveryLatitude = originLatitude + ((Rand.random() * LAT_LNG_OFFSET) - LAT_LNG_OFFSET)
-        var deliveryLongitude = originLongitude + ((Rand.random() * LAT_LNG_OFFSET) - LAT_LNG_OFFSET)
+        var deliveryLatitude = originLatitude + ((Rand.random() * randMultiplier) - randOffset)
+        var deliveryLongitude = originLongitude + ((Rand.random() * randMultiplier) - randOffset)
         var shipment = new Shipment(shipmentID, description, gratuity,
             pickupName, pickupLatitude, pickupLongitude,
             deliveryName, deliveryLatitude, deliveryLongitude)

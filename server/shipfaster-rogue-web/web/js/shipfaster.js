@@ -22,8 +22,8 @@ var shipments = {}
     $("#shipfast-api-key-input").val("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
     $("#location-latitude-input").val("55.944614")
     $("#location-longitude-input").val("-3.181431")
-    $("#location-blast-radius-input").val("15.0")
-    $("#location-blast-step-input").val("0.5")
+    $("#location-blast-radius-input").val("1.0")
+    $("#location-blast-step-input").val("0.075")
 })
 
 $("#send-bitcoin-button").click(function() {
@@ -54,30 +54,37 @@ function searchForShipments() {
     var lonStart = parseFloat(longitude) - halfLBR
     var lonEnd = parseFloat(longitude) + halfLBR
 
+    var fetchNearestShipment = function(latVal, lonVal) {
+        $.ajax({
+            url: shipFastServerURL + "/shipments/nearest_shipment",
+            headers: {
+                "SF-API_KEY" : shipFastAPIKey,
+                "Authorization" : "Bearer " + userAuthToken,
+                "SF-Latitude" : latVal.toString(),
+                "SF-Longitude" : lonVal.toString()
+            },
+            method: "GET",
+            timeout: 5000,
+            success: function(json) {
+                var shipmentID = json["id"]
+                var shipmentPickupLatitude = json["pickupLatitude"]
+                var shipmentPickupLongitude = json["pickupLongitude"]
+                json["pickupDistance"] = Math.round(distanceInMiles(parseFloat(shipmentPickupLatitude), parseFloat(shipmentPickupLongitude),
+                    parseFloat(latitude), parseFloat(longitude))).toString()
+                shipments[shipmentID] = json
+                addShipmentsToResults()
+                updateProgressBar(Math.min(Math.round((progress++ / totalProgress) * 100), 100))
+            }
+        })
+    }
+
+    fetchNearestShipment(parseFloat(latitude), parseFloat(longitude))
+    
     var progress = 0
     var totalProgress = Math.pow(parseFloat(locationBlastRadius) / locStep, 2)
-    for (lat = latStart; lat <= latEnd; lat += locStep) {
-        for (lon = lonStart; lon <= lonEnd; lon += locStep) {
-            $.ajax({
-                url: shipFastServerURL + "/shipments/nearest_shipment",
-                headers: {
-                    "SF-API_KEY" : shipFastAPIKey,
-                    "Authorization" : "Bearer " + userAuthToken,
-                    "SF-Latitude" : lat.toString(),
-                    "SF-Longitude" : lon.toString()
-                },
-                method: "GET",
-                success: function(json) {
-                    var shipmentID = json["id"]
-                    var shipmentPickupLatitude = json["pickupLatitude"]
-                    var shipmentPickupLongitude = json["pickupLongitude"]
-                    json["pickupDistance"] = Math.round(distanceInMiles(parseFloat(shipmentPickupLatitude), parseFloat(shipmentPickupLongitude),
-                        parseFloat(latitude), parseFloat(longitude))).toString()
-                    shipments[shipmentID] = json
-                    addShipmentsToResults()
-                    updateProgressBar(Math.min(Math.round((progress++ / totalProgress) * 100), 100))
-                }
-            })
+    for (var lat = latStart; lat <= latEnd; lat += locStep) {
+        for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
+            fetchNearestShipment(lat, lon)
         }
     }
 }
@@ -127,7 +134,6 @@ function addShipmentsToResults() {
             $("#shipment-" + shipmentID).click(function(event) {
                 event.preventDefault()
                 grabShipment(shipmentID)
-                alert("Grabbing shipment " + event.target.id)
             })
         }
     )
@@ -150,8 +156,13 @@ function grabShipment(shipmentID) {
             "SF-STATE" : "1"
         },
         method: "POST",
+        timeout: 5000,
         success: function(json) {
+            alert("You got shipment ID" + shipmentID + " - check the app and enjoy the extra cash!\n\n@crackmaapi - don't forget da bitcoin pls")
             searchForShipments()
+        },
+        error: function(xhr) {
+            alert("Man, it didn't work this time!")
         }
     })
 }

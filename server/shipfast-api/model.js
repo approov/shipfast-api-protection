@@ -67,6 +67,24 @@ function calculateDistance(originLatitude, originLongitude, destinationLatitude,
     return Math.abs(Math.sqrt(lat*lat + lon*lon))
 }
 
+// Calculate and return the distance in miles between the two given points using the haversine formula
+function calculateDistance(originLatitude, originLongitude, destinationLatitude, destinationLongitude) {
+
+    var radiusEarth = 3961 // radius of Earth in miles
+    var dLat = deg2rad(destinationLatitude - originLatitude)
+    var dLon = deg2rad(destinationLongitude - originLongitude)
+    var squareHalfChordLen = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(originLatitude))
+        * Math.cos(deg2rad(destinationLatitude)) * Math.sin(dLon/2) * Math.sin(dLon/2)
+    var angularRadDistance = 2 * Math.atan2(Math.sqrt(squareHalfChordLen), Math.sqrt(1 - squareHalfChordLen))
+    var distance = radiusEarth * angularRadDistance;
+    return distance;
+}
+
+// Convert the given degrees angle to radians
+function deg2rad(deg) {
+    return deg * (Math.PI/180)
+}
+
 // A function to populate this model with a collection of sample shipment data base on a given location
 function populateShipments(originLatitude, originLongitude) {
 

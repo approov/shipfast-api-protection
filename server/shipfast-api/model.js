@@ -59,14 +59,6 @@ function shuffleArray(array) {
     return array
 }
 
-// A function to calculate and return the distance between two points
-// FIXME: use Haversine Formula
-function calculateDistance(originLatitude, originLongitude, destinationLatitude, destinationLongitude) {
-    var lat = originLatitude - destinationLatitude
-    var lon = originLongitude - destinationLongitude
-    return Math.abs(Math.sqrt(lat*lat + lon*lon))
-}
-
 // Calculate and return the distance in miles between the two given points using the haversine formula
 function calculateDistance(originLatitude, originLongitude, destinationLatitude, destinationLongitude) {
 

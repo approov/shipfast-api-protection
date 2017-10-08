@@ -151,8 +151,8 @@ function grabShipment(shipmentID) {
         headers: {
             "SF-API_KEY" : shipFastAPIKey,
             "Authorization" : "Bearer " + userAuthToken,
-            "SF-Latitude" : lat.toString(),
-            "SF-Longitude" : lon.toString(),
+            "SF-Latitude" : latitude,
+            "SF-Longitude" : longitude,
             "SF-STATE" : "1"
         },
         method: "POST",
@@ -165,4 +165,10 @@ function grabShipment(shipmentID) {
             alert("Man, it didn't work this time!")
         }
     })
+}
+
+// FIXME
+function testHMAC() {
+    var hmac = CryptoJS.HmacSHA256("this is my data", "a secret").toString();
+    console.log("hmac: ", hmac)
 }

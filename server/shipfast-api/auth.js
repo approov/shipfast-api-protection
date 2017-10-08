@@ -40,10 +40,10 @@ router.use(function(req, res, next) {
     return
   }
 
-  // var hmac = crypto.createHmac('sha256', 'a secret');
-  // hmac.update("this is my data");
-  // var hmachex = hmac.digest('hex');
-  // console.log("hmac: ", hmachex);
+  // var hmac = crypto.createHmac('sha256', 'a secret')
+  // hmac.update("this is my data")
+  // var hmachex = hmac.digest('hex')
+  // console.log("hmac: ", hmachex)
 
   next()
 })

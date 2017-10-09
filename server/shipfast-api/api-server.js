@@ -68,6 +68,23 @@ app.get('/shipments/delivered', function(req, res) {
   res.status(200).json(deliveredShipments)
 })
 
+// The '/shipments/active' GET request route
+app.get('/shipments/active', function(req, res) {
+  
+    console.log("/shipments/active from " + req.user)
+  
+    // Calculate the array of active shipments
+    var activeShipment = model.getActiveShipment()
+    if (!activeShipment) {
+      console.log('\tNo active shipment found')
+      res.status(404).send()
+      return
+    }
+    console.log('\tActive Shipment:')
+    console.log(activeShipment)
+    res.status(200).json(activeShipment)
+  })
+
 // The '/shipments/:shipmentID' GET request route
 app.get('/shipments/:shipmentID', function(req, res) {
 

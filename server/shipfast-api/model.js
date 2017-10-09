@@ -9,8 +9,8 @@
 
 const Shipment = require('./shipment').Shipment
 const SHIPMENT_STATE = require('./shipment').SHIPMENT_STATE
-const MersenneTwister = require('mersenne-twister');
-const Rand = new MersenneTwister(Date.now());
+const MersenneTwister = require('mersenne-twister')
+const Rand = new MersenneTwister(Date.now())
 
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
@@ -45,7 +45,7 @@ var SHIPMENT_DESCRIPTIONS = [
     'Pete\'s Consignment #12589'
 ]
 
-// The collection of shipments
+// The map of shipments
 var shipments = {}
 
 // A function to shuffle an array in-place randomly
@@ -68,8 +68,8 @@ function calculateDistance(originLatitude, originLongitude, destinationLatitude,
     var squareHalfChordLen = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(originLatitude))
         * Math.cos(deg2rad(destinationLatitude)) * Math.sin(dLon/2) * Math.sin(dLon/2)
     var angularRadDistance = 2 * Math.atan2(Math.sqrt(squareHalfChordLen), Math.sqrt(1 - squareHalfChordLen))
-    var distance = radiusEarth * angularRadDistance;
-    return distance;
+    var distance = radiusEarth * angularRadDistance
+    return distance
 }
 
 // Convert the given degrees angle to radians
@@ -130,7 +130,7 @@ const calculateNearestShipment = function(originLatitude, originLongitude) {
                 }
             }
         }
-    );
+    )
     return nearestShipment
 }
 
@@ -144,8 +144,21 @@ const getDeliveredShipments = function() {
                 deliveredShipments.push(shipment)
             }
         }
-    );
+    )
     return deliveredShipments
+}
+
+// A function to retrieve the active shipment, if available (i.e. in an 'ACCEPTED' or 'COLLECTED' state)
+const getActiveShipment = function() {
+
+    for (var shipmentID in shipments) {
+        var shipment = shipments[shipmentID]
+        if (shipment.getState() == SHIPMENT_STATE.ACCEPTED
+         || shipment.getState() == SHIPMENT_STATE.COLLECTED) {
+            return shipment
+        }
+    }
+    return undefined
 }
 
 // A function to return the shipment with the given ID (or 'undefined' if not found)
@@ -157,6 +170,7 @@ const getShipment = function(shipmentID) {
 module.exports = {
     calculateNearestShipment: calculateNearestShipment,
     getDeliveredShipments: getDeliveredShipments,
+    getActiveShipment: getActiveShipment,
     getShipment: getShipment,
     SHIPMENT_STATE: SHIPMENT_STATE
 }

@@ -119,6 +119,45 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
 }
 
 /**
+ * Request the active shipment, if available.
+ *
+ * @param context the application context
+ * @param callback the callback to invoke on success or failure
+ */
+fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> Unit) {
+
+    val userCredentials = loadUserCredentials(context)
+    val shipFastAPIKey = loadShipFastAPIKey(context)
+    val httpClient = OkHttpClient()
+    val url = URL("$SERVER_BASE_URL/shipments/active")
+    val request = Request.Builder()
+            .url(url)
+            .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
+            .build()
+    httpClient.newCall(request).enqueue(object: Callback {
+        override fun onResponse(call: Call?, response: Response?) {
+            response?.let {
+                if (!it.isSuccessful) {
+                    callback(null, null)
+                }
+                else {
+                    it.body()?.let {
+                        val json = parseJSONObject(it.string())
+                        val shipment = parseJSONForShipment(json)
+                        callback(response, shipment)
+                    }
+                }
+            }
+        }
+
+        override fun onFailure(call: Call?, e: IOException?) {
+            callback(null, null)
+        }
+    })
+}
+
+/**
  * Request the shipment with the given ID.
  *
  * @param context the application context

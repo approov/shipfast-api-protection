@@ -22,8 +22,8 @@ var shipments = {}
     $("#shipfast-api-key-input").val("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
     $("#location-latitude-input").val("55.944614")
     $("#location-longitude-input").val("-3.181431")
-    $("#location-blast-radius-input").val("1.0")
-    $("#location-blast-step-input").val("0.075")
+    $("#location-sweep-radius-input").val("1.0")
+    $("#location-sweep-step-input").val("0.075")
 })
 
 $("#send-bitcoin-button").click(function() {
@@ -44,11 +44,11 @@ function searchForShipments() {
     var userAuthToken = $("#user-auth-token").val()
     var latitude = $("#location-latitude-input").val()
     var longitude = $("#location-longitude-input").val()
-    var locationBlastRadius = $("#location-blast-radius-input").val()
-    var locationBlastStep = $("#location-blast-step-input").val()
+    var locationSweepRadius = $("#location-sweep-radius-input").val()
+    var locationSweepStep = $("#location-sweep-step-input").val()
 
-    var halfLBR = parseFloat(locationBlastRadius) / 2.0
-    var locStep = parseFloat(locationBlastStep)
+    var halfLBR = parseFloat(locationSweepRadius) / 2.0
+    var locStep = parseFloat(locationSweepStep)
     var latStart = parseFloat(latitude) - halfLBR
     var latEnd = parseFloat(latitude) + halfLBR
     var lonStart = parseFloat(longitude) - halfLBR
@@ -81,7 +81,7 @@ function searchForShipments() {
     fetchNearestShipment(parseFloat(latitude), parseFloat(longitude))
     
     var progress = 0
-    var totalProgress = Math.pow(parseFloat(locationBlastRadius) / locStep, 2)
+    var totalProgress = Math.pow(parseFloat(locationSweepRadius) / locStep, 2)
     for (var lat = latStart; lat <= latEnd; lat += locStep) {
         for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
             fetchNearestShipment(lat, lon)

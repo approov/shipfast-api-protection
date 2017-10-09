@@ -36,7 +36,6 @@ class ShipmentActivity : AppCompatActivity() {
 
     /** The current shipment */
     private var currentShipment: Shipment? = null
-//        set(value) { updateState() }
 
     /** The location update callback */
     private lateinit var locationCallback: LocationCallback
@@ -176,39 +175,52 @@ class ShipmentActivity : AppCompatActivity() {
     private fun performToggleAvailability(isChecked: Boolean) {
 
         if (isChecked) {
-            pollForNearestShipment()
+            fetchNextShipment()
         }
     }
 
     /**
-     * Keep polling the server until we get a shipment to work with.
+     * Fetch the next shipment (will either be the active one or the next available nearest one to the current location).
      */
-    private fun pollForNearestShipment() {
+    private fun fetchNextShipment() {
 
         Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
 
-        if (ActivityCompat.checkSelfPermission(this@ShipmentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@ShipmentActivity)
-            fusedLocationClient?.lastLocation?.addOnSuccessListener { location ->
-                location?.let {
-                    startProgress()
-                    requestNearestShipment(this@ShipmentActivity, it.toLatLng(), { _, shipment ->
-                        stopProgress()
-                        this@ShipmentActivity.currentShipment = shipment
-                        runOnUiThread {
-                            updateState()
-                            if (shipment == null && activityActive) {
-                                // FIXME tight loop and broken recursion
-                                pollForNearestShipment()
-                            }
+        startProgress()
+
+        requestActiveShipment(this@ShipmentActivity, { _, shipment ->
+            if (shipment == null) {
+                if (ActivityCompat.checkSelfPermission(this@ShipmentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@ShipmentActivity)
+                    fusedLocationClient?.lastLocation?.addOnSuccessListener { location ->
+                        location?.let {
+                            startProgress()
+                            requestNearestShipment(this@ShipmentActivity, it.toLatLng(), { _, shipment ->
+                                stopProgress()
+                                this@ShipmentActivity.currentShipment = shipment
+                                runOnUiThread {
+                                    updateState()
+                                    if (shipment == null && activityActive) {
+                                        // FIXME tight loop and broken recursion
+                                        fetchNextShipment()
+                                    }
+                                }
+                            })
                         }
-                    })
+                    }
+                } else {
+                    ActivityCompat.requestPermissions(this@ShipmentActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 123)
+                    fetchNextShipment()
                 }
             }
-        } else {
-            ActivityCompat.requestPermissions(this@ShipmentActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 123)
-            pollForNearestShipment()
-        }
+            else {
+                stopProgress()
+                this@ShipmentActivity.currentShipment = shipment
+                runOnUiThread {
+                    updateState()
+                }
+            }
+        })
     }
 
     /**

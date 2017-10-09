@@ -20,6 +20,9 @@ var shipFastAPIKeys = [
   'V2hhdCBnZWVrIGNvbnZlcnRlZCB0aGlzPyE/'
 ]
 
+// The ShipFast HMAC secret used to sign API requests
+const SHIPFAST_HMAC_SECRET = '4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=='
+
 // Verify the ShipFast API key
 router.use(function(req, res, next) {
 
@@ -40,10 +43,27 @@ router.use(function(req, res, next) {
     return
   }
 
-  // var hmac = crypto.createHmac('sha256', 'a secret')
-  // hmac.update("this is my data")
-  // var hmachex = hmac.digest('hex')
-  // console.log("hmac: ", hmachex)
+  // Retrieve the ShipFast HMAC used to sign the API request from the request header
+  var requestShipFastHMAC = req.get('SF-HMAC')
+  if (!requestShipFastHMAC) {
+    console.log('\tShipFast HMAC not specified or in the wrong format')
+    res.status(400).send()
+    return
+  }
+
+  // Calculate our version of the HMAC and compare with one sent in the request header
+  var hmac = crypto.createHmac('sha256', Buffer.from(SHIPFAST_HMAC_SECRET, 'base64'))
+  hmac.update(req.protocol)
+  hmac.update(req.host)
+  hmac.update(req.originalUrl)
+  hmac.update(req.get('Authorization'))
+  var ourShipFastHMAC = hmac.digest('hex')
+  if (ourShipFastHMAC != requestShipFastHMAC) {
+    console.log("\tShipFast HMAC invalid: received " + requestShipFastHMAC
+      + " but should be " + ourShipFastHMAC)
+    res.status(403).send()
+    return
+  }
 
   next()
 })

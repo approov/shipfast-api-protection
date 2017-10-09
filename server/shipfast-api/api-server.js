@@ -19,7 +19,7 @@ const auth = require('./auth')
 app.use(cors())
 
 // Add the authentication functionality to our server
-// app.use(auth)
+app.use(auth)
 
 // Load the certificate and key data for our server to be hosted over HTTPS
 var options = {

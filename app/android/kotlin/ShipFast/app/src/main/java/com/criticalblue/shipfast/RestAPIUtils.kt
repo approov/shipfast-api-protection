@@ -13,6 +13,7 @@ import android.content.Context
 import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
+import android.util.Base64
 import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import okhttp3.*
@@ -21,6 +22,10 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URL
+import java.nio.charset.Charset
+import java.security.Signature
+import javax.crypto.Mac
+import javax.crypto.spec.SecretKeySpec
 
 /** The server's base URL */
 const val SERVER_BASE_URL = /*"http://192.168.0.200:3000"*/ "http://10.0.2.2:3000"
@@ -34,6 +39,10 @@ const val LATITUDE_HEADER = "SF-Latitude"
 const val LONGITUDE_HEADER = "SF-Longitude"
 /** The shipment state request header */
 const val SHIPMENT_STATE_HEADER = "SF-State"
+/** The HMAC request header */
+const val HMAC_HEADER = "SF-HMAC"
+/** The HMAC secret used to sign API requests */
+const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
 
 /**
  * Request the nearest available shipment to the given location.
@@ -48,9 +57,11 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
     val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/nearest_shipment")
+    var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
             .url(url)
-            .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(AUTH_HEADER, auth)
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .addHeader(LATITUDE_HEADER, originLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, originLocation.longitude.toString())
@@ -89,9 +100,11 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
     val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/delivered")
+    var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
             .url(url)
-            .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(AUTH_HEADER, auth)
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
@@ -130,9 +143,11 @@ fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> 
     val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/active")
+    var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
             .url(url)
-            .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(AUTH_HEADER, auth)
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
@@ -170,9 +185,11 @@ fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shi
     val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/$shipmentID")
+    var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
             .url(url)
-            .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(AUTH_HEADER, auth)
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
@@ -207,10 +224,12 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
     val shipFastAPIKey = loadShipFastAPIKey(context)
     val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/update_state/$shipmentID")
+    var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
             .url(url)
             .method("POST", RequestBody.create(null, ByteArray(0)))
-            .addHeader(AUTH_HEADER, "Bearer ${userCredentials.idToken}")
+            .addHeader(AUTH_HEADER, auth)
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .addHeader(LATITUDE_HEADER, currentLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, currentLocation.longitude.toString())
@@ -244,7 +263,7 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
             // TODO get waypoints
             response?.body()?.let {
                 val json = parseJSONObject(it.string())
-                Log.i("SR", "$json")
+                Log.i("SF", "$json")
                 callback(response, response?.isSuccessful ?: false)
             }
         }
@@ -256,12 +275,30 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
 }
 
 /**
+ * Compute an API request HMAC using the given request URL and authorization request header value.
+ *
+ * @param url the request URL
+ * @param authHeaderValue the value of the authorization request header
+ * @return the request HMAC
+ */
+private fun calculateAPIRequestHMAC(url: URL, authHeaderValue: String): String {
+
+    val hmac = Mac.getInstance("HmacSHA256")
+    hmac.init(SecretKeySpec(Base64.decode(HMAC_SECRET, Base64.DEFAULT), "HmacSHA256"))
+    hmac.update(url.protocol.toByteArray(Charsets.UTF_8))
+    hmac.update(url.host.toByteArray(Charsets.UTF_8))
+    hmac.update(url.path.toByteArray(Charsets.UTF_8))
+    hmac.update(authHeaderValue.toByteArray(Charsets.UTF_8))
+    return hmac.doFinal().toHex()
+}
+
+/**
  * Safely attempt to parse the given string as a JSON object.
  *
  * @param json the JSON string
  * @return the JSON object
  */
-fun parseJSONObject(json: String?): JSONObject? {
+private fun parseJSONObject(json: String?): JSONObject? {
 
     return if (json == null) null else try {
         JSONObject(json)
@@ -275,7 +312,7 @@ fun parseJSONObject(json: String?): JSONObject? {
  * @param json the JSON string
  * @return the JSON array
  */
-fun parseJSONArray(json: String?): JSONArray? {
+private fun parseJSONArray(json: String?): JSONArray? {
 
     return if (json == null) null else try {
         JSONArray(json)
@@ -289,7 +326,7 @@ fun parseJSONArray(json: String?): JSONArray? {
  * @param json the JSON representation
  * @return the shipment
  */
-fun parseJSONForShipment(json: JSONObject?): Shipment? {
+private fun parseJSONForShipment(json: JSONObject?): Shipment? {
 
     return if (json == null) null else try {
         Shipment(json.getInt("id"),
@@ -310,13 +347,15 @@ fun parseJSONForShipment(json: JSONObject?): Shipment? {
  * @param context the application context
  * @return the ShipFast API key
  */
-fun loadShipFastAPIKey(context: Context): String {
+private fun loadShipFastAPIKey(context: Context): String {
     return context.packageManager.getApplicationInfo( context.packageName, PackageManager.GET_META_DATA)
             .metaData.getString("com.criticalblue.shipfast.API_KEY")
 }
 
 /**
  * Allows Location objects to be converted to LatLng objects.
+ *
+ * @return the LatLng value
  */
 fun Location.toLatLng(): LatLng {
     return LatLng(this.latitude, this.longitude)
@@ -324,10 +363,31 @@ fun Location.toLatLng(): LatLng {
 
 /**
  * Allows LatLng objects to be converted to Location objects.
+ *
+ * @return the Location value
  */
 fun LatLng.toLocation(): Location {
     val location = Location(LocationManager.GPS_PROVIDER)
     location.latitude = this.latitude
     location.longitude = this.longitude
     return location
+}
+
+/**
+ * Allows ByteArray objects to be converted to a hex string.
+ *
+ * @return the hex string
+ */
+fun ByteArray.toHex() : String {
+
+    val hexChars = "0123456789abcdef".toCharArray()
+    val result = StringBuffer()
+    forEach {
+        val octet = it.toInt()
+        val firstIndex = (octet and 0xF0).ushr(4)
+        val secondIndex = octet and 0x0F
+        result.append(hexChars[firstIndex])
+        result.append(hexChars[secondIndex])
+    }
+    return result.toString()
 }

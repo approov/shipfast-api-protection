@@ -59,7 +59,7 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .addHeader(LATITUDE_HEADER, originLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, originLocation.longitude.toString())
@@ -102,7 +102,7 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
@@ -145,7 +145,7 @@ fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> 
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
@@ -187,7 +187,7 @@ fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shi
     val request = Request.Builder()
             .url(url)
             .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
     httpClient.newCall(request).enqueue(object: Callback {
@@ -227,7 +227,7 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
             .url(url)
             .method("POST", RequestBody.create(null, ByteArray(0)))
             .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
+            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .addHeader(LATITUDE_HEADER, currentLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, currentLocation.longitude.toString())
@@ -275,14 +275,21 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
 /**
  * Compute an API request HMAC using the given request URL and authorization request header value.
  *
+ * @param context the application context
  * @param url the request URL
  * @param authHeaderValue the value of the authorization request header
  * @return the request HMAC
  */
-private fun calculateAPIRequestHMAC(url: URL, authHeaderValue: String): String {
+private fun calculateAPIRequestHMAC(context: Context, url: URL, authHeaderValue: String): String {
 
     val secret = HMAC_SECRET
-    val keySpec = SecretKeySpec(Base64.decode(secret, Base64.DEFAULT), "HmacSHA256")
+    val obfuscatedSecretData = Base64.decode(secret, Base64.DEFAULT)
+    val shipFastAPIKeyData = loadShipFastAPIKey(context).toByteArray(Charsets.UTF_8)
+    for (i in 0 until minOf(obfuscatedSecretData.size, shipFastAPIKeyData.size)) {
+        obfuscatedSecretData[i] = (obfuscatedSecretData[i].toInt() xor shipFastAPIKeyData[i].toInt()).toByte()
+    }
+    val obfuscatedSecret = Base64.encode(obfuscatedSecretData, Base64.DEFAULT)
+    val keySpec = SecretKeySpec(Base64.decode(/*secret*/obfuscatedSecret, Base64.DEFAULT), "HmacSHA256")
     val hmac = Mac.getInstance("HmacSHA256")
     hmac.init(keySpec)
     hmac.update(url.protocol.toByteArray(Charsets.UTF_8))

@@ -53,7 +53,13 @@ router.use(function(req, res, next) {
 
   // Calculate our version of the HMAC and compare with one sent in the request header
   var secret = SHIPFAST_HMAC_SECRET
-  var hmac = crypto.createHmac('sha256', Buffer.from(secret, 'base64'))
+  var obfuscatedSecretData = Buffer.from(secret, 'base64')
+  var shipFastAPIKeyData = new Buffer("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
+  for (var i = 0; i < Math.min(obfuscatedSecretData.length, shipFastAPIKeyData.length); i++) {
+    obfuscatedSecretData[i] ^= shipFastAPIKeyData[i]
+  }
+  var obfuscatedSecret = new Buffer(obfuscatedSecretData).toString('base64')
+  var hmac = crypto.createHmac('sha256', Buffer.from(/*secret*/obfuscatedSecret, 'base64'))
   hmac.update(req.protocol)
   hmac.update(req.host)
   hmac.update(req.originalUrl)

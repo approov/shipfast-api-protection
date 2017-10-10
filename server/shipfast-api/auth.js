@@ -52,7 +52,8 @@ router.use(function(req, res, next) {
   }
 
   // Calculate our version of the HMAC and compare with one sent in the request header
-  var hmac = crypto.createHmac('sha256', Buffer.from(SHIPFAST_HMAC_SECRET, 'base64'))
+  var secret = SHIPFAST_HMAC_SECRET
+  var hmac = crypto.createHmac('sha256', Buffer.from(secret, 'base64'))
   hmac.update(req.protocol)
   hmac.update(req.host)
   hmac.update(req.originalUrl)

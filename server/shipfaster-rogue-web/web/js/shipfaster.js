@@ -7,6 +7,8 @@
  * The rogue ShipFast 'ShipFaster' web server's JQuery logic script.
  *****************************************************************************/
 
+const HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw==" 
+
 var shipments = {}
 
  $(document).ready(function() {
@@ -55,11 +57,14 @@ function searchForShipments() {
     var lonEnd = parseFloat(longitude) + halfLBR
 
     var fetchNearestShipment = function(latVal, lonVal) {
+        var url = shipFastServerURL + "/shipments/nearest_shipment"
+        var auth = "Bearer " + userAuthToken
         $.ajax({
-            url: shipFastServerURL + "/shipments/nearest_shipment",
+            url: url,
             headers: {
                 "SF-API_KEY" : shipFastAPIKey,
-                "Authorization" : "Bearer " + userAuthToken,
+                "Authorization" : auth,
+                "SF-HMAC" : computeHMAC(url, auth),
                 "SF-Latitude" : latVal.toString(),
                 "SF-Longitude" : lonVal.toString()
             },
@@ -73,7 +78,8 @@ function searchForShipments() {
                     parseFloat(latitude), parseFloat(longitude))).toString()
                 shipments[shipmentID] = json
                 addShipmentsToResults()
-                updateProgressBar(Math.min(Math.round((progress++ / totalProgress) * 100), 100))
+                updateProgressBar(Math.min(Math.round((progress / totalProgress) * 100), 100))
+                progress++
             }
         })
     }
@@ -146,11 +152,14 @@ function grabShipment(shipmentID) {
     var latitude = $("#location-latitude-input").val()
     var longitude = $("#location-longitude-input").val()
 
+    var url = shipFastServerURL + "/shipments/update_state/" + shipmentID
+    var auth = "Bearer " + userAuthToken
     $.ajax({
-        url: shipFastServerURL + "/shipments/update_state/" + shipmentID,
+        url: url,
         headers: {
             "SF-API_KEY" : shipFastAPIKey,
-            "Authorization" : "Bearer " + userAuthToken,
+            "Authorization" : auth,
+            "SF-HMAC" : computeHMAC(url, auth),
             "SF-Latitude" : latitude,
             "SF-Longitude" : longitude,
             "SF-STATE" : "1"
@@ -167,8 +176,11 @@ function grabShipment(shipmentID) {
     })
 }
 
-// FIXME
-function testHMAC() {
-    var hmac = CryptoJS.HmacSHA256("this is my data", "a secret").toString();
-    console.log("hmac: ", hmac)
+function computeHMAC(url, idToken) {
+    var parser = document.createElement('a')
+    parser.href = url
+    var msg = parser.protocol.substring(0, parser.protocol.length - 1)
+        + parser.hostname + parser.pathname + idToken
+    var hmac = CryptoJS.HmacSHA256(msg, CryptoJS.enc.Base64.parse(HMAC_SECRET)).toString(CryptoJS.enc.Hex)
+    return hmac
 }

@@ -22,8 +22,6 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URL
-import java.nio.charset.Charset
-import java.security.Signature
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -283,8 +281,10 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
  */
 private fun calculateAPIRequestHMAC(url: URL, authHeaderValue: String): String {
 
+    val secret = HMAC_SECRET
+    val keySpec = SecretKeySpec(Base64.decode(secret, Base64.DEFAULT), "HmacSHA256")
     val hmac = Mac.getInstance("HmacSHA256")
-    hmac.init(SecretKeySpec(Base64.decode(HMAC_SECRET, Base64.DEFAULT), "HmacSHA256"))
+    hmac.init(keySpec)
     hmac.update(url.protocol.toByteArray(Charsets.UTF_8))
     hmac.update(url.host.toByteArray(Charsets.UTF_8))
     hmac.update(url.path.toByteArray(Charsets.UTF_8))

@@ -37,9 +37,6 @@ class ShipmentActivity : AppCompatActivity() {
     /** The current shipment */
     private var currentShipment: Shipment? = null
 
-    /** The location update callback */
-    private lateinit var locationCallback: LocationCallback
-
     /** The progress bar */
     private lateinit var updateShipmentProgressBar: ProgressBar
 
@@ -72,12 +69,6 @@ class ShipmentActivity : AppCompatActivity() {
         setContentView(R.layout.activity_shipment)
         title = "Current Shipment"
 
-        locationCallback = object: LocationCallback() {
-            override fun onLocationResult(result: LocationResult?) {
-
-            }
-        }
-
         updateShipmentProgressBar = findViewById(R.id.updateShipmentProgressBar)
         descriptionTextView = findViewById(R.id.shipmentDescription)
         gratuityTextView = findViewById(R.id.shipmentGratuity)
@@ -100,21 +91,13 @@ class ShipmentActivity : AppCompatActivity() {
     override fun onPause() {
         super.onPause()
         mapView.onPause()
-
-        // stop listening for location updates
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@ShipmentActivity)
-//        fusedLocationClient.removeLocationUpdates(locationCallback)
+        activityActive = false
     }
 
     override fun onResume() {
         super.onResume()
         mapView.onResume()
-
-        // start listening for location updates
-        val locationRequest = LocationRequest.create()
-        locationRequest.priority = LocationRequest.PRIORITY_HIGH_ACCURACY
-        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@ShipmentActivity)
-//        fusedLocationClient.requestLocationUpdates(locationRequest, locationCallback, null)
+        activityActive = true
     }
 
     override fun onStop() {
@@ -158,7 +141,6 @@ class ShipmentActivity : AppCompatActivity() {
                 }
                 updateShipment()
 
-                // FIXME REMOVE AFTER TESTING
                 if (it.nextState == ShipmentState.DELIVERED) {
                     val intent = Intent(this@ShipmentActivity, SummaryActivity::class.java)
                     startActivity(intent)
@@ -184,6 +166,9 @@ class ShipmentActivity : AppCompatActivity() {
      */
     private fun fetchNextShipment() {
 
+        if (!availabilitySwitch.isChecked)
+            return
+
         runOnUiThread {
             Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
         }
@@ -202,10 +187,10 @@ class ShipmentActivity : AppCompatActivity() {
                                 this@ShipmentActivity.currentShipment = shipment
                                 runOnUiThread {
                                     updateState()
-                                    if (shipment == null && activityActive) {
-                                        // FIXME tight loop and broken recursion
-                                        fetchNextShipment()
-                                    }
+                                }
+                                Thread.sleep(1000)
+                                if (shipment == null && activityActive) {
+                                    fetchNextShipment()
                                 }
                             })
                         }
@@ -246,6 +231,7 @@ class ShipmentActivity : AppCompatActivity() {
     private fun updateState() {
 
         nextStateButton.isEnabled = false
+        nextStateButton.visibility = View.INVISIBLE
 
         currentShipment?.let {
             requestShipmentRoute(this, it, {_,_ -> })
@@ -263,7 +249,7 @@ class ShipmentActivity : AppCompatActivity() {
 
             nextStateButton.text = it.state.nextStateActionName
             nextStateButton.isEnabled = it.state != ShipmentState.DELIVERED
-            // TODO hide button
+            nextStateButton.visibility = if (it.state != ShipmentState.DELIVERED) View.VISIBLE else View.INVISIBLE
         }
     }
 

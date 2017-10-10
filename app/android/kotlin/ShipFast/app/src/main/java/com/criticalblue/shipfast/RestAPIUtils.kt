@@ -22,6 +22,7 @@ import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
 import java.net.URL
+import java.util.concurrent.TimeUnit
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
@@ -53,7 +54,6 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
 
     val userCredentials = loadUserCredentials(context)
     val shipFastAPIKey = loadShipFastAPIKey(context)
-    val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/nearest_shipment")
     var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
@@ -64,7 +64,7 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
             .addHeader(LATITUDE_HEADER, originLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, originLocation.longitude.toString())
             .build()
-    httpClient.newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             response?.let {
                 if (!it.isSuccessful) {
@@ -96,7 +96,6 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
 
     val userCredentials = loadUserCredentials(context)
     val shipFastAPIKey = loadShipFastAPIKey(context)
-    val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/delivered")
     var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
@@ -105,7 +104,7 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
             .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
-    httpClient.newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             var deliveredShipments: MutableList<Shipment>? = null
             response?.body()?.let {
@@ -139,7 +138,6 @@ fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> 
 
     val userCredentials = loadUserCredentials(context)
     val shipFastAPIKey = loadShipFastAPIKey(context)
-    val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/active")
     var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
@@ -148,7 +146,7 @@ fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> 
             .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
-    httpClient.newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             response?.let {
                 if (!it.isSuccessful) {
@@ -181,7 +179,6 @@ fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shi
 
     val userCredentials = loadUserCredentials(context)
     val shipFastAPIKey = loadShipFastAPIKey(context)
-    val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/$shipmentID")
     var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
@@ -190,7 +187,7 @@ fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shi
             .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .build()
-    httpClient.newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             var shipment: Shipment? = null
             response?.body()?.let {
@@ -220,7 +217,6 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
 
     val userCredentials = loadUserCredentials(context)
     val shipFastAPIKey = loadShipFastAPIKey(context)
-    val httpClient = OkHttpClient()
     val url = URL("$SERVER_BASE_URL/shipments/update_state/$shipmentID")
     var auth = "Bearer ${userCredentials.idToken}"
     val request = Request.Builder()
@@ -233,7 +229,7 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
             .addHeader(LONGITUDE_HEADER, currentLocation.longitude.toString())
             .addHeader(SHIPMENT_STATE_HEADER, newState.ordinal.toString())
             .build()
-    httpClient.newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             callback(response, response?.isSuccessful ?: false)
         }
@@ -248,7 +244,6 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
 
     val googleAPIKey = context.packageManager.getApplicationInfo( context.packageName, PackageManager.GET_META_DATA)
             .metaData.getString("com.google.android.geo.API_KEY")
-    val httpClient = OkHttpClient()
     val url = URL("https://maps.googleapis.com/maps/api/directions/json?" +
             "origin=${shipment.pickupLocation.latitude},${shipment.pickupLocation.longitude}" +
             "&destination=${shipment.deliveryLocation.latitude},${shipment.deliveryLocation.longitude}" +
@@ -256,7 +251,7 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
     val request = Request.Builder()
             .url(url)
             .build()
-    httpClient.newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             // TODO get waypoints
             response?.body()?.let {
@@ -270,6 +265,18 @@ fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Respon
             callback(null, false)
         }
     })
+}
+
+/**
+ * Build a default HTTP client to use for API requests.
+ *
+ * @return the HTTP client
+ */
+private fun buildDefaultHTTPClient(): OkHttpClient {
+    return OkHttpClient.Builder()
+            .readTimeout(2, TimeUnit.SECONDS)
+            .writeTimeout(2, TimeUnit.SECONDS)
+            .build()
 }
 
 /**

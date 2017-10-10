@@ -307,6 +307,25 @@ private fun calculateAPIRequestHMAC(context: Context, url: URL, authHeaderValue:
 }
 
 /**
+ * Allows ByteArray objects to be converted to a hex string.
+ *
+ * @return the hex string
+ */
+fun ByteArray.toHex() : String {
+
+    val hexChars = "0123456789abcdef".toCharArray()
+    val result = StringBuffer()
+    forEach {
+        val octet = it.toInt()
+        val firstIndex = (octet and 0xF0).ushr(4)
+        val secondIndex = octet and 0x0F
+        result.append(hexChars[firstIndex])
+        result.append(hexChars[secondIndex])
+    }
+    return result.toString()
+}
+
+/**
  * Safely attempt to parse the given string as a JSON object.
  *
  * @param json the JSON string
@@ -385,23 +404,4 @@ fun LatLng.toLocation(): Location {
     location.latitude = this.latitude
     location.longitude = this.longitude
     return location
-}
-
-/**
- * Allows ByteArray objects to be converted to a hex string.
- *
- * @return the hex string
- */
-fun ByteArray.toHex() : String {
-
-    val hexChars = "0123456789abcdef".toCharArray()
-    val result = StringBuffer()
-    forEach {
-        val octet = it.toInt()
-        val firstIndex = (octet and 0xF0).ushr(4)
-        val secondIndex = octet and 0x0F
-        result.append(hexChars[firstIndex])
-        result.append(hexChars[secondIndex])
-    }
-    return result.toString()
 }

@@ -16,6 +16,10 @@ const serverPath = __dirname + '/'
 
 app.use(express.static('web'))
 
+app.use('/login', function(req, res) {
+  res.send('hi')
+})
+
 app.use('*', function(req, res) {
   res.send('Error 404: Not Found!')
 })

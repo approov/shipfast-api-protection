@@ -25,6 +25,9 @@ import com.auth0.android.result.Credentials
 
 /**
  * The Login activity class.
+ *
+ * TODO: use Auth0 CredentialsManager
+ * TODO: use Android Lock rather than web Lock
  */
 class LoginActivity : AppCompatActivity() {
 

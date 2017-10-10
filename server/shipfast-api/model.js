@@ -30,7 +30,7 @@ var DELIVERY_LOCATIONS = [
     'Hugwarts School',
     'LetGo Land',
     '123 Fake Street',
-    'Suspicious Whirring Blue Box',
+    'Whirring Blue Box',
     'Terok Nor Promenade',
     'Getwell Soon Hospital',
     'Llanfairpwllgwyngyll'

@@ -184,7 +184,9 @@ class ShipmentActivity : AppCompatActivity() {
      */
     private fun fetchNextShipment() {
 
-        Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
+        runOnUiThread {
+            Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
+        }
 
         startProgress()
 

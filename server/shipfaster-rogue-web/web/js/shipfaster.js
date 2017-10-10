@@ -43,7 +43,7 @@ function searchForShipments() {
 
     var shipFastServerURL = $("#server-url-input").val()
     var shipFastAPIKey = $("#shipfast-api-key-input").val()
-    var userAuthToken = $("#user-auth-token").val()
+    var userAuthToken = $("#user-auth-token-input").val()
     var latitude = $("#location-latitude-input").val()
     var longitude = $("#location-longitude-input").val()
     var locationSweepRadius = $("#location-sweep-radius-input").val()
@@ -148,7 +148,7 @@ function addShipmentsToResults() {
 function grabShipment(shipmentID) {
     var shipFastServerURL = $("#server-url-input").val()
     var shipFastAPIKey = $("#shipfast-api-key-input").val()
-    var userAuthToken = $("#user-auth-token").val()
+    var userAuthToken = $("#user-auth-token-input").val()
     var latitude = $("#location-latitude-input").val()
     var longitude = $("#location-longitude-input").val()
 

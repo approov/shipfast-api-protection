@@ -15,6 +15,7 @@ import android.os.Bundle
 import android.support.v4.app.ActivityCompat
 import android.Manifest
 import android.content.Intent
+import android.graphics.Color
 import android.view.View
 import android.widget.*
 import com.google.android.gms.location.LocationCallback
@@ -28,6 +29,10 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
+import com.google.android.gms.maps.model.Polyline
+import com.google.android.gms.maps.model.PolylineOptions
+
+
 
 class ShipmentActivity : AppCompatActivity() {
 
@@ -244,6 +249,7 @@ class ShipmentActivity : AppCompatActivity() {
             mapView.getMapAsync { googleMap ->
                 addMapMarker(googleMap, it.pickupLocation, it.pickupName, BitmapDescriptorFactory.HUE_GREEN)
                 addMapMarker(googleMap, it.deliveryLocation, it.deliveryName, BitmapDescriptorFactory.HUE_RED)
+                addMapRoute(googleMap, it.pickupLocation, it.deliveryLocation)
                 zoomMapIntoLocation(googleMap, it.pickupLocation)
             }
 
@@ -264,6 +270,22 @@ class ShipmentActivity : AppCompatActivity() {
     private fun addMapMarker(googleMap: GoogleMap, location: LatLng, markerTitle: String, markerHue: Float) {
 
         googleMap.addMarker(MarkerOptions().position(location).title(markerTitle).icon(BitmapDescriptorFactory.defaultMarker(markerHue)))
+    }
+
+    /**
+     * Add a line to the given map which represents the route from the given start location to the given end location.
+     *
+     * @param googleMap the map view
+     * @param routeStart the start location of the route
+     * @param routeEnd the end location of the route
+     */
+    private fun addMapRoute(googleMap: GoogleMap, routeStart: LatLng, routeEnd: LatLng) {
+
+        val rectOptions = PolylineOptions().add(routeStart).add(routeEnd)
+        val polyline = googleMap.addPolyline(rectOptions)
+        polyline.color = Color.CYAN
+        polyline.width = 9.0f
+        polyline.isGeodesic = true
     }
 
     /**

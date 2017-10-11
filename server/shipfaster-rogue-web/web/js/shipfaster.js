@@ -199,14 +199,13 @@ function grabShipment(shipmentID) {
 }
 
 function computeHMAC(url, idToken) {
-
     var staticSecret = HMAC_SECRET
     var dynamicSecret = CryptoJS.enc.Base64.parse(staticSecret)
     var shipFastAPIKey = CryptoJS.enc.Utf8.parse($("#shipfast-api-key-input").val())
     for (var i = 0; i < Math.min(dynamicSecret.words.length, shipFastAPIKey.words.length); i++) {
         dynamicSecret.words[i] ^= shipFastAPIKey.words[i]
     }
-    dynamicSecret = CryptoJS.enc.Base64.stringify(dynamicSecret);
+    dynamicSecret = CryptoJS.enc.Base64.stringify(dynamicSecret)
     var parser = document.createElement('a')
     parser.href = url
     var msg = parser.protocol.substring(0, parser.protocol.length - 1)

@@ -33,6 +33,9 @@
                         <div class="input-group">
                             <span class="input-group-addon" id="user-auth-token">User Auth Token</span>
                             <input type="text" class="form-control" id="user-auth-token-input" placeholder="stick ur auth token ere" aria-describedby="user-auth-token">
+                            <span class="input-group-btn">
+                                <button class="btn btn-secondary" id="login-button" type="button">Login</button>
+                            </span>
                         </div>    
                         <div class="input-group">
                             <span class="input-group-addon" id="location-latitude">Location Latitude</span>
@@ -88,6 +91,8 @@
         </div>
     </body>
     <footer>
+        <script src="https://cdn.auth0.com/js/auth0/8.10.1/auth0.min.js"></script>
+        <script src="https://cdn.auth0.com/js/lock/10.21.1/lock.min.js"></script>
         <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
         <script src="js/shipfaster.js"></script>
     </footer>

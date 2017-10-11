@@ -32,6 +32,28 @@ $("#send-bitcoin-button").click(function() {
     alert("Pay me the money!")
 })
 
+var lock = new Auth0Lock("yOqjrArkqM0vuRHjjBv4KrhdFzvnr9kI", "approov.auth0.com", {
+    auth: {
+        // redirectUrl: "demo://approov.auth0.com/android/com.criticalblue.shipfast/callback",
+        redirectUrl: window.url,
+        responseType: "id_token",
+        redirect: true
+    },
+    oidcConformant: false,
+    autoclose: true,
+    allowSignUp: false,
+    theme: {
+        logo: 'images/auth0lock.png'
+    }
+})
+lock.on("authenticated", function(authResult) {
+    $("#user-auth-token-input").val(authResult.idToken)
+})
+
+$("#login-button").click(function() {
+    lock.show()
+})
+
 $("#search-shipments-button").click(function(event) {
     event.preventDefault()
     searchForShipments()

@@ -22,8 +22,8 @@ var shipments = {}
     
     $("#server-url-input").val("http://127.0.0.1:3000")
     $("#shipfast-api-key-input").val("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
-    $("#location-latitude-input").val("55.944614")
-    $("#location-longitude-input").val("-3.181431")
+    $("#location-latitude-input").val("51.535472")
+    $("#location-longitude-input").val("-0.104971")
     $("#location-sweep-radius-input").val("1.0")
     $("#location-sweep-step-input").val("0.075")
 })

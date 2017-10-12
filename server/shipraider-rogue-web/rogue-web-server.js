@@ -4,7 +4,7 @@
  * Original:    Created on 6 Oct 2017 by Simon Rigg
  * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
  *
- * The rogue ShipFast 'ShipFaster' web server.
+ * The rogue ShipFast 'ShipRaider' web server.
  *****************************************************************************/
 
 const express = require('express')
@@ -23,5 +23,5 @@ app.use('*', function(req, res) {
 app.use(cors())
 
 app.listen(80, function () {
-  console.log('ShipFaster ready!')
+  console.log('ShipRaider ready!')
 })

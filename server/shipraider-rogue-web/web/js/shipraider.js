@@ -1,10 +1,10 @@
 /*****************************************************************************
  * Project:     ShipFast API Protection (Server)
- * File:        shipfaster.js
+ * File:        shipraider.js
  * Original:    Created on 6 Oct 2017 by Simon Rigg
  * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
  *
- * The rogue ShipFast 'ShipFaster' web server's JQuery logic script.
+ * The rogue ShipFast 'ShipRaider' web server's JQuery logic script.
  *****************************************************************************/
 
 const HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw==" 

@@ -241,7 +241,7 @@ class ShipmentActivity : AppCompatActivity() {
         currentShipment?.let {
             requestShipmentRoute(this, it, {_,_ -> })
             descriptionTextView.text = it.description
-            gratuityTextView.text = "$${it.gratuity}"
+            gratuityTextView.text = "£${it.gratuity}"
             pickupTextView.text = it.pickupName
             deliveryTextView.text = it.deliveryName
             stateTextView.text = it.state.name

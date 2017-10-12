@@ -143,7 +143,7 @@ function addShipmentsToResults() {
         ([shipmentID, json]) => {
             var shipmentID = json["id"]
             var shipmentName = json["description"]
-            var shipmentGratuity = "$" + json["gratuity"]
+            var shipmentGratuity = "£" + json["gratuity"]
             var shipmentPickup = json["pickupName"]
             var shipmentPickupDistance = json["pickupDistance"]
             var shipmentDelivery = json["deliveryName"]

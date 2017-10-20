@@ -15,7 +15,7 @@ const Rand = new MersenneTwister(Date.now())
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
 const MAX_GRATUITY = 30
-const LAT_LNG_OFFSET = 0.5
+const LAT_LNG_OFFSET = 0.1
 const SHIPMENT_COUNT = 7
 var PICKUP_LOCATIONS = [
     'ParcelFarce Depot 192',

@@ -86,6 +86,10 @@ class ShipmentActivity : AppCompatActivity() {
         nextStateButton.setOnClickListener { switch -> performAdvanceToNextState() }
         availabilitySwitch = findViewById(R.id.availabilitySwitch)
         availabilitySwitch.setOnCheckedChangeListener { switch, isChecked -> performToggleAvailability(isChecked) }
+
+        mapView.getMapAsync { googleMap ->
+            zoomMapIntoLocation(googleMap, LatLng(51.535472, -0.104971))
+        }
     }
 
     override fun onStart() {
@@ -241,7 +245,7 @@ class ShipmentActivity : AppCompatActivity() {
         currentShipment?.let {
             requestShipmentRoute(this, it, {_,_ -> })
             descriptionTextView.text = it.description
-            gratuityTextView.text = "£${it.gratuity}"
+            gratuityTextView.text = "£${it.gratuity.toInt()}"
             pickupTextView.text = it.pickupName
             deliveryTextView.text = it.deliveryName
             stateTextView.text = it.state.name

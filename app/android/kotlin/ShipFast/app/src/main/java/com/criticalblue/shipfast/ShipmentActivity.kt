@@ -18,9 +18,6 @@ import android.content.Intent
 import android.graphics.Color
 import android.view.View
 import android.widget.*
-import com.google.android.gms.location.LocationCallback
-import com.google.android.gms.location.LocationRequest
-import com.google.android.gms.location.LocationResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -29,7 +26,6 @@ import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
-import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 
 
@@ -88,9 +84,9 @@ class ShipmentActivity : AppCompatActivity() {
         mapView = findViewById(R.id.mapView)
         mapView.onCreate(savedInstanceState)
         nextStateButton = findViewById(R.id.nextStateButton)
-        nextStateButton.setOnClickListener { switch -> performAdvanceToNextState() }
+        nextStateButton.setOnClickListener { _ -> performAdvanceToNextState() }
         availabilitySwitch = findViewById(R.id.availabilitySwitch)
-        availabilitySwitch.setOnCheckedChangeListener { switch, isChecked -> performToggleAvailability(isChecked) }
+        availabilitySwitch.setOnCheckedChangeListener { _, isChecked -> performToggleAvailability(isChecked) }
 
         mapView.getMapAsync { googleMap ->
             zoomMapIntoLocation(googleMap, LatLng(51.535472, -0.104971))
@@ -241,14 +237,14 @@ class ShipmentActivity : AppCompatActivity() {
      */
     private fun updateShipment() {
 
-        if (currentShipment == null) return
-        startProgress()
-        val shipmentID = currentShipment!!.id // FIXME
-        requestShipment(this@ShipmentActivity, shipmentID, { _, shipment ->
-            stopProgress()
-            this@ShipmentActivity.currentShipment = shipment
-            runOnUiThread { updateState() }
-        })
+        currentShipment?.id?.let {
+            startProgress()
+            requestShipment(this@ShipmentActivity, it, { _, shipment ->
+                stopProgress()
+                this@ShipmentActivity.currentShipment = shipment
+                runOnUiThread { updateState() }
+            })
+        }
     }
 
     /**
@@ -260,7 +256,6 @@ class ShipmentActivity : AppCompatActivity() {
         nextStateButton.visibility = View.INVISIBLE
 
         currentShipment?.let {
-            requestShipmentRoute(this, it, {_,_ -> })
             descriptionTextView.text = it.description
             gratuityTextView.text = "£${it.gratuity.toInt()}"
             pickupTextView.text = it.pickupName

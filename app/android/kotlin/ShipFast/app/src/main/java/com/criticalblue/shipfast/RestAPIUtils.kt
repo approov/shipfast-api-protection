@@ -240,33 +240,6 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
     })
 }
 
-fun requestShipmentRoute(context: Context, shipment: Shipment, callback: (Response?, Boolean) -> Unit) {
-
-    val googleAPIKey = context.packageManager.getApplicationInfo( context.packageName, PackageManager.GET_META_DATA)
-            .metaData.getString("com.google.android.geo.API_KEY")
-    val url = URL("https://maps.googleapis.com/maps/api/directions/json?" +
-            "origin=${shipment.pickupLocation.latitude},${shipment.pickupLocation.longitude}" +
-            "&destination=${shipment.deliveryLocation.latitude},${shipment.deliveryLocation.longitude}" +
-            "&key=$googleAPIKey")
-    val request = Request.Builder()
-            .url(url)
-            .build()
-    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
-        override fun onResponse(call: Call?, response: Response?) {
-            // TODO get waypoints
-            response?.body()?.let {
-                val json = parseJSONObject(it.string())
-                Log.i("SF", "$json")
-                callback(response, response?.isSuccessful ?: false)
-            }
-        }
-
-        override fun onFailure(call: Call?, e: IOException?) {
-            callback(null, false)
-        }
-    })
-}
-
 /**
  * Build a default HTTP client to use for API requests.
  *

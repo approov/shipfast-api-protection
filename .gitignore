@@ -1,7 +1,7 @@
-.crt
-.cert
-.der
-.pem
-.key
+**/*.crt
+**/*.cert
+**/*.der
+**/*.pem
+**/*.key
+**/*.DS_Store
 node_modules
-.DS_Store

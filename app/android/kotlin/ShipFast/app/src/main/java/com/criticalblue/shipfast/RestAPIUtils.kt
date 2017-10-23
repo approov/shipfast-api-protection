@@ -27,7 +27,7 @@ import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
 /** The server's base URL */
-const val SERVER_BASE_URL = /*"http://192.168.0.200:3000"*/ "http://10.0.2.2:3000"
+const val SERVER_BASE_URL = "https://10.0.2.2"
 /** The authorisation request header */
 const val AUTH_HEADER = "Authorization"
 /** The ShipFast API key header */

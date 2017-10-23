@@ -33,7 +33,12 @@ import com.google.android.gms.maps.model.Polyline
 import com.google.android.gms.maps.model.PolylineOptions
 
 
+/** The maximum number of attempts to fetch the next shipment before reporting a failure */
+const val FETCH_NEXT_SHIPMENT_ATTEMPTS = 3
 
+/**
+ * The Shipment activity class.
+ */
 class ShipmentActivity : AppCompatActivity() {
 
     /** The active state of the activity */
@@ -166,20 +171,32 @@ class ShipmentActivity : AppCompatActivity() {
     private fun performToggleAvailability(isChecked: Boolean) {
 
         if (isChecked) {
-            fetchNextShipment()
+            fetchNextShipment(FETCH_NEXT_SHIPMENT_ATTEMPTS)
         }
     }
 
     /**
      * Fetch the next shipment (will either be the active one or the next available nearest one to the current location).
+     *
+     * @param remainingRetries the number of remaining retries
      */
-    private fun fetchNextShipment() {
+    private fun fetchNextShipment(remainingRetries: Int) {
 
         if (!availabilitySwitch.isChecked)
             return
 
-        runOnUiThread {
-            Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
+        if (remainingRetries <= 0) {
+            runOnUiThread {
+                availabilitySwitch.isChecked = false
+                updateState()
+                Toast.makeText(this@ShipmentActivity, "No shipment available!", Toast.LENGTH_LONG).show()
+            }
+            return
+        }
+        else {
+            runOnUiThread {
+                Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
+            }
         }
 
         startProgress()
@@ -199,14 +216,14 @@ class ShipmentActivity : AppCompatActivity() {
                                 }
                                 Thread.sleep(1000)
                                 if (shipment == null && activityActive) {
-                                    fetchNextShipment()
+                                    fetchNextShipment(remainingRetries - 1)
                                 }
                             })
                         }
                     }
                 } else {
                     ActivityCompat.requestPermissions(this@ShipmentActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 123)
-                    fetchNextShipment()
+                    fetchNextShipment(remainingRetries - 1)
                 }
             }
             else {

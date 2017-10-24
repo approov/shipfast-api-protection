@@ -38,10 +38,10 @@ const val LATITUDE_HEADER = "SF-Latitude"
 const val LONGITUDE_HEADER = "SF-Longitude"
 /** The shipment state request header */
 const val SHIPMENT_STATE_HEADER = "SF-State"
-/** The HMAC request header */
-const val HMAC_HEADER = "SF-HMAC"
 /** The HMAC secret used to sign API requests */
 const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
+/** The HMAC request header */
+const val HMAC_HEADER = "SF-HMAC"
 
 /**
  * Request the nearest available shipment to the given location.
@@ -52,18 +52,11 @@ const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pV
  */
 fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (Response?, Shipment?) -> Unit) {
 
-    val userCredentials = loadUserCredentials(context)
-    val shipFastAPIKey = loadShipFastAPIKey(context)
     val url = URL("$SERVER_BASE_URL/shipments/nearest_shipment")
-    var auth = "Bearer ${userCredentials.idToken}"
-    val request = Request.Builder()
-            .url(url)
-            .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
-            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
+    val requestBuilder = createDefaultRequestBuilder(context, url)
             .addHeader(LATITUDE_HEADER, originLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, originLocation.longitude.toString())
-            .build()
+    val request = requestBuilder.build()
     buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             response?.let {
@@ -94,16 +87,9 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
  */
 fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipment>?) -> Unit) {
 
-    val userCredentials = loadUserCredentials(context)
-    val shipFastAPIKey = loadShipFastAPIKey(context)
     val url = URL("$SERVER_BASE_URL/shipments/delivered")
-    var auth = "Bearer ${userCredentials.idToken}"
-    val request = Request.Builder()
-            .url(url)
-            .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
-            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
-            .build()
+    val requestBuilder = createDefaultRequestBuilder(context, url)
+    val request = requestBuilder.build()
     buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             var deliveredShipments: MutableList<Shipment>? = null
@@ -136,16 +122,9 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
  */
 fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> Unit) {
 
-    val userCredentials = loadUserCredentials(context)
-    val shipFastAPIKey = loadShipFastAPIKey(context)
     val url = URL("$SERVER_BASE_URL/shipments/active")
-    var auth = "Bearer ${userCredentials.idToken}"
-    val request = Request.Builder()
-            .url(url)
-            .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
-            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
-            .build()
+    val requestBuilder = createDefaultRequestBuilder(context, url)
+    val request = requestBuilder.build()
     buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             response?.let {
@@ -177,16 +156,9 @@ fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> 
  */
 fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shipment?) -> Unit) {
 
-    val userCredentials = loadUserCredentials(context)
-    val shipFastAPIKey = loadShipFastAPIKey(context)
     val url = URL("$SERVER_BASE_URL/shipments/$shipmentID")
-    var auth = "Bearer ${userCredentials.idToken}"
-    val request = Request.Builder()
-            .url(url)
-            .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
-            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
-            .build()
+    val requestBuilder = createDefaultRequestBuilder(context, url)
+    val request = requestBuilder.build()
     buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             var shipment: Shipment? = null
@@ -215,20 +187,13 @@ fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shi
 fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipmentID: Int, newState: ShipmentState,
                                callback: (Response?, Boolean) -> Unit) {
 
-    val userCredentials = loadUserCredentials(context)
-    val shipFastAPIKey = loadShipFastAPIKey(context)
     val url = URL("$SERVER_BASE_URL/shipments/update_state/$shipmentID")
-    var auth = "Bearer ${userCredentials.idToken}"
-    val request = Request.Builder()
-            .url(url)
+    val requestBuilder = createDefaultRequestBuilder(context, url)
             .method("POST", RequestBody.create(null, ByteArray(0)))
-            .addHeader(AUTH_HEADER, auth)
-            .addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
-            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
             .addHeader(LATITUDE_HEADER, currentLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, currentLocation.longitude.toString())
             .addHeader(SHIPMENT_STATE_HEADER, newState.ordinal.toString())
-            .build()
+    val request = requestBuilder.build()
     buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             callback(response, response?.isSuccessful ?: false)
@@ -238,6 +203,42 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
             callback(null, false)
         }
     })
+}
+
+/**
+ * Create a default request builder for an authenticated request.
+ *
+ * Depending on the demo stage (DemoConfiguration.kt 'CURRENT_DEMO_STAGE') the request
+ * will be authenticated using different methods.
+ *
+ * The default request will use the 'GET' method, but the callee may change this.
+ *
+ * @param context the application context
+ * @param url the URL for the request
+ * @return the request builder with authentication pre-configured
+ */
+private fun createDefaultRequestBuilder(context: Context, url: URL): Request.Builder {
+
+    // Retrieve the ShipFast API key from the app manifest
+    val shipFastAPIKey = loadShipFastAPIKey(context)
+
+    // Retrieve the user's ID token from the credential storage
+    val userCredentials = loadUserCredentials(context)
+    var auth = "Bearer ${userCredentials.idToken}"
+
+    // Create the request builder with API key and user authentication
+    val requestBuilder = Request.Builder()
+            .url(url)
+            .addHeader(AUTH_HEADER, auth)
+            .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
+
+    // Depending on the demo stage, calculate and specify the request HMAC
+    if (CURRENT_DEMO_STAGE === DemoStage.HMAC_STATIC_SECRET_PROTECTION
+            || CURRENT_DEMO_STAGE === DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION) {
+        requestBuilder.addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
+    }
+
+    return requestBuilder
 }
 
 /**
@@ -263,13 +264,31 @@ private fun buildDefaultHTTPClient(): OkHttpClient {
 private fun calculateAPIRequestHMAC(context: Context, url: URL, authHeaderValue: String): String {
 
     val secret = HMAC_SECRET
-    val obfuscatedSecretData = Base64.decode(secret, Base64.DEFAULT)
-    val shipFastAPIKeyData = loadShipFastAPIKey(context).toByteArray(Charsets.UTF_8)
-    for (i in 0 until minOf(obfuscatedSecretData.size, shipFastAPIKeyData.size)) {
-        obfuscatedSecretData[i] = (obfuscatedSecretData[i].toInt() xor shipFastAPIKeyData[i].toInt()).toByte()
+    var keySpec: SecretKeySpec
+
+    // Configure the request HMAC based on the demo stage
+    when (CURRENT_DEMO_STAGE) {
+        DemoStage.API_KEY_PROTECTION, DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
+            throw IllegalStateException("calculateAPIRequestHMAC() not used in this demo stage")
+        }
+        DemoStage.HMAC_STATIC_SECRET_PROTECTION -> {
+            // Just use the static secret to initialise the key spec for this demo stage
+            keySpec = SecretKeySpec(Base64.decode(secret, Base64.DEFAULT), "HmacSHA256")
+        }
+        DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION -> {
+            // Obfuscate the static secret to produce a dymanic secret to initialise the key
+            // spec for this demo stage
+            val obfuscatedSecretData = Base64.decode(secret, Base64.DEFAULT)
+            val shipFastAPIKeyData = loadShipFastAPIKey(context).toByteArray(Charsets.UTF_8)
+            for (i in 0 until minOf(obfuscatedSecretData.size, shipFastAPIKeyData.size)) {
+                obfuscatedSecretData[i] = (obfuscatedSecretData[i].toInt() xor shipFastAPIKeyData[i].toInt()).toByte()
+            }
+            val obfuscatedSecret = Base64.encode(obfuscatedSecretData, Base64.DEFAULT)
+            keySpec = SecretKeySpec(Base64.decode(obfuscatedSecret, Base64.DEFAULT), "HmacSHA256")
+        }
     }
-    val obfuscatedSecret = Base64.encode(obfuscatedSecretData, Base64.DEFAULT)
-    val keySpec = SecretKeySpec(Base64.decode(/*secret*/obfuscatedSecret, Base64.DEFAULT), "HmacSHA256")
+
+    // Compute the request HMAC using the HMAC SHA-256 algorithm
     val hmac = Mac.getInstance("HmacSHA256")
     hmac.init(keySpec)
     hmac.update(url.protocol.toByteArray(Charsets.UTF_8))

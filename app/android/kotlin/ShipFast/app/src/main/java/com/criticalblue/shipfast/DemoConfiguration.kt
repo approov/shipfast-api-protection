@@ -24,4 +24,4 @@ enum class DemoStage {
 }
 
 /** The current demo stage */
-val CURRENT_DEMO_STAGE = DemoStage.API_KEY_PROTECTION
+val currentDemoStage = DemoStage.API_KEY_PROTECTION

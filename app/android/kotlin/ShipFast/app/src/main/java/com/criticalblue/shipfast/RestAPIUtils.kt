@@ -208,7 +208,7 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
 /**
  * Create a default request builder for an authenticated request.
  *
- * Depending on the demo stage (DemoConfiguration.kt 'CURRENT_DEMO_STAGE') the request
+ * Depending on the demo stage (DemoConfiguration.kt 'currentDemoStage') the request
  * will be authenticated using different methods.
  *
  * The default request will use the 'GET' method, but the callee may change this.
@@ -233,8 +233,8 @@ private fun createDefaultRequestBuilder(context: Context, url: URL): Request.Bui
             .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
 
     // Depending on the demo stage, calculate and specify the request HMAC
-    if (CURRENT_DEMO_STAGE === DemoStage.HMAC_STATIC_SECRET_PROTECTION
-            || CURRENT_DEMO_STAGE === DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION) {
+    if (currentDemoStage === DemoStage.HMAC_STATIC_SECRET_PROTECTION
+            || currentDemoStage === DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION) {
         requestBuilder.addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
     }
 
@@ -267,7 +267,7 @@ private fun calculateAPIRequestHMAC(context: Context, url: URL, authHeaderValue:
     var keySpec: SecretKeySpec
 
     // Configure the request HMAC based on the demo stage
-    when (CURRENT_DEMO_STAGE) {
+    when (currentDemoStage) {
         DemoStage.API_KEY_PROTECTION, DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
             throw IllegalStateException("calculateAPIRequestHMAC() not used in this demo stage")
         }

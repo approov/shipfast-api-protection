@@ -23,8 +23,8 @@ app.use(auth)
 
 // Load the certificate and key data for our server to be hosted over HTTPS
 var options = {
-  key: fs.readFileSync( './macmini.key' ),
-  cert: fs.readFileSync( './macmini.crt' ),
+  key: fs.readFileSync( './10.0.2.2.key' ),
+  cert: fs.readFileSync( './10.0.2.2.pem' ),
   requestCert: false,
   rejectUnauthorized: false
 }
@@ -164,11 +164,11 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
 })
 
 // Create and run the HTTPS server
-// https.createServer(options, app).listen(443, function() {
-//   console.log('ShipFast server listening on port 443!')
-// })
+https.createServer(options, app).listen(443, function() {
+  console.log('ShipFast server listening on port 443!')
+})
 
 // Create and run the HTTP server
-app.listen(3000, function () {
-  console.log('Insecure ShipFast server listening on port 3000!')
-})
+// app.listen(3000, function () {
+//   console.log('Insecure ShipFast server listening on port 3000!')
+// })

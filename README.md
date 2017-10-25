@@ -200,3 +200,10 @@ For reference, this is the structure of the git repo directory:
 Node.js server
 * **shipfast-api-protection/server/shipfaster-rogue-web** - The 'rogue' ShipRaider web Node.js server
 * **shipfast-api-protection/app/android/kotlin** - The Android Kotlin mobile app
+
+## The Walkthrough
+
+Ensure the ShipFast server is running and accessible (see above) then launch the
+ShipFast app in the Android Emulator. You will be presented with the home screen:
+
+![ShipFast Home Screen](images/shipfast_home.png)

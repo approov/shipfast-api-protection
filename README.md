@@ -164,13 +164,39 @@ and enter your Auth0 client ID and domain:
 <string name="com_auth0_client_id">PUT-YOUR-CLIENT-ID-HERE"</string> <string name="com_auth0_domain">PUT-YOUR-DOMAIN-HERE"</string>
 ```
 
+### Running the Demo
 
-## Directory Structure
+The demo has three components: the mobile app, the ShipFast server and the
+ShipRaider rogue web server.
 
-* **./app** - The mobile application directory
-* **./app/android/kotlin** - Kotlin Android implementation
-* **./app/android/java** - Java Android implementation (coming soon)
-* **./app/iOS/swift** - Swift iOS implementation (coming soon)
-* **./server** - The server directory
-* **./server/shipfast-api** - The 'genuine' ShipFast API node.js server
-* **./server/shipfaster-rogue-web** - The 'rogue' ShipFaster web node.js server
+1. Launch the ShipFast server as follows:
+```
+cd shipfast-api-protection/server/shipfast-api
+npm install
+node api-server.js
+```
+(the server may need to run as admin to host on port 443 as HTTPS)
+1. Launch the ShipFast mobile app in Android Studio using an x86 emulator
+running Android 6 Marshmallow
+1. Launch the ShipRaider rogue web server as follows:
+```
+cd shipfast-api-protection/server/shipraider-rogue-web
+npm install
+node rogue-web-server.js
+```
+
+The ShipFast server generates sample shipment data, held in memory, when the
+first request for the nearest shipment is made to the server. The sample
+shipment pickup and delivery locations are generated around an origin point
+given by the first call to fetch the nearest shipment, so if the actual client
+location changes dramatically, you will probably need to restart the server to
+regenerate sample data around a new origin point.
+
+### Directory Structure
+
+For reference, this is the structure of the git repo directory:
+
+* **shipfast-api-protection/server/shipfast-api** - The 'genuine' ShipFast API
+Node.js server
+* **shipfast-api-protection/server/shipfaster-rogue-web** - The 'rogue' ShipRaider web Node.js server
+* **shipfast-api-protection/app/android/kotlin** - The Android Kotlin mobile app

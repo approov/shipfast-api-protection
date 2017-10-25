@@ -106,6 +106,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         locationRequest = LocationRequest
                 .create()
                 .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+                .setInterval(500)
         googleAPIClient = GoogleApiClient.Builder(this)
                 .addConnectionCallbacks(this)
                 .addOnConnectionFailedListener(this)
@@ -247,6 +248,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         requestActiveShipment(this@ShipmentActivity, { _, shipment ->
             if (shipment == null) {
                 if (lastLocation == null) {
+                    stopProgress()
                     Thread.sleep(1000)
                     fetchNextShipment(remainingRetries - 1)
                 }

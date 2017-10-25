@@ -210,6 +210,7 @@ Node.js server
 Ensure the ShipFast server is running and accessible (see above) then launch the
 ShipFast app in the Android Emulator. You will be presented with the home screen
 once the app has launched:
+
 ![ShipFast Home Screen](images/shipfast_home.png)
 
 Click the "SHIPFAST LOGIN" button to start the user authentication process using
@@ -255,9 +256,24 @@ router.use(checkJwt)
 
 Back to the app running in the emulator, you should see the "Current Shipment"
 screen:
+
 ![ShipFast Current Shipment](images/shipfast_blank_shipment.png)
 
 This screen shows the current active shipment, but there is no active shipment
 at the moment until you toggle the "I'm available!" switch to express that, as a
 Shipper, you are ready for deliveries. Go ahead and do that now and you will
 see the nearest available shipment, for example:
+
+![ShipFast First Shipment](images/shipfast_first_shipment.png)
+
+It is now possible to accept the shipment, pick up the shipment and mark it as
+collected, deliver it, then finally mark it as delivered and repeat the process.
+Go ahead and progress the shipment through the various states by clicking the
+button in the bottom-left which will change from "ACCEPT" to "COLLECT" to "DELIVER".
+Note that the shipment status also updates after this button is clicked. This
+state transition is achieved through authenticated API calls to our server. Finally,
+the shipment will be shown in the "Delivered Shipments" screen, for example:
+
+![ShipFast Delivered Shipment](images/shipfast_shipment_delivered.png)
+
+In our case, this shipment had no gratuity. We would really like one with a bonus!

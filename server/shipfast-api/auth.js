@@ -12,7 +12,8 @@ const router = express.Router()
 const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
 const crypto = require('crypto')
-const config = require('./demo-configuration')
+const DEMO_STAGE = require('./demo-configuration').DEMO_STAGE
+const config = require('./demo-configuration').config
 
 // The array of ShipFast API keys
 var shipFastAPIKeys = [
@@ -102,12 +103,12 @@ const checkJwt = jwt({
     cache: true,
     rateLimit: true,
     jwksRequestsPerMinute: 5,
-    jwksUri: `https://approov.auth0.com/.well-known/jwks.json`
+    jwksUri: "https://" + config.auth0Domain + "/.well-known/jwks.json"
   }),
 
   // Validate the audience and the issuer.
   audience: process.env.AUTH0_AUDIENCE,
-  issuer: `https://approov.auth0.com/`,
+  issuer: "https://" + config.auth0Domain + "/",
   algorithms: ['RS256']
 })
 router.use(checkJwt)

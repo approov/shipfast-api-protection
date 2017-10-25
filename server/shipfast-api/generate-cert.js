@@ -10,7 +10,7 @@
 const selfsigned = require('selfsigned')
 const fs = require('fs')
 const exec = require('child_process').exec
-const config = require('./demo-configuration')
+const config = require('./demo-configuration').config
 
 const HOST_NAME = config.serverHostName
 const KEY_FILE = HOST_NAME + ".key"

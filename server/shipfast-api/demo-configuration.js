@@ -24,10 +24,16 @@ var config = {}
 // The ShipFast server host name
 config.serverHostName = "mac-mini" // 'localhost'
 
+// The flag for whether to run the ShipFast server over HTTPS (true) or HTTP (false)
+config.runSecureServer = false
+
+// The Auth0 domain to use for use authentication
+config.auth0Domain = 'approov.auth0.com'
+
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.API_KEY_PROTECTION
 
 module.exports = {
     DEMO_STAGE,
-    config 
+    config
 }

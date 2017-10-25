@@ -141,7 +141,11 @@ more if you wish
 in your favourite text editor and change the server host name to the name of the
 machine which you intend to use to host the ShipFast and ShipRaider servers:
 ```
-config.serverHostName = "MY_SERVER_HOST_NAME"
+config.serverHostName = "PUT-YOUR-SERVER-HOSTNAME-HERE"
+```
+1. In the same "demo-configuration.js" file, enter your Auth0 domain:
+```
+config.auth0Domain = "PUT-YOUR-DOMAIN-HERE"
 ```
 1. Generate a self-signed certificate and private key so that you can host your
 server over HTTPS using TLS to protect the network channel:
@@ -204,6 +208,56 @@ Node.js server
 ## The Walkthrough
 
 Ensure the ShipFast server is running and accessible (see above) then launch the
-ShipFast app in the Android Emulator. You will be presented with the home screen:
-
+ShipFast app in the Android Emulator. You will be presented with the home screen
+once the app has launched:
 ![ShipFast Home Screen](images/shipfast_home.png)
+
+Click the "SHIPFAST LOGIN" button to start the user authentication process using
+the Auth0 code grant flow (see https://auth0.com/docs/api-auth/grant/authorization-code-pkce
+  for more details on the underlying process).
+
+The Auth0 "Lock" screen appears (the UI component which allows you to log in),
+so either use an existing social login or register a new social login or email/password
+login.
+
+If everything is set up correctly, you will now be presented with a "Current Shipment"
+screen. Woaw, but hold on a minute, a lot just happened there. We used the Auth0
+service to provide us with an industry-standard method of authenticating a user using
+the OAuth 2.0 and OpenID Connect (OIDC) protocols. There is so much to cover
+there, we will leave that for another tutorial. The result of logging in this way
+provides the app with a time-limited JSON Web Token (JWT) representing the
+authenticated user which we can use to communicate with the ShipFast server and
+prove we are who we say we are. A JWT is simply a cryptographically-signed carrier
+of information, which you can find more about at https://jwt.io/introduction
+
+The ShipFast server validates the authenticated user using Node.js express
+middleware (a bit of code which plays a role in processing a network request) in
+the file "shipfast-api-protection/server/shipfast-api/auth.js". The piece of code
+which is responsible for this is:
+```
+// Create middleware for checking the JWT
+const checkJwt = jwt({
+  // Dynamically provide a signing key based on the kid in the header and the singing keys provided by the JWKS endpoint
+  secret: jwksRsa.expressJwtSecret({
+    cache: true,
+    rateLimit: true,
+    jwksRequestsPerMinute: 5,
+    jwksUri: "https://" + config.auth0Domain + "/.well-known/jwks.json"
+  }),
+
+  // Validate the audience and the issuer.
+  audience: process.env.AUTH0_AUDIENCE,
+  issuer: "https://" + config.auth0Domain + "/",
+  algorithms: ['RS256']
+})
+router.use(checkJwt)
+```
+
+Back to the app running in the emulator, you should see the "Current Shipment"
+screen:
+![ShipFast Current Shipment](images/shipfast_blank_shipment.png)
+
+This screen shows the current active shipment, but there is no active shipment
+at the moment until you toggle the "I'm available!" switch to express that, as a
+Shipper, you are ready for deliveries. Go ahead and do that now and you will
+see the nearest available shipment, for example:

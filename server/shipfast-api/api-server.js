@@ -14,9 +14,9 @@ const fs = require('fs')
 const cors = require('cors')
 const model = require('./model')
 const auth = require('./auth')
-const config = require('./demo-configuration')
+const config = require('./demo-configuration').config
 
-const HOST_NAME = "mac-mini"//config.serverHostName
+const HOST_NAME = config.serverHostName
 
 // Load the certificate and key data for our server to be hosted over HTTPS
 var serverOptions = {
@@ -166,12 +166,15 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
   res.status(200).send()
 })
 
-// Create and run the HTTPS server
-https.createServer(serverOptions, app).listen(443, function() {
-  console.log('ShipFast server listening on port 443!')
-})
-
-// Create and run the HTTP server
-// app.listen(3000, function () {
-//   console.log('Insecure ShipFast server listening on port 3000!')
-// })
+if (config.runSecureServer) {
+  // Create and run the HTTPS server
+  https.createServer(serverOptions, app).listen(443, function() {
+    console.log('ShipFast server listening on port 443!')
+  })
+}
+else {
+  // Create and run the HTTP server
+  app.listen(3333, function () {
+    console.log('Insecure ShipFast server listening on port 3333!')
+  })
+}

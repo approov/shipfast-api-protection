@@ -43,7 +43,7 @@ class LoginActivity : AppCompatActivity() {
 
         // Add an 'on-click' listener to the user login button
         loginButton = findViewById(R.id.loginButton)
-        loginButton.setOnClickListener { button -> performLogin()}
+        loginButton.setOnClickListener { _ -> performLogin()}
 
         loginProgressBar = findViewById(R.id.loginProgressBar)
     }

@@ -7,5 +7,5 @@ openssl x509 -req -days 365 -in localhost.pem -signkey localhost.key -extfile ./
 openssl x509 -inform PEM -outform DER -in localhost.crt -out localhost.der.crt
 adb push localhost.der.crt /sdcard
 npm install
-sudo node server.js
+sudo node api-server.js
 ```

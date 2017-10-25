@@ -14,20 +14,23 @@ const fs = require('fs')
 const cors = require('cors')
 const model = require('./model')
 const auth = require('./auth')
+const config = require('./demo-configuration')
+
+const HOST_NAME = "mac-mini"//config.serverHostName
+
+// Load the certificate and key data for our server to be hosted over HTTPS
+var serverOptions = {
+  key: fs.readFileSync(HOST_NAME + ".key"),
+  cert: fs.readFileSync(HOST_NAME + ".pem"),
+  requestCert: false,
+  rejectUnauthorized: false
+}
 
 // Support CORS
 app.use(cors())
 
 // Add the authentication functionality to our server
 app.use(auth)
-
-// Load the certificate and key data for our server to be hosted over HTTPS
-var options = {
-  key: fs.readFileSync( './10.0.2.2.key' ),
-  cert: fs.readFileSync( './10.0.2.2.pem' ),
-  requestCert: false,
-  rejectUnauthorized: false
-}
 
 // The '/shipments/nearest_shipment' GET request route
 app.get('/shipments/nearest_shipment', function(req, res) {
@@ -164,7 +167,7 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
 })
 
 // Create and run the HTTPS server
-https.createServer(options, app).listen(443, function() {
+https.createServer(serverOptions, app).listen(443, function() {
   console.log('ShipFast server listening on port 443!')
 })
 

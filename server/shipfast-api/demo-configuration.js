@@ -21,6 +21,9 @@ const DEMO_STAGE = {
 
 var config = {}
 
+// The ShipFast server host name
+config.serverHostName = "mac-mini" // 'localhost'
+
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.API_KEY_PROTECTION
 

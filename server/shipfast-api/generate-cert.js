@@ -10,16 +10,15 @@
 const selfsigned = require('selfsigned')
 const fs = require('fs')
 const exec = require('child_process').exec
+const config = require('./demo-configuration')
 
-const HOST_NAME = '10.0.2.2'
+const HOST_NAME = config.serverHostName
 const KEY_FILE = HOST_NAME + ".key"
 const CERT_FILE = HOST_NAME + ".pem"
 
 var attrs = [{
     name: 'commonName',
-    value: HOST_NAME,
-    name: 'subjectAltName',
-    value: HOST_NAME + ",localhost,127.0.0.1"
+    value: HOST_NAME
 }]
 selfsigned.generate(attrs, {
     days: 365

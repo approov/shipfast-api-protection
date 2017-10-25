@@ -1,3 +1,7 @@
+** IMPORTANT: This is a special early-access preview of an upcoming mobile
+platform and API protection walkthrough by CriticalBlue. This walkthrough will
+be updated in due course, but you are welcome to browse now. Thank you! **
+
 # ShipFast API Protection Walkthrough
 
 Welcome! This demo will walk you through the process of defending against various
@@ -280,7 +284,7 @@ In our case, this shipment had no gratuity. We would really like one with a bonu
 You can hit the back button in the "Delivered Shipments" screen to go back to the
 "Current Shipment" screen to restart the process with a new shipment.
 
-### The First attack
+### The First Attack
 
 We know the ShipFast app communicates with the ShipFast server to make API calls,
 so we will now intercept the network traffic using a Man in the Middle (MitM)
@@ -349,10 +353,19 @@ it. The four location fields in ShipRaider allow Shippers to specify a location
 of their choosing as an origin point and a radius to 'sweep' over with a 'step'
 granularity. This is used to construct a virtual geographical area and fire
 authenticated API requests for nearest shipments at various points in this area
-in order to drive out the list of shipments in the backend server. In practice,
-we would probably need to use a more unpredictable method to avoid any server
-Web Application Firewall (WAF) behavioural analysis, but this is outside the
-scope of this walkthrough.
+in order to drive out the list of shipments in the backend server. The code
+which performs this task is located in "shipraider-rogue-web/web/js/shipraider.js":
+```
+for (var lat = latStart; lat <= latEnd; lat += locStep) {
+  for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
+    fetchNearestShipment(lat, lon)
+  }
+}
+```
+
+In practice, we would probably need to use a more unpredictable method to avoid
+any server Web Application Firewall (WAF) behavioural analysis, but this is outside
+the scope of this walkthrough.
 
 Also recall that the ShipFast server generates sample data on first request for
 a shipment, so we should ensure the emulator running the ShipFast app and
@@ -364,3 +377,69 @@ set up correctly the rogue website will begin enumerating available shipments,
 for example:
 
 ![ShipRaider Results](images/shipraider_results.png)
+
+We can now choose the shipment with the highest gratuity (or any shipment for
+that matter) and click "Grab It!" which will perform an authenticated API
+request to modify the state of the shipment from "READY" to "ACCEPTED" as if
+we had clicked the "ACCEPT" button in the app.
+
+When we go back into the genuine ShipFast app and mark ourselves as available
+for the next shipment, the app first requests any pending shipment, so we will
+be presented with the shipment we grabbed using ShipRaider. Go ahead and try it out!
+
+Shippers are happy, ShipFast is not. A defence is needed.
+
+### The First Defence
+
+It is clear from the first attack that ShipFast need to provide better protection
+of their API to ensure that only the genuine app is using it, and not a rogue
+alternative such as ShipRaider. Some API requests are from the app, others are
+from the rogue website. The only way to distinguish these is by the ShipFast API
+key, but that has already been stolen!
+
+An initial improvement would be to move sensitive data into app code rather than
+the manifest. That will at least make it slightly harder for an attacker to find
+the data.
+
+A further improvement would be to bind the API requests to a particular client
+and ensure that modification of these requests through MitM attacks is detected.
+
+A common method used to digitally sign API requests involves using a Keyed-Hash
+Message Authentication Code (HMAC) which is designed to prevent hijacking and
+tampering (https://en.wikipedia.org/wiki/Hash-based_message_authentication_code).
+
+We will generate a shared symmetric key for the HMAC, include it in the ShipFast
+app and server, and construct the message from the API request URL and user
+authentication bearer token. The result of this HMAC can be transmitted as
+part of API requests from the app and verified by the server.
+
+To enable this stage of the demo, modify the "currentDemoStage" variable in the
+app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+```
+/** The current demo stage */
+val currentDemoStage = DemoStage.HMAC_STATIC_SECRET_PROTECTION
+```
+Also modify the "config.currentDemoStage" variable in the server's "demo-configuration.js"
+file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+```
+// The current demo stage
+config.currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
+```
+
+MORE COMING SOON!
+
+## The Second Attack
+
+COMING SOON!
+
+## The Second Defence
+
+COMING SOON!
+
+## The Third Attack
+
+COMING SOON!
+
+## The Final Defence?
+
+COMING SOON!

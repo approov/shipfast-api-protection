@@ -2,6 +2,8 @@
 platform and API protection walkthrough by CriticalBlue. This walkthrough will
 be updated in due course, but you are welcome to browse now. Thank you!**
 
+---
+
 # ShipFast API Protection Walkthrough
 
 Welcome! This demo will walk you through the process of defending against various

@@ -20,7 +20,7 @@ var shipments = {}
         "background-size:":"cover",
         "color":"yellow"})
     
-    $("#server-url-input").val("http://127.0.0.1:3000")
+    $("#server-url-input").val("http://127.0.0.1:3333")
     $("#shipfast-api-key-input").val("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
     $("#location-latitude-input").val("51.535472")
     $("#location-longitude-input").val("-0.104971")
@@ -34,7 +34,6 @@ $("#send-bitcoin-button").click(function() {
 
 var lock = new Auth0Lock("yOqjrArkqM0vuRHjjBv4KrhdFzvnr9kI", "approov.auth0.com", {
     auth: {
-        // redirectUrl: "demo://approov.auth0.com/android/com.criticalblue.shipfast/callback",
         redirectUrl: window.url,
         responseType: "id_token",
         redirect: true

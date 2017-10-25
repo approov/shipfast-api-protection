@@ -329,3 +329,38 @@ is actually a simple web server using a combination of Node.js, bootstrap, jQuer
 and AJAX. Most of the logic is run client-side because we wish to minimise server
 resources and can therefore get the clients (browsers) to do the processing.
 The ShipRaider website is shown below:
+
+![ShipRaider Configuration](images/shipraider_config.png)
+
+For demonstration purposes we show the various configuration data, but this could
+easily be cleaned up to make this rogue service very attractive to Shippers in
+search for an extra bonus.
+
+As indicated by our MitM API analysis we are able to view user authorisation
+bearer tokens and can therefore include them in ShipRaider, however, we have
+made the process even easier for Shippers by providing a "Login" button which
+uses the Auth0 service and configuration data we extracted by reverse engineering
+the ShipFast app such as the Auth0 Client ID and domain.
+
+Recall that there is no way for Shippers to enumerate available shipments in
+the app: location data is provided internally and the ShipFast server gives out
+the nearest available shipment which may or may not have gratuity associated with
+it. The four location fields in ShipRaider allow Shippers to specify a location
+of their choosing as an origin point and a radius to 'sweep' over with a 'step'
+granularity. This is used to construct a virtual geographical area and fire
+authenticated API requests for nearest shipments at various points in this area
+in order to drive out the list of shipments in the backend server. In practice,
+we would probably need to use a more unpredictable method to avoid any server
+Web Application Firewall (WAF) behavioural analysis, but this is outside the
+scope of this walkthrough.
+
+Also recall that the ShipFast server generates sample data on first request for
+a shipment, so we should ensure the emulator running the ShipFast app and
+ShipRaider are reasonably synchronised in terms of initial location. If in doubt,
+restart the ShipFast server.
+
+Click the "Search for Shipments!" button in ShipRaider and if everything is
+set up correctly the rogue website will begin enumerating available shipments,
+for example:
+
+![ShipRaider Results](images/shipraider_results.png)

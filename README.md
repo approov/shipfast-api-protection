@@ -1,6 +1,6 @@
-** IMPORTANT: This is a special early-access preview of an upcoming mobile
+**IMPORTANT: This is a special early-access preview of an upcoming mobile
 platform and API protection walkthrough by CriticalBlue. This walkthrough will
-be updated in due course, but you are welcome to browse now. Thank you! **
+be updated in due course, but you are welcome to browse now. Thank you!**
 
 # ShipFast API Protection Walkthrough
 
@@ -428,18 +428,18 @@ config.currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
 
 MORE COMING SOON!
 
-## The Second Attack
+### The Second Attack
 
 COMING SOON!
 
-## The Second Defence
+### The Second Defence
 
 COMING SOON!
 
-## The Third Attack
+### The Third Attack
 
 COMING SOON!
 
-## The Final Defence?
+### The Final Defence?
 
 COMING SOON!

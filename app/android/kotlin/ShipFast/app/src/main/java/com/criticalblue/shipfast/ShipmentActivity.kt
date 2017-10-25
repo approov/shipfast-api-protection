@@ -16,8 +16,11 @@ import android.support.v4.app.ActivityCompat
 import android.Manifest
 import android.content.Intent
 import android.graphics.Color
+import android.location.Location
+import android.util.Log
 import android.view.View
 import android.widget.*
+import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -27,6 +30,9 @@ import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
+import com.google.android.gms.common.api.GoogleApiClient
+import com.google.android.gms.location.LocationListener
+import com.google.android.gms.location.LocationRequest
 
 
 /** The maximum number of attempts to fetch the next shipment before reporting a failure */
@@ -35,13 +41,22 @@ const val FETCH_NEXT_SHIPMENT_ATTEMPTS = 3
 /**
  * The Shipment activity class.
  */
-class ShipmentActivity : AppCompatActivity() {
+class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
 
     /** The active state of the activity */
     private var activityActive = false
 
     /** The current shipment */
     private var currentShipment: Shipment? = null
+
+    /** The location request */
+    private lateinit var locationRequest: LocationRequest
+
+    /** The last known location */
+    private var lastLocation: Location? = null
+
+    /** The Google API client for location data */
+    private lateinit var googleAPIClient: GoogleApiClient
 
     /** The progress bar */
     private lateinit var updateShipmentProgressBar: ProgressBar
@@ -88,12 +103,22 @@ class ShipmentActivity : AppCompatActivity() {
         availabilitySwitch = findViewById(R.id.availabilitySwitch)
         availabilitySwitch.setOnCheckedChangeListener { _, isChecked -> performToggleAvailability(isChecked) }
 
+        locationRequest = LocationRequest
+                .create()
+                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
+        googleAPIClient = GoogleApiClient.Builder(this)
+                .addConnectionCallbacks(this)
+                .addOnConnectionFailedListener(this)
+                .addApi(LocationServices.API)
+                .build()
+
         mapView.getMapAsync { googleMap ->
             zoomMapIntoLocation(googleMap, LatLng(51.535472, -0.104971))
         }
     }
 
     override fun onStart() {
+        googleAPIClient.connect()
         super.onStart()
         activityActive = true
     }
@@ -111,6 +136,7 @@ class ShipmentActivity : AppCompatActivity() {
     }
 
     override fun onStop() {
+        googleAPIClient.disconnect()
         super.onStop()
         activityActive = false
     }
@@ -128,6 +154,27 @@ class ShipmentActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle?) {
         super.onSaveInstanceState(outState)
         mapView.onSaveInstanceState(outState)
+    }
+
+    override fun onConnected(connectionHint: Bundle?) {
+        if (ActivityCompat.checkSelfPermission(this@ShipmentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            LocationServices.FusedLocationApi.requestLocationUpdates(googleAPIClient, locationRequest, this)
+        }
+        else {
+            ActivityCompat.requestPermissions(this@ShipmentActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 123)
+        }
+    }
+
+    override fun onLocationChanged(location: Location?) {
+        lastLocation = location
+    }
+
+    override fun onConnectionSuspended(cause: Int) {
+        Log.i("ShipFast", "Location update suspended: $cause")
+    }
+
+    override fun onConnectionFailed(result: ConnectionResult) {
+        Log.e("ShipFast", "Location update failed: $result")
     }
 
     /**
@@ -199,27 +246,25 @@ class ShipmentActivity : AppCompatActivity() {
 
         requestActiveShipment(this@ShipmentActivity, { _, shipment ->
             if (shipment == null) {
-                if (ActivityCompat.checkSelfPermission(this@ShipmentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-                    val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this@ShipmentActivity)
-                    fusedLocationClient?.lastLocation?.addOnSuccessListener { location ->
-                        location?.let {
-                            startProgress()
-                            requestNearestShipment(this@ShipmentActivity, it.toLatLng(), { _, shipment ->
-                                stopProgress()
-                                this@ShipmentActivity.currentShipment = shipment
-                                runOnUiThread {
-                                    updateState()
-                                }
-                                Thread.sleep(1000)
-                                if (shipment == null && activityActive) {
-                                    fetchNextShipment(remainingRetries - 1)
-                                }
-                            })
-                        }
-                    }
-                } else {
-                    ActivityCompat.requestPermissions(this@ShipmentActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 123)
+                if (lastLocation == null) {
+                    Thread.sleep(1000)
                     fetchNextShipment(remainingRetries - 1)
+                }
+                else {
+                    lastLocation?.let {
+                        startProgress()
+                        requestNearestShipment(this@ShipmentActivity, it.toLatLng(), { _, shipment ->
+                            stopProgress()
+                            this@ShipmentActivity.currentShipment = shipment
+                            runOnUiThread {
+                                updateState()
+                            }
+                            Thread.sleep(1000)
+                            if (shipment == null && activityActive) {
+                                fetchNextShipment(remainingRetries - 1)
+                            }
+                        })
+                    }
                 }
             }
             else {

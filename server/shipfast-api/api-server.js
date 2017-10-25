@@ -18,14 +18,6 @@ const config = require('./demo-configuration').config
 
 const HOST_NAME = config.serverHostName
 
-// Load the certificate and key data for our server to be hosted over HTTPS
-var serverOptions = {
-  key: fs.readFileSync(HOST_NAME + ".key"),
-  cert: fs.readFileSync(HOST_NAME + ".pem"),
-  requestCert: false,
-  rejectUnauthorized: false
-}
-
 // Support CORS
 app.use(cors())
 
@@ -167,6 +159,14 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
 })
 
 if (config.runSecureServer) {
+  // Load the certificate and key data for our server to be hosted over HTTPS
+  var serverOptions = {
+    key: fs.readFileSync(HOST_NAME + ".key"),
+    cert: fs.readFileSync(HOST_NAME + ".pem"),
+    requestCert: false,
+    rejectUnauthorized: false
+  }
+
   // Create and run the HTTPS server
   https.createServer(serverOptions, app).listen(443, function() {
     console.log('ShipFast server listening on port 443!')

@@ -277,3 +277,55 @@ the shipment will be shown in the "Delivered Shipments" screen, for example:
 ![ShipFast Delivered Shipment](images/shipfast_shipment_delivered.png)
 
 In our case, this shipment had no gratuity. We would really like one with a bonus!
+You can hit the back button in the "Delivered Shipments" screen to go back to the
+"Current Shipment" screen to restart the process with a new shipment.
+
+### The First attack
+
+We know the ShipFast app communicates with the ShipFast server to make API calls,
+so we will now intercept the network traffic using a Man in the Middle (MitM)
+proxy such as mitmproxy (https://mitmproxy.org) or Charles (https://www.charlesproxy.com).
+We will use mitmproxy in this example which is free. This tutorial assumes you
+have configured the proxy on a host machine and the emulator.
+
+If we request the nearest available shipment and look at the traffic through the
+MitM proxy, this is what we see:
+
+![ShipFast MitM Nearest Shipment](images/mitm_nearest_shipment.png)
+
+Wow! The authorization bearer token (from OIDC), nice. The ShipFast API key, great.
+Some location data and of course the actual URL for the API request. We can also
+take a peek at what comes back from the server:
+
+![ShipFast MitM Nearest Shipment Response](images/mitm_nearest_shipment_response.png)
+
+And now we have the basis of reverse engineering an API. Also note that the API key
+for ShipFast, like many API keys for various cloud-based services, is contained
+in the app manifest:
+```
+<meta-data android:name="com.criticalblue.shipfast.API_KEY" android:value="QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh"/>
+```
+
+But it is just an API key, right? I mean, it is behind user authentication so that
+is just fine.
+
+API keys are generally used for identifying what is using the API
+and are often accompanied with a secret. They are a means for a server to perform
+a keyed lookup and proceed from there. The problem is, that in many cases these API
+keys are tied to services which are either free but rate-limited, or become
+associated with a cost depending on usage. So even if they are treated as "not
+hiding particularly sensitive data", they could be misused to gain unauthorised
+access to services and rack up an unexpected bill for somebody. Mental note to self:
+remove my Google API key from this demo before committing!
+
+If we spend a little time analysing API traffic and the contents of the ShipFast
+app we gain an understanding of how the private API works and thus use that
+information to our advantage. Note that this is a **private** API, as in, undocumented
+to the public. I would humbly suggest that there is no such thing. All APIs are
+vulnerable to reverse engineering and must be protected.
+
+With our knowledge, we now build a rogue ShipFast 'app' named "ShipRaider" which
+is actually a simple web server using a combination of Node.js, bootstrap, jQuery
+and AJAX. Most of the logic is run client-side because we wish to minimise server
+resources and can therefore get the clients (browsers) to do the processing.
+The ShipRaider website is shown below:

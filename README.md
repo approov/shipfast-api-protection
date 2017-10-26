@@ -782,6 +782,26 @@ Android is also a special case in that what runs in memory is often
 quite far away from the original APK due to the processes of the Android
 Runtime (ART) optimisation, so although we can verify the original APK at
 runtime, we must remember that the APK is not memory-mapped in the same
-way as other processes running on other systems such as Linux.
+way as other processes running on other systems such as Linux. It is
+possible for an attacker to modify the app between the original APK and
+runtime on a rooted/jailbroken device or emulator.
 
 COMING SOON!
+
+## Wrap Up
+
+I sincerely hope that you have enjoyed this walkthrough and found it
+useful, and thank you for reading it!
+
+I hope that it is clear that API protection needs not only to authenticate
+the user with techniques such as OAuth 2.0 and Open ID Connect, and
+authenticate network traffic using Transport Layer Security and
+certificate pinning; but also authenticate the **running mobile application**.
+The combination of these provide a crucial synergy of API protection techniques.
+
+You know _who_ is talking to you. You know _how_ they are talking to you.
+Do you know **_what_** is talking to you?
+
+We are CriticalBlue: https://www.criticalblue.com
+We protect mobile API businesses with Approov: https://approov.io
+

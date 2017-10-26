@@ -7,7 +7,25 @@
  * The rogue ShipFast 'ShipRaider' web server's JQuery logic script.
  *****************************************************************************/
 
-const HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw==" 
+ // The enumeration of various stages of the demo.
+const DEMO_STAGE = {
+    // The demo which uses basic protection by way of API key specified in the app manifest
+    API_KEY_PROTECTION: 0,
+    // The demo which introduces API request signing by HMAC using a static secret in code
+    HMAC_STATIC_SECRET_PROTECTION: 1,
+    // The demo which introduces API request signing by HMAC using a dynamic secret in code
+    HMAC_DYNAMIC_SECRET_PROTECTION: 2
+}
+
+// The current demo stage
+var currentDemoStage = DEMO_STAGE.API_KEY_PROTECTION
+// The Auth0 client ID
+const AUTH0_CLIENT_ID = "yOqjrArkqM0vuRHjjBv4KrhdFzvnr9kI"
+// The Auth0 domain
+const AUTH0_DOMAIN = "approov.auth0.com"
+
+
+const HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
 
 var shipments = {}
 
@@ -32,7 +50,7 @@ $("#send-bitcoin-button").click(function() {
     alert("Pay me the money!")
 })
 
-var lock = new Auth0Lock("yOqjrArkqM0vuRHjjBv4KrhdFzvnr9kI", "approov.auth0.com", {
+var lock = new Auth0Lock(AUTH0_CLIENT_ID, AUTH0_DOMAIN, {
     auth: {
         redirectUrl: window.url,
         responseType: "id_token",
@@ -198,17 +216,34 @@ function grabShipment(shipmentID) {
 }
 
 function computeHMAC(url, idToken) {
-    var staticSecret = HMAC_SECRET
-    var dynamicSecret = CryptoJS.enc.Base64.parse(staticSecret)
-    var shipFastAPIKey = CryptoJS.enc.Utf8.parse($("#shipfast-api-key-input").val())
-    for (var i = 0; i < Math.min(dynamicSecret.words.length, shipFastAPIKey.words.length); i++) {
-        dynamicSecret.words[i] ^= shipFastAPIKey.words[i]
+    if (currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
+            || currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION)  {
+        var hmacSecret
+        if (currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION) {
+            // Just use the static secret in the HMAC for this demo stage
+            hmacSecret = HMAC_SECRET
+        }
+        else if (currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
+            // Obfuscate the static secret to produce a dynamic secret to
+            // use in the HMAC for this demo stage
+            var staticSecret = HMAC_SECRET
+            var dynamicSecret = CryptoJS.enc.Base64.parse(staticSecret)
+            var shipFastAPIKey = CryptoJS.enc.Utf8.parse($("#shipfast-api-key-input").val())
+            for (var i = 0; i < Math.min(dynamicSecret.words.length, shipFastAPIKey.words.length); i++) {
+                dynamicSecret.words[i] ^= shipFastAPIKey.words[i]
+            }
+            dynamicSecret = CryptoJS.enc.Base64.stringify(dynamicSecret)
+            hmacSecret = dynamicSecret
+        }
+        
+        if (hmacSecret) {
+            var parser = document.createElement('a')
+            parser.href = url
+            var msg = parser.protocol.substring(0, parser.protocol.length - 1)
+                + parser.hostname + parser.pathname + idToken
+            var hmac = CryptoJS.HmacSHA256(msg, CryptoJS.enc.Base64.parse(hmacSecret)).toString(CryptoJS.enc.Hex)
+            return hmac
+        }
     }
-    dynamicSecret = CryptoJS.enc.Base64.stringify(dynamicSecret)
-    var parser = document.createElement('a')
-    parser.href = url
-    var msg = parser.protocol.substring(0, parser.protocol.length - 1)
-        + parser.hostname + parser.pathname + idToken
-    var hmac = CryptoJS.HmacSHA256(msg, CryptoJS.enc.Base64.parse(/*staticSecret*/dynamicSecret)).toString(CryptoJS.enc.Hex)
-    return hmac
+    return null
 }

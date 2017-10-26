@@ -153,6 +153,14 @@ config.serverHostName = "PUT-YOUR-SERVER-HOSTNAME-HERE"
 ```
 config.auth0Domain = "PUT-YOUR-DOMAIN-HERE"
 ```
+1. Open the file "shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js"
+in your favourite text editor and enter your Auth0 client ID and domain:
+```
+// The Auth0 client ID
+const AUTH0_CLIENT_ID = "PUT-YOUR-CLIENT-ID-HERE"
+// The Auth0 domain
+const AUTH0_DOMAIN = "PUT-YOUR-DOMAIN-HERE"
+```
 1. Generate a self-signed certificate and private key so that you can host your
 server over HTTPS using TLS to protect the network channel:
 ```

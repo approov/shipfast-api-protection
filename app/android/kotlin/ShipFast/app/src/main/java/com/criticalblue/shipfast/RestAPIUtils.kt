@@ -26,8 +26,6 @@ import java.util.concurrent.TimeUnit
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 
-/** The server's base URL */
-const val SERVER_BASE_URL = "http://10.0.2.2:3333"
 /** The authorisation request header */
 const val AUTH_HEADER = "Authorization"
 /** The ShipFast API key header */
@@ -276,7 +274,7 @@ private fun calculateAPIRequestHMAC(context: Context, url: URL, authHeaderValue:
             keySpec = SecretKeySpec(Base64.decode(secret, Base64.DEFAULT), "HmacSHA256")
         }
         DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION -> {
-            // Obfuscate the static secret to produce a dymanic secret to initialise the key
+            // Obfuscate the static secret to produce a dynamic secret to initialise the key
             // spec for this demo stage
             val obfuscatedSecretData = Base64.decode(secret, Base64.DEFAULT)
             val shipFastAPIKeyData = loadShipFastAPIKey(context).toByteArray(Charsets.UTF_8)

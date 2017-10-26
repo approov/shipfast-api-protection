@@ -65,7 +65,7 @@ router.use(function(req, res, next) {
       hmac = crypto.createHmac('sha256', Buffer.from(secret, 'base64'))
     }
     else if (config.DEMO_STAGE == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
-      // Obfuscate the static secret to produce a dymanic secret to use during HMAC
+      // Obfuscate the static secret to produce a dynamic secret to use during HMAC
       // verification for this demo stage
       var obfuscatedSecretData = Buffer.from(secret, 'base64')
       var shipFastAPIKeyData = new Buffer("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")

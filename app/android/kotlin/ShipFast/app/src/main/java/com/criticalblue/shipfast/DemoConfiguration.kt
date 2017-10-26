@@ -25,3 +25,6 @@ enum class DemoStage {
 
 /** The current demo stage */
 val currentDemoStage = DemoStage.API_KEY_PROTECTION
+
+/** The ShipFast server's base URL */
+const val SERVER_BASE_URL = "http://10.0.2.2:3333"

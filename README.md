@@ -407,6 +407,27 @@ alternative such as ShipRaider. Some API requests are from the app, others are
 from the rogue website. The only way to distinguish these is by the ShipFast API
 key, but that has already been stolen!
 
+A simple strategy to avoid leakage of third-party API keys in the mobile app would
+be to, well, not include these API keys in the mobile app in the first place! They
+can be hoisted out of the app and instead stored on an intermediate server between
+the app and the ShipFast backend server, the intermediate server acting as an API
+key proxy. The app would then access the proxy instead of the backend server
+through a single API key and using a unified API to reduce the attack surface.
+This strategy is covered in more detail in another tutorial at
+https://github.com/approov/hands-on-api-proxy which I recommend checking out.
+
+Another strategy to avoid leakage of or tampering with sensitive data originating
+from the app which is visible through a MitM attack as demonstrated is to
+configure Transport Layer Security (TLS) certificate pinning to ensure the app
+knows it is talking to the correct server. In practice, this is often difficult to
+get right and there are various tools such as TrustKiller (https://github.com/iSECPartners/Android-SSL-TrustKiller) for Android and SSL Kill
+Switch (https://github.com/nabla-c0d3/ssl-kill-switch2) for iOS which circumvent
+this protection. There is a great video explaining this in more detail which
+I recommend checking out at https://www.youtube.com/watch?v=bHYZl1IC9SE.
+
+For the purposes of this walkthrough, we will focus on a different strategy of
+defence.
+
 An initial improvement would be to move sensitive data into app code rather than
 the manifest. That will at least make it slightly harder for an attacker to find
 the data.

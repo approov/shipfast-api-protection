@@ -664,8 +664,124 @@ for now!
 
 ### The Third Attack
 
+If we MitM the API traffic again, we still see the "SF-HMAC" header.
+
+Recall we require three things break this protection:
+1. The HMAC algorithm
+1. The HMAC secret
+1. The HMAC message
+
+Once again, we will decompile the app's APK using the tools
+"apktool", "dex2jar" and "JD-GUI". Looking around, we find the
+following:
+
+![ShipRaider Results](images/shipfast_hmac_dynamic_secret.png)
+
+Okay, it looks a little different this time round. There is a
+lot more 'noise' between the static secret we discovered earlier
+and the initialisation of the HMAC. We added this obfuscation
+ourselves, but it should be noted that there are commercial
+tools available which achieve the same goal automatically.
+
+Things were going so well for ShipFast, but alas, it is typically
+not possible to obfuscate public library methods and we still
+notice a couple of interesting points:
+1. The algorithm is still "HmacSHA256"
+1. The message appears to be the same
+1. The secret key is computed using a combination of static
+and dynamic data.
+
+Looking at the decompiled code, we see there are multiple
+variables involved in computing the secret, but the result
+ends up being a parameter to the "SecretKeySpec" object
+constructor. In order to break this, we need to run the app
+and find out what that first parameter is.
+
+As an attacker, we have a number of options available to us. We
+can repackage the original signed APK and enable debugging of
+the app by adding the following string to the manifest file:
+```
+android:debuggable="true"
+```
+We can then resign the APK and run it on an emulator or device
+and debug it in order to derive the HMAC key.
+
+There is another option available which avoids modifying the
+original APK to include a debug flag. We could use a dynamic
+instrumentation framework such as Frida (https://www.frida.re)
+and follow along the docs (https://www.frida.re/docs/android)
+to create a script which can dump the HMAC key when required.
+Frida is capable of attaching to a running process, poking
+around that process, then detaching from it and leaving it in
+the original state. Ouch! To run this, however, we do need to
+be on a rooted/jailbroken device or emulator.
+
+There are other such frameworks to modify apps on rooted/jailbroken
+devices such as the Xposed framework for Android. I recommend you
+check out the video at https://www.youtube.com/watch?v=yJRlMmJjrhY
+to see how Xposed is used to break TLS certificate pinning.
+
+In this walkthrough, we will choose the option to enable app
+debugging, unzipping the APK, adding the debug flag to the
+manifest, zipping the APK and resigning it before running it on
+an emulator.
+
+In Android Studio, we add a method breakpoint to the
+"javax.crypto.spec.SecretKeySpec" constructor which accepts the
+key and algorithm as parameters. When we run our app and trigger
+an action to perform an authenticated API request, such as
+fetching the nearest available shipment, we will break on the
+constructor of SecretKeySpec and see the computed HMAC secret.
+
+Using a debugger also makes it possible to step through the code
+and learn about the algorithm so we can replicated it in the
+rogue ShipRaider website.
+
+To see this process in action, we have prepared a short video:
+
 COMING SOON!
 
+To enable this stage of the demo, modify the "currentDemoStage" variable
+in the ShipRaider's "shipraider.js"
+file (shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js):
+```
+// The current demo stage
+var currentDemoStage = DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION
+```
+
+If things are configured correctly, you should now be able to run
+ShipRaider against the ShipFast server and grab those bonus shipments,
+even although we have migrated to using a dynamic secret key for the
+HMAC used to sign API requests.
+
 ### The Final Defence?
+
+It is possible to build on the previous defence by use of a more
+sophisticated dynamic key for the HMAC.
+
+One option would be to introduce code to compute a signature of the
+app's APK at runtime, something similar to the V1 and V2 signatures
+already included.
+
+We could also verify the signing authority of the APK to ensure the
+app is not repacked and resigned by someone else.
+
+As pointed out in the third attack, it is possible for an attacker to
+debug the running app if they modify the original APK or use an
+instrumentation framework such as Frida to scrape data from a running
+app. To mitigate these, we would required:
+1. A way of detecting app repackaging
+1. A way of detecting app debugging
+1. A way of detecting running an app on a rooted or jailbroken device
+or on an emulator
+
+This information could all be tied to the API request HMAC to add further
+protection.
+
+Android is also a special case in that what runs in memory is often
+quite far away from the original APK due to the processes of the Android
+Runtime (ART) optimisation, so although we can verify the original APK at
+runtime, we must remember that the APK is not memory-mapped in the same
+way as other processes running on other systems such as Linux.
 
 COMING SOON!

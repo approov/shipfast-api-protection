@@ -1,0 +1,8 @@
+.container {
+    background-image: url("images/fire.jpg");
+}
+
+#search-shipments-button {
+    background-color: red;
+    color: white;
+}

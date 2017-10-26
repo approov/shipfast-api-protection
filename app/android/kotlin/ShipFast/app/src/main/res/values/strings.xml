@@ -2,5 +2,5 @@
     <string name="app_name">ShipFast</string>
     <!--Specify the Auth0 API key and domain-->
     <string name="com_auth0_client_id">PUT-YOUR-CLIENT-ID-HERE</string>
-    <string name="com_auth0_domain">PUT-YOUR-DOMAIN-HERE"</string>
+    <string name="com_auth0_domain">PUT-YOUR-DOMAIN-HERE</string>
 </resources>

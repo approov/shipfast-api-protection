@@ -26,5 +26,5 @@ enum class DemoStage {
 /** The current demo stage */
 val currentDemoStage = DemoStage.API_KEY_PROTECTION
 
-/** The ShipFast server host name */
-val serverHostName = "PUT-YOUR-SERVER-HOSTNAME-HERE"
+/** The ShipFast server's base URL */
+const val SERVER_BASE_URL = "PUT-YOUR-SERVER-HOSTNAME-HERE"

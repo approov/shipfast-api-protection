@@ -457,11 +457,118 @@ file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
 config.currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
 ```
 
-MORE COMING SOON!
+Restart the ShipFast server, ShipRaider web page and ShipFast mobile app for
+these changes to take affect. The app should work as it did before, but ShipRaider
+no longer appears to work. We will take a look at the changes in more detail.
+
+If we turn our attention to the ShipFast API server code, and in particular the
+"auth.js" Node.js express router (shipfast-api-protection/server/shipfast-api/auth.js)
+we can observer the changes made to validate the client API requests
+by use of an HMAC.
+
+First, we have the HMAC secret:
+```
+// The ShipFast HMAC secret used to sign API requests
+const SHIPFAST_HMAC_SECRET = '4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=='
+```
+Second, we have a new API request header "SF-HMAC":
+```
+// Retrieve the ShipFast HMAC used to sign the API request from the request header
+var requestShipFastHMAC = req.get('SF-HMAC')
+```
+Finally, we can see the HMAC computation which uses the static HMAC secret
+and a message composed of the request URL and user authorisation
+bearer token:
+```
+// Just use the static secret during HMAC verification for this demo stage
+hmac = crypto.createHmac('sha256', Buffer.from(secret, 'base64'))
+...
+...
+// Compute the request HMAC using the HMAC SHA-256 algorithm
+hmac.update(req.protocol)
+hmac.update(req.host)
+hmac.update(req.originalUrl)
+hmac.update(req.get('Authorization'))
+var ourShipFastHMAC = hmac.digest('hex')
+
+// Check to see if our HMAC matches the one sent in the request header
+// and send an error response if it doesn't
+if (ourShipFastHMAC != requestShipFastHMAC) {
+...
+```
+
+This Node.js express router is added to all our authenticated API requests
+which means that it will verify the HMAC signature in the "SF-HMAC"
+header and respond with 403 "Forbidden" if things are not right.
 
 ### The Second Attack
 
-COMING SOON!
+If we use a MitM proxy technique to view network activity between the
+app and the server, we can observer that a new "SF-HMAC" header is
+introduced:
+
+![ShipRaider Results](images/mitm_hmac.png)
+
+In this case, the name of the request header is a bit of a giveaway, however,
+deeper analysis of the mobile app would also lead us to discover that
+API requests are now signed with an HMAC. Once that is disovered, we
+know there are three things to find to break this protection:
+1. The HMAC algorithm
+1. The HMAC secret
+1. The HMAC message
+
+Since we know the app must be computing this HMAC header, we can attempt to
+decompile it using freely-available reverse engineering tools and perform
+static analysis. We know the result is added to an "SF-HMAC" header. We know
+an HMAC is used. We can hypothesise that the app must contain an embedded
+secret for the HMAC and probably uses whatever HMAC function comes as part
+of the standard libraries. We will now test our hypothesis.
+
+We will decompile the app's APK using the tools "apktool", "dex2jar" and
+"JD-GUI". I will not cover the details here as other people have done that
+very well, but a good tutorial can be found at http://www.brightdevelopers.com/reverse-engineer-android-apk.
+
+Looking through the decompiled code, we find something interesting:
+
+![ShipRaider Results](images/shipfast_hmac_static_secret.png)
+
+Eureka! My bath is overflowing, brb... false alarm. Well, we have found
+quite a nugget here! This method, first of all, has been obfuscated. So
++1 for the developer at least doing that. In our case this used ProGuard (https://www.guardsquare.com/en/proguard) but other solutions are available.
+
+However, it is very important to note that you typically **cannot
+obfuscate public methods** as it is not certain at compile time what will
+be invoking them, so it is not safe to obfuscate them as it could lead to
+a nasty runtime exception. This is especially true for standard libraries,
+for example, javax.crypto which provides HMAC support.
+
+What we see in our decompiled code snippet is:
+1. The HMAC algorithm (the "HmacSHA256" string)
+1. The HMAC secret (the long base 64 string "4ymoo..." etc)
+1. The HMAC message. This is harder to find, but we can follow through the
+decompiled Java code or even the byte code pretty easily and look
+for calls to "Mac.update()" as those calls make up the HMAC message. We
+know when things are finished, because the "Mac.doFinal()" method will
+be called which produces the result.
+
+HINT: It is easy to find standard library cryptographic functions in
+obfuscated and signed mobile apps.
+
+In this stage of the demo, the secret is in code which is much better than
+in a static text file, but is still easily retrievable. Armed with our
+new knowledge, we can update ShipRaider to compute the new HMAC header
+and therefore continue to authenticated our rogue API requests.
+
+To enable this stage of the demo, modify the "currentDemoStage" variable
+in the ShipRaider's "shipraider.js"
+file (shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js):
+```
+// The current demo stage
+var currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
+```
+
+If things are configured correctly, you should now be able to run
+ShipRaider against the ShipFast server and grab those bonus shipments.
 
 ### The Second Defence
 

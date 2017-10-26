@@ -572,7 +572,95 @@ ShipRaider against the ShipFast server and grab those bonus shipments.
 
 ### The Second Defence
 
-COMING SOON!
+It turns out that our previous approach is a really good starting point:
+signing the API requests in the app proving both _who_ and _what_ is
+making those requests which can then be verified by the server. This
+binds the requests to the user and to the running app.
+
+The problem is our implementation. To begin with, we use a static secret
+in code in the form of a single string. You may think this is obvious
+now that I mention it, but you would be surprised, even shoked, to
+discover the number of cloud-based services which offer access through
+an API or SDK which involves initialisation using an API key, an API
+secret and often a base URL in code. This makes it easy to adopt the
+service, but unfortunately also makes it easy to exploit the service.
+
+We can obfuscate the HMAC secret by computing it at runtime which means
+regular static analysis will not yield the secret: the app must be run
+in order to generate the secret and store it in memory for use in the
+HMAC computation. The approach we use is kept simple for demonstration
+purposes, and the process is as follows:
+1. Take our original HMAC secret embedded in the app code
+1. Take the user's ID Token JWT fetched at runtime by the user
+logging in using Auth0
+1. Perform an XOR operation on the two
+1. Use the result as our new dynamic HMAC secret
+
+In our Android app, the code looks like this:
+```
+val secret = HMAC_SECRET
+var keySpec: SecretKeySpec
+...
+...
+val obfuscatedSecretData = Base64.decode(secret, Base64.DEFAULT)
+val shipFastAPIKeyData = loadShipFastAPIKey(context).toByteArray(Charsets.UTF_8)
+for (i in 0 until minOf(obfuscatedSecretData.size, shipFastAPIKeyData.size)) {
+  obfuscatedSecretData[i] = (obfuscatedSecretData[i].toInt() xor shipFastAPIKeyData[i].toInt()).toByte()
+}
+val obfuscatedSecret = Base64.encode(obfuscatedSecretData, Base64.DEFAULT)
+keySpec = SecretKeySpec(Base64.decode(obfuscatedSecret, Base64.DEFAULT), "HmacSHA256")
+...
+...
+// Compute the request HMAC using the HMAC SHA-256 algorithm
+...
+...
+```
+
+And on the ShipFast server side, the code looks like this:
+```
+var secret = SHIPFAST_HMAC_SECRET
+var hmac
+...
+...
+var obfuscatedSecretData = Buffer.from(secret, 'base64')
+var shipFastAPIKeyData = new Buffer("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
+for (var i = 0; i < Math.min(obfuscatedSecretData.length, shipFastAPIKeyData.length); i++) {
+  obfuscatedSecretData[i] ^= shipFastAPIKeyData[i]
+}
+var obfuscatedSecret = new Buffer(obfuscatedSecretData).toString('base64')
+hmac = crypto.createHmac('sha256', Buffer.from(obfuscatedSecret, 'base64'))
+...
+...
+// Compute the request HMAC using the HMAC SHA-256 algorithm
+...
+...
+// Check to see if our HMAC matches the one sent in the request header
+// and send an error response if it doesn't
+if (ourShipFastHMAC != requestShipFastHMAC) {
+...
+```
+
+It is almost like some strange game of spot the difference, but as you can
+hopefully see, the app and server perform the same HMAC calculation using
+the same secret key and message, and the server ensures both components
+end up with the same answer before authenticating the API request.
+
+To enable this stage of the demo, modify the "currentDemoStage" variable in the
+app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+```
+/** The current demo stage */
+val currentDemoStage = DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION
+```
+Also modify the "config.currentDemoStage" variable in the server's "demo-configuration.js"
+file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+```
+// The current demo stage
+config.currentDemoStage = DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION
+```
+
+Restart everything again, the app should continue to work normally,
+but it looks like we have blocked those pesky ShipRaider pirates
+for now!
 
 ### The Third Attack
 

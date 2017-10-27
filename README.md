@@ -403,7 +403,7 @@ Shippers are happy, ShipFast is not. A defence is needed urgently.
 
 ### The First Defence
 
-It is clear from the first attack that ShipFast need to provide better protection
+It is clear from the first attack that ShipFast must provide better protection
 of their API to ensure that only the genuine app is using it, and not a rogue
 alternative such as ShipRaider. Some API requests are from the app, others are
 from the rogue website. The only way to distinguish these is by the ShipFast API
@@ -414,7 +414,7 @@ be to, well, not include these API keys in the mobile app in the first place! Th
 can be hoisted out of the app and instead stored on an intermediate server between
 the app and the ShipFast backend server, the intermediate server acting as an API
 key proxy. The app would then access the proxy instead of the backend server
-through a single API key and using a unified API to reduce the attack surface.
+through a single API key and unified API to reduce the attack surface.
 This strategy is covered in more detail in another tutorial at
 https://github.com/approov/hands-on-api-proxy which I recommend checking out.
 
@@ -513,14 +513,14 @@ introduced:
 
 In this case, the name of the request header is a bit of a giveaway, however,
 deeper analysis of the mobile app would also lead us to discover that
-API requests are now signed with an HMAC. Once that is disovered, we
+API requests are now signed with an HMAC. Once that is discovered, we
 know there are three things to find to break this protection:
 1. The HMAC algorithm
 1. The HMAC secret
 1. The HMAC message
 
-Since we know the app must be computing this HMAC header, we can attempt to
-decompile it using freely-available reverse engineering tools and perform
+Since we know the app must be computing this HMAC request header, we can attempt
+to decompile it using freely-available reverse engineering tools and perform
 static analysis. We know the result is added to an "SF-HMAC" header. We know
 an HMAC is used. We can hypothesise that the app must contain an embedded
 secret for the HMAC and probably uses whatever HMAC function comes as part
@@ -559,7 +559,7 @@ obfuscated and signed mobile apps.
 In this stage of the demo, the secret is in code which is much better than
 in a static text file, but is still easily retrievable. Armed with our
 new knowledge, we can update ShipRaider to compute the new HMAC header
-and therefore continue to authenticated our rogue API requests.
+and therefore continue to authenticate our rogue API requests.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"

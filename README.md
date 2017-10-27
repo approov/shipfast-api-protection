@@ -739,7 +739,7 @@ rogue ShipRaider website.
 
 To see this process in action, we have prepared a short video:
 
-COMING SOON!
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/pjA8ug9UT5k/0.jpg)](http://www.youtube.com/watch?v=pjA8ug9UT5k)
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"

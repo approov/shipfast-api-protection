@@ -14,7 +14,6 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.util.Base64
-import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import okhttp3.*
 import org.json.JSONArray
@@ -245,10 +244,26 @@ private fun createDefaultRequestBuilder(context: Context, url: URL): Request.Bui
  * @return the HTTP client
  */
 private fun buildDefaultHTTPClient(): OkHttpClient {
-    return OkHttpClient.Builder()
-            .readTimeout(2, TimeUnit.SECONDS)
-            .writeTimeout(2, TimeUnit.SECONDS)
-            .build()
+
+    when (currentDemoStage) {
+        DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
+            // Use a custom Hostname Verifier and Request Interceptor to enable Approov protection
+            // for this demo stage
+            return OkHttpClient.Builder()
+                    .readTimeout(2, TimeUnit.SECONDS)
+                    .writeTimeout(2, TimeUnit.SECONDS)
+                    .hostnameVerifier(ApproovHostnameVerifier(OkHttpClient().hostnameVerifier()))
+                    .addInterceptor(ApproovRequestInterceptor())
+                    .build()
+        }
+        else -> {
+            // Use a simple client for non-Approov demo stages
+            return OkHttpClient.Builder()
+                    .readTimeout(2, TimeUnit.SECONDS)
+                    .writeTimeout(2, TimeUnit.SECONDS)
+                    .build()
+        }
+    }
 }
 
 /**

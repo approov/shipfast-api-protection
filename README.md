@@ -17,25 +17,25 @@ company.
 delivery of shipments to anyone wishing to earn some additional income. These guys
 are the "Shippers". They earn a wage for the delivery of shipments, but also have the
 opportunity to earn an additional bonus for some shipments which include an
-associated gratuity. Not all shipments have a gratuity, and are therefore not all
-equal.
+associated gratuity. Not all shipments have a gratuity, and the gratuity is different
+for each shipment, therefore not all shipments are equal.
 
 ShipFast provides the actual delivery service to customers on a subscription basis.
 Shippers are paid their standard wage, and any gratuity provided by customers ahead
-of time is passed on, 100%, to Shippers.
+of time is passed on, 100%, to Shippers. Good for them.
 
 ShipFast needs to run a tight ship, so they are keen to maintain optimal efficiency
 in their service and therefore ensure that distances covered by Shippers to pick up
 shipments from one location and deliver them to another location are kept to an
-absolute minimum. Therefore, Shippers have no way to access the list of available
-shipments and pick and choose: they are always given the available shipment which
-is closest to their current location.
+absolute minimum. Therefore, Shippers _have no way to access the list of available
+shipments and thus pick and choose them_: they are always given the available
+shipment which is _closest_ to their current location.
 
 ## The Exploit
 
 There is no hijacking of user credentials here or tricking users to tap things in
 the app they shouldn't. The attack is much more subtle, because it is exploited
-by real trusted users of the system.
+by _real trusted users_ of the system.
 
 Recall in the explanation above ("The Service") that shipments are not created
 equally: some have gratuity associated with them, but the Shippers have no way
@@ -60,15 +60,15 @@ Shippers though!
 
 ## The Battlefield
 
-For this demonstration, where no Shippers will be hurt, we will show various stages
-to defend the ShipFast mobile app and server API, and the attacks used to work
-around these defences.
+For this demonstration, where no Shippers will be hurt...much, we will show
+various stages to defend the ShipFast mobile app and server API, and the attacks
+used to work around these defences.
 
 ### Stage 1
 
 In the first stage, we will show how ShipFast secure access to their server by
-authenticating users and by providing an API key to identify what is talking to
-the service. The API key will be present in the app's metadata.
+authenticating users and by providing an API key to identify _what_ is talking
+to the service. The API key will be present in the app's metadata.
 
 We will then show how easy it is to extract this from the app statically and
 use it against the server API.
@@ -76,12 +76,12 @@ use it against the server API.
 ### Stage 2
 
 In the second stage, we will show how ShipFast secure access to their server API
-by introducing a Keyed-Hash Message Authentication Code (HMAC) to authenticated
-API requests to digitally sign them and prevent hijacking and tampering.
+by introducing a Keyed-Hash Message Authentication Code (HMAC) to authenticate
+API requests by digitally signing them and prevent hijacking and tampering.
 
 HMAC's use a secret and a message to produce a cryptographic signature, and
-therefore tell you two things: the integrity of the message (has it been modified?)
-and the authenticity of the message (is the person who signed it in possession
+therefore tell you two things: the _integrity_ of the message (has it been modified?)
+and the _authenticity_ of the message (is the person who signed it in possession
 of the secret key?).
 
 The secret key is embedded statically in app code, and we will show how this
@@ -91,9 +91,9 @@ and used against the server API.
 ### Stage 3
 
 In the third stage, we will extend what we did in Stage 2 but instead of using
-a static secret we will us a dynamic secret, that is, a secret which is computed
+a static secret we will use a dynamic secret, that is, a secret which is computed
 at app runtime and therefore is not known until the app is actually running, so
-cannot easily be extracted statically.
+cannot easily be extracted statically by looking at the app package on disk.
 
 We will then show how an obfuscated and digitally-signed app can be repackaged
 to support debugging, then debug the app by introducing a breakpoint at the
@@ -130,14 +130,15 @@ these are easy to get hold of, and are free!
 ### Configuring Auth0
 
 1. Create a new Native Client in the Auth0 dashboard and name it "ShipFast"
-1. Take careful note of your Auth0 Domain and Client ID as these will be
+2. Take careful note of your Auth0 Domain and Client ID as these will be
 required for user authentication
-1. In the "Allowed Callback URLs" field, enter
+3. In the "Allowed Callback URLs" field, enter
 ```
 demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipfast/callback, http://127.0.0.1
 ```
 replacing YOUR-ACCOUNT with your Auth0 account name
-1. Auth0 should already be pre-configured to include Google and GitHub social
+
+4. Auth0 should already be pre-configured to include Google and GitHub social
 accounts allowing you to log in to ShipFast with those, but go ahead and add
 more if you wish
 
@@ -149,11 +150,11 @@ machine which you intend to use to host the ShipFast and ShipRaider servers:
 ```
 config.serverHostName = "PUT-YOUR-SERVER-HOSTNAME-HERE"
 ```
-1. In the same "demo-configuration.js" file, enter your Auth0 domain:
+2. In the same "demo-configuration.js" file, enter your Auth0 domain:
 ```
 config.auth0Domain = "PUT-YOUR-DOMAIN-HERE"
 ```
-1. Open the file "shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js"
+3. Open the file "shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js"
 in your favourite text editor and enter your Auth0 client ID and domain:
 ```
 // The Auth0 client ID
@@ -161,22 +162,22 @@ const AUTH0_CLIENT_ID = "PUT-YOUR-CLIENT-ID-HERE"
 // The Auth0 domain
 const AUTH0_DOMAIN = "PUT-YOUR-DOMAIN-HERE"
 ```
-1. Generate a self-signed certificate and private key so that you can host your
+4. Generate a self-signed certificate and private key so that you can host your
 server over HTTPS using TLS to protect the network channel:
 ```
 node generate-cert.js
 ```
-1. Configure an Android Emulator to run Android 6 Marshmallow and install the
+5. Configure an Android Emulator to run Android 6 Marshmallow and install the
 **.crt** file generated in the previous step onto the emulator
-1. Ensure the Android Emulator has sufficient permission to use high accuracy
+6. Ensure the Android Emulator has sufficient permission to use high accuracy
 location data (Settings->Location->Mode set to "High accuracy")
-1. Open the Android Studio ShipFast project in "shipfast-api-protection/app/android/kotlin"
-1. In Android Studio, open the app's manifest "app/manifests/AndroidManifest.xml"
+7. Open the Android Studio ShipFast project in "shipfast-api-protection/app/android/kotlin"
+8. In Android Studio, open the app's manifest "app/manifests/AndroidManifest.xml"
 and enter your Google Maps API key:
 ```
 <meta-data android:name="com.google.android.geo.API_KEY" android:value="PUT-YOUR-API-KEY-HERE"/>
 ```
-1. In Android Studio, open the string resource file "app/res/values/strings.xml"
+9. In Android Studio, open the string resource file "app/res/values/strings.xml"
 and enter your Auth0 client ID and domain:
 ```
 <string name="com_auth0_client_id">PUT-YOUR-CLIENT-ID-HERE"</string> <string name="com_auth0_domain">PUT-YOUR-DOMAIN-HERE"</string>
@@ -194,9 +195,10 @@ npm install
 node api-server.js
 ```
 (the server may need to run as admin to host on port 443 as HTTPS)
-1. Launch the ShipFast mobile app in Android Studio using an x86 emulator
+
+2. Launch the ShipFast mobile app in Android Studio using an x86 emulator
 running Android 6 Marshmallow
-1. Launch the ShipRaider rogue web server as follows:
+3. Launch the ShipRaider rogue web server as follows:
 ```
 cd shipfast-api-protection/server/shipraider-rogue-web
 npm install
@@ -340,7 +342,7 @@ vulnerable to reverse engineering and must be protected.
 
 With our knowledge, we now build a rogue ShipFast 'app' named "ShipRaider" which
 is actually a simple web server using a combination of Node.js, bootstrap, jQuery
-and AJAX. Most of the logic is run client-side because we wish to minimise server
+and AJAX. Most of the logic runs client-side because we wish to minimise server
 resources and can therefore get the clients (browsers) to do the processing.
 The ShipRaider website is shown below:
 
@@ -363,8 +365,8 @@ it. The four location fields in ShipRaider allow Shippers to specify a location
 of their choosing as an origin point and a radius to 'sweep' over with a 'step'
 granularity. This is used to construct a virtual geographical area and fire
 authenticated API requests for nearest shipments at various points in this area
-in order to drive out the list of shipments in the backend server. The code
-which performs this task is located in "shipraider-rogue-web/web/js/shipraider.js":
+in a brute-force fashion in order to drive out the list of shipments in the
+backend server. The code which performs this task is located in "shipraider-rogue-web/web/js/shipraider.js":
 ```
 for (var lat = latStart; lat <= latEnd; lat += locStep) {
   for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
@@ -397,11 +399,11 @@ When we go back into the genuine ShipFast app and mark ourselves as available
 for the next shipment, the app first requests any pending shipment, so we will
 be presented with the shipment we grabbed using ShipRaider. Go ahead and try it out!
 
-Shippers are happy, ShipFast is not. A defence is needed.
+Shippers are happy, ShipFast is not. A defence is needed urgently.
 
 ### The First Defence
 
-It is clear from the first attack that ShipFast need to provide better protection
+It is clear from the first attack that ShipFast must provide better protection
 of their API to ensure that only the genuine app is using it, and not a rogue
 alternative such as ShipRaider. Some API requests are from the app, others are
 from the rogue website. The only way to distinguish these is by the ShipFast API
@@ -412,7 +414,7 @@ be to, well, not include these API keys in the mobile app in the first place! Th
 can be hoisted out of the app and instead stored on an intermediate server between
 the app and the ShipFast backend server, the intermediate server acting as an API
 key proxy. The app would then access the proxy instead of the backend server
-through a single API key and using a unified API to reduce the attack surface.
+through a single API key and unified API to reduce the attack surface.
 This strategy is covered in more detail in another tutorial at
 https://github.com/approov/hands-on-api-proxy which I recommend checking out.
 
@@ -511,14 +513,14 @@ introduced:
 
 In this case, the name of the request header is a bit of a giveaway, however,
 deeper analysis of the mobile app would also lead us to discover that
-API requests are now signed with an HMAC. Once that is disovered, we
+API requests are now signed with an HMAC. Once that is discovered, we
 know there are three things to find to break this protection:
 1. The HMAC algorithm
 1. The HMAC secret
 1. The HMAC message
 
-Since we know the app must be computing this HMAC header, we can attempt to
-decompile it using freely-available reverse engineering tools and perform
+Since we know the app must be computing this HMAC request header, we can attempt
+to decompile it using freely-available reverse engineering tools and perform
 static analysis. We know the result is added to an "SF-HMAC" header. We know
 an HMAC is used. We can hypothesise that the app must contain an embedded
 secret for the HMAC and probably uses whatever HMAC function comes as part
@@ -534,7 +536,7 @@ Looking through the decompiled code, we find something interesting:
 
 Eureka! My bath is overflowing, brb... false alarm. Well, we have found
 quite a nugget here! This method, first of all, has been obfuscated. So
-+1 for the developer at least doing that. In our case this used ProGuard (https://www.guardsquare.com/en/proguard) but other solutions are available.
++1 for the developer for at least doing that. In our case this used ProGuard (https://www.guardsquare.com/en/proguard) but other solutions are available.
 
 However, it is very important to note that you typically **cannot
 obfuscate public methods** as it is not certain at compile time what will
@@ -557,7 +559,7 @@ obfuscated and signed mobile apps.
 In this stage of the demo, the secret is in code which is much better than
 in a static text file, but is still easily retrievable. Armed with our
 new knowledge, we can update ShipRaider to compute the new HMAC header
-and therefore continue to authenticated our rogue API requests.
+and therefore continue to authenticate our rogue API requests.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"
@@ -693,9 +695,9 @@ and dynamic data.
 
 Looking at the decompiled code, we see there are multiple
 variables involved in computing the secret, but the result
-ends up being a parameter to the "SecretKeySpec" object
-constructor. In order to break this, we need to run the app
-and find out what that first parameter is.
+still ends up being a single parameter to the "SecretKeySpec"
+object constructor. In order to break this, we need to run the
+app and find out what that first parameter is.
 
 As an attacker, we have a number of options available to us. We
 can repackage the original signed APK and enable debugging of
@@ -706,8 +708,8 @@ android:debuggable="true"
 We can then resign the APK and run it on an emulator or device
 and debug it in order to derive the HMAC key.
 
-There is another option available which avoids modifying the
-original APK to include a debug flag. We could use a dynamic
+There is another option available which avoids the need to modify
+the original APK to include a debug flag. We could use a dynamic
 instrumentation framework such as Frida (https://www.frida.re)
 and follow along the docs (https://www.frida.re/docs/android)
 to create a script which can dump the HMAC key when required.
@@ -721,7 +723,7 @@ devices such as the Xposed framework for Android. I recommend you
 check out the video at https://www.youtube.com/watch?v=yJRlMmJjrhY
 to see how Xposed is used to break TLS certificate pinning.
 
-In this walkthrough, we will choose the option to enable app
+In this walkthrough though, we will choose the option to enable app
 debugging, unzipping the APK, adding the debug flag to the
 manifest, zipping the APK and resigning it before running it on
 an emulator.
@@ -739,7 +741,7 @@ rogue ShipRaider website.
 
 To see this process in action, we have prepared a short video:
 
-COMING SOON!
+[![IMAGE ALT TEXT HERE](http://img.youtube.com/vi/pjA8ug9UT5k/0.jpg)](http://www.youtube.com/watch?v=pjA8ug9UT5k)
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"
@@ -764,7 +766,8 @@ app's APK at runtime, something similar to the V1 and V2 signatures
 already included.
 
 We could also verify the signing authority of the APK to ensure the
-app is not repacked and resigned by someone else.
+app is not repacked and resigned by someone else (I'm looking at you,
+ShipRaider pirates!).
 
 As pointed out in the third attack, it is possible for an attacker to
 debug the running app if they modify the original APK or use an
@@ -780,11 +783,82 @@ protection.
 
 Android is also a special case in that what runs in memory is often
 quite far away from the original APK due to the processes of the Android
-Runtime (ART) optimisation, so although we can verify the original APK at
-runtime, we must remember that the APK is not memory-mapped in the same
-way as other processes running on other systems such as Linux. It is
-possible for an attacker to modify the app between the original APK and
-runtime on a rooted/jailbroken device or emulator.
+Runtime (ART), so although we can verify the original APK at runtime,
+we must remember that the APK is not memory-mapped in the same way as
+other processes running on other systems such as Linux. It is possible
+for an attacker to modify the app between the original APK and runtime
+on a rooted/jailbroken device or emulator.
+
+We also need to be careful with root/jailbreak detection as there are
+methods of circumventing these on mobile platforms such as RootCloak (http://repo.xposed.info/module/com.devadvance.rootcloak2) and
+Hide my Root (https://play.google.com/store/apps/details?id=com.amphoras.hidemyroot)
+on Android, and tsProtector (http://cydia.saurik.com/package/kr.typostudio.tsprotector8)
+on iOS. A quick online search for "detect android root from app" or
+"detect ios jailbreak from app" yields results which developers typically
+adopt to protect these environments. This knowledge has been used
+recently by the online community to work around root/jailbreak
+detection on popular app store apps and unlock protected features.
+
+If we step back for a moment and look at the previous defenses objectively,
+there are several problems we can identify:
+1. The use of static secrets or sensitive data embedded in the app, running
+in an untrusted environment (untrusted, as it is in control of a user
+rather than the company who provides the server and API)
+1. The use of a dynamically-obfuscated secret in the app only known at
+runtime which, despite dispersion in code, still cumulates to a single
+'secret key' variable
+1. The lack of root/jailbreak, debug or instrumentation framework
+detection in our mobile app
+1. The lack of TLS certificate-pinning implemented in such a way
+that it is not trivial for an attacker to simply replace the set of
+trusted certificates or certificate fingerprint 'pins' and enable a
+MitM proxy to steal sensitive data in-flight
+1. The use of standard, out-of-the-box, platform-provided cryptographic
+functions; the SHA256 HMAC in our case which is typically not obfuscated
+as it is public library API
+1. The implementation of 'secure' code in Kotlin (or indeed Java) rather
+than native C/C++ or assembly which results in a reasonably high-level
+bytecode representation free tools do a good job of reversing back into
+their original source form, even with the lack of symbols
+
+For the ShipFast company to ensure its shipment service is protected from
+attacks such as those suggested in this walkthrough, the API server running
+in a trusted environment must ensure it can authenticate code running in
+untrusted environments such as mobile devices. It must authenticate the
+mobile app and its environment at runtime, in addition to authenticating
+the user and the network channel.
+
+Although it is possible for ShipFast to develop a suitable solution
+themselves, this requires sophisticated mobile device and cloud server
+security knowledge and experience, incredible creative and persevering
+penetration testing, the ability to analyse, identify and adapt 
+vulnerabilities yesterday, and a great deal of time
+(I hear [flux capacitors](http://backtothefuture.wikia.com/wiki/Flux_capacitor)
+are good for this too). If ShipFast fail to act quickly and effectively,
+their profits will be hit badly and their reputation could be severely
+crippled.
+
+Another option for ShipFast would be to invest in an existing solution
+which has solved these problems already and is prepared to protect their
+API and mobile app business. [Approov](https://approov.io) by CriticalBlue
+is a product specifically designed to do just that in a unique way which:
+1. Uses a unique software authentication approach to positively
+identify good apps and hence good customers, without relying on historical
+data or suffering from false positives
+1. Does not require a static secret to be embedded in the app or the
+use of a system-provided cryptographic library, but instead performs
+a dynamic integrity check using a patented low-level approach based on
+many years of low-level software analysis experience
+1. Is easy to integrate and quick to deploy via a cloud service and
+mobile SDK for Android, iOS and hybrid mobile platforms without
+impacting customer experience (a multi-million user base customer
+with API data-scraping problems going live with Approov in _just over
+a week_)
+
+For this defense, we will walk through the process of integrating
+Approov into the ShipFast mobile app and backend Node.js server and
+demonstrate its effectiveness in protecting the ShipFast web API
+from those pesky ShipRaider pirates!
 
 COMING SOON!
 

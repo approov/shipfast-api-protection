@@ -536,7 +536,7 @@ Looking through the decompiled code, we find something interesting:
 
 Eureka! My bath is overflowing, brb... false alarm. Well, we have found
 quite a nugget here! This method, first of all, has been obfuscated. So
-+1 for the developer at least doing that. In our case this used ProGuard (https://www.guardsquare.com/en/proguard) but other solutions are available.
++1 for the developer for at least doing that. In our case this used ProGuard (https://www.guardsquare.com/en/proguard) but other solutions are available.
 
 However, it is very important to note that you typically **cannot
 obfuscate public methods** as it is not certain at compile time what will
@@ -695,9 +695,9 @@ and dynamic data.
 
 Looking at the decompiled code, we see there are multiple
 variables involved in computing the secret, but the result
-ends up being a parameter to the "SecretKeySpec" object
-constructor. In order to break this, we need to run the app
-and find out what that first parameter is.
+still ends up being a single parameter to the "SecretKeySpec"
+object constructor. In order to break this, we need to run the
+app and find out what that first parameter is.
 
 As an attacker, we have a number of options available to us. We
 can repackage the original signed APK and enable debugging of
@@ -708,8 +708,8 @@ android:debuggable="true"
 We can then resign the APK and run it on an emulator or device
 and debug it in order to derive the HMAC key.
 
-There is another option available which avoids modifying the
-original APK to include a debug flag. We could use a dynamic
+There is another option available which avoids the need to modify
+the original APK to include a debug flag. We could use a dynamic
 instrumentation framework such as Frida (https://www.frida.re)
 and follow along the docs (https://www.frida.re/docs/android)
 to create a script which can dump the HMAC key when required.
@@ -723,7 +723,7 @@ devices such as the Xposed framework for Android. I recommend you
 check out the video at https://www.youtube.com/watch?v=yJRlMmJjrhY
 to see how Xposed is used to break TLS certificate pinning.
 
-In this walkthrough, we will choose the option to enable app
+In this walkthrough though, we will choose the option to enable app
 debugging, unzipping the APK, adding the debug flag to the
 manifest, zipping the APK and resigning it before running it on
 an emulator.
@@ -766,7 +766,8 @@ app's APK at runtime, something similar to the V1 and V2 signatures
 already included.
 
 We could also verify the signing authority of the APK to ensure the
-app is not repacked and resigned by someone else.
+app is not repacked and resigned by someone else (I'm looking at you,
+ShipRaider pirates!).
 
 As pointed out in the third attack, it is possible for an attacker to
 debug the running app if they modify the original APK or use an
@@ -782,11 +783,11 @@ protection.
 
 Android is also a special case in that what runs in memory is often
 quite far away from the original APK due to the processes of the Android
-Runtime (ART) optimisation, so although we can verify the original APK at
-runtime, we must remember that the APK is not memory-mapped in the same
-way as other processes running on other systems such as Linux. It is
-possible for an attacker to modify the app between the original APK and
-runtime on a rooted/jailbroken device or emulator.
+Runtime (ART), so although we can verify the original APK at runtime,
+we must remember that the APK is not memory-mapped in the same way as
+other processes running on other systems such as Linux. It is possible
+for an attacker to modify the app between the original APK and runtime
+on a rooted/jailbroken device or emulator.
 
 We also need to be careful with root/jailbreak detection as there are
 methods of circumventing these on mobile platforms such as RootCloak (http://repo.xposed.info/module/com.devadvance.rootcloak2) and
@@ -810,8 +811,8 @@ runtime which, despite dispersion in code, still cumulates to a single
 detection in our mobile app
 1. The lack of TLS certificate-pinning implemented in such a way
 that it is not trivial for an attacker to simply replace the set of
-trusted certificates and enable a MitM proxy to steal sensitive data
-in-flight
+trusted certificates or certificate fingerprint 'pins' and enable a
+MitM proxy to steal sensitive data in-flight
 1. The use of standard, out-of-the-box, platform-provided cryptographic
 functions; the SHA256 HMAC in our case which is typically not obfuscated
 as it is public library API
@@ -829,7 +830,7 @@ the user and the network channel.
 
 Although it is possible for ShipFast to develop a suitable solution
 themselves, this requires sophisticated mobile device and cloud server
-security knowledge and experience, incredibly creating and persevering
+security knowledge and experience, incredible creative and persevering
 penetration testing, the ability to analyse, identify and adapt 
 vulnerabilities yesterday, and a great deal of time
 (I hear [flux capacitors](http://backtothefuture.wikia.com/wiki/Flux_capacitor)
@@ -851,8 +852,8 @@ many years of low-level software analysis experience
 1. Is easy to integrate and quick to deploy via a cloud service and
 mobile SDK for Android, iOS and hybrid mobile platforms without
 impacting customer experience (a multi-million user base customer
-with API data-scraping problems going live with Approov in just over
-a week)
+with API data-scraping problems going live with Approov in _just over
+a week_)
 
 For this defense, we will walk through the process of integrating
 Approov into the ShipFast mobile app and backend Node.js server and

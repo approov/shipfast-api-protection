@@ -28,7 +28,7 @@ android {
 }
 
 dependencies {
-    implementation fileTree(dir: 'libs', include: ['*.jar'])
+    implementation fileTree(include: ['*.jar'], dir: 'libs')
     implementation 'com.android.support:appcompat-v7:26.1.0'
     implementation 'com.android.support.constraint:constraint-layout:1.0.2'
     testImplementation 'junit:junit:4.12'
@@ -36,13 +36,11 @@ dependencies {
         exclude group: 'com.android.support', module: 'support-annotations'
     })
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
-
     // Include Google Play Services for Google Maps
     compile 'com.google.android.gms:play-services:11.2.2'
-
     // Include Auth0 for user authentication
     compile 'com.auth0.android:auth0:1.+'
-
     // Include OkHttp3 for REST API requests
     compile 'com.squareup.okhttp3:okhttp:3.9.0'
+    implementation project(':approov')
 }

@@ -25,9 +25,6 @@ var shipFastAPIKeys = [
 // The ShipFast HMAC secret used to sign API requests
 const SHIPFAST_HMAC_SECRET = '4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=='
 
-// The Approov token secret
-const APPROOV_TOKEN_SECRET = 'OsMZ/lGRG8a7KrbvRf0qGOOIocANrjxcDZMbm1tguPqUpZuDup+rPVseN3Nd4oq3rKlodPPUnIdJIIVMTbmk3A=='
-
 // Verify the ShipFast API key
 router.use(function(req, res, next) {
 
@@ -105,7 +102,7 @@ if (config.currentDemoStage == DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION) {
   // Verify and decode the Approov token and respond with 403 if the JWT
   // could not be decoded, has expired, or has an invalid signature
   const checkApproovTokenJWT = jwt({
-    secret: new Buffer(APPROOV_TOKEN_SECRET, 'base64'),
+    secret: new Buffer(config.approovTokenSecret, 'base64'),
     getToken: function fromApproovTokenHeader(req) {
       // Retrieve the Approov token used to authenticate the mobile app from the request header
       var approovToken = req.get('Approov-Token')

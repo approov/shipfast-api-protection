@@ -24,7 +24,7 @@ class ApproovRequestInterceptor : Interceptor {
      * Intercept the given request chain to add the Approov token to an 'Approov-Token' header.
      *
      * @param chain the request chain to modify
-     * @return the response
+     * @return the modified response, authenticated by Approov
      */
     override fun intercept(chain: Interceptor.Chain): Response {
 

@@ -33,6 +33,9 @@ config.auth0Domain = 'approov.auth0.com'
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.API_KEY_PROTECTION
 
+// The Approov token secret
+config.approovTokenSecret = 'OsMZ/lGRG8a7KrbvRf0qGOOIocANrjxcDZMbm1tguPqUpZuDup+rPVseN3Nd4oq3rKlodPPUnIdJIIVMTbmk3A=='
+
 module.exports = {
     DEMO_STAGE,
     config

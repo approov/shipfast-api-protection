@@ -854,11 +854,134 @@ mobile SDK for Android, iOS and hybrid mobile platforms without
 impacting customer experience (a multi-million user base customer
 with API data-scraping problems going live with Approov in _just over
 a week_)
+1. Is a constantly-monitored, enterprise-grade, highly-available and
+highly-performant proven cloud-based API and app protection service
 
 For this defense, we will walk through the process of integrating
 Approov into the ShipFast mobile app and backend Node.js server and
 demonstrate its effectiveness in protecting the ShipFast web API
 from those pesky ShipRaider pirates!
+
+The steps to integrate Approov into a mobile app and backend API are
+really simple. If you do not believe me, check out https://approov.io/blog/
+and you will see a real case of this in action! The steps required are:
+1. Sign up for an Approov 30-day free trial at https://approov.io/demo-reg.html
+where you will receive everything you require for this service
+1. Download the necessary mobile app SDK and add it to your app
+1. Add some code to your mobile app to trigger the app authentication
+process which will communicate with the Approov Cloud Service and issue
+you with an authentication JSON Web Token (JWT) similar to the one
+used by Open ID Connect (OIDC) for authenticating users
+1. Send that token along with any web server API calls which require
+your app to be authenticated
+1. Register your mobile app with the Approov Cloud Service so we can
+verify it at runtime and ensure it is present and unaltered
+1. Add a simple JWT check to your server code to verify the Approov
+JWT in authenticated requests, using one of the many available
+industry-standard JWT libraries from https://jwt.io#libraries
+
+In this walkthrough we have already added a new Android module to our
+Android Studio project so we can include the Approov aar SDK. The
+steps to achieve this can be found at https://approov.io/docs/androidclientapiuserguide.html#importing-the-approov-sdk-into-android-studio
+
+First, we add the code to the ShipFast app in the form of an OkHttpClient
+request "Interceptor" (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovRequestInterceptor). This makes Approov pluggable so, if we include this
+interceptor, the Approov authentication process will be performed
+for API requests and the resulting Approov JWT will be added to an
+"Approov-Token" request header as follows:
+```
+/**
+  * Intercept the given request chain to add the Approov token to an 'Approov-Token' header.
+  *
+  * @param chain the request chain to modify
+  * @return the modified response, authenticated by Approov
+  */
+override fun intercept(chain: Interceptor.Chain): Response {
+
+    val originalRequest = chain.request()
+    val approovToken = ApproovAttestation.shared().fetchApproovTokenAndWait(originalRequest.url().toString()).token
+    val approovRequest = originalRequest.newBuilder().addHeader("Approov-Token", approovToken).build()
+    return chain.proceed(approovRequest)
+}
+```
+
+This request interceptor can be included in our OkHttpClient as follows:
+```
+OkHttpClient.Builder()
+    .addInterceptor(ApproovRequestInterceptor())
+    .build()
+```
+
+Second, when we are done with the app, we need to build the APK, sign it, and
+register it with the Approov Cloud Service by following the documentation at
+https://approov.io/docs/applicationregistration.html
+
+Finally, we need to add the server side changes which will be performed
+using our request authentication express middleware (shipfast-api-protection/server/shipfast-api/auth.js):
+```
+// Verify and decode the Approov token and respond with 403 if the JWT
+// could not be decoded, has expired, or has an invalid signature
+const checkApproovTokenJWT = jwt({
+  secret: new Buffer(config.approovTokenSecret, 'base64'),
+  getToken: function fromApproovTokenHeader(req) {
+    // Retrieve the Approov token used to authenticate the mobile app from the request header
+    var approovToken = req.get('Approov-Token')
+    if (!approovToken) {
+      console.log('\tApproov token not specified or in the wrong format')
+    }
+    return approovToken
+  },
+  algorithms: ['HS256']
+})
+router.use(checkApproovTokenJWT)
+```
+
+The Approov Token Secret is the base 64-encoded HS256 symmetric secret
+you are given when signing up for the Approov service. It is what the
+Approov Cloud Service uses to sign Approov JWTs, and what your web
+service will use to verify these tokens for protected API requests.
+The app does not and should not know whether these tokens are valid
+(i.e. signed correctly and not expired). If your app is genuine and
+untampered and passes the Approov authentication process, you will be
+issued with a valid Approov JWT; otherwise it will be an invalid one.
+The mobile app is simply a carrier of this token.
+
+HINT: Do not put secrets in the app! Please! :-)
+
+To enable this stage of the demo, modify the "currentDemoStage" variable in the
+app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+```
+/** The current demo stage */
+val currentDemoStage = DemoStage.APPROOV_APP_AUTH_PROTECTION
+```
+Also modify the "config.currentDemoStage" variable and the
+"config.approovTokenSecret" variable in the server's "demo-configuration.js"
+file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+```
+// The current demo stage
+config.currentDemoStage = DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION
+
+// The Approov token secret
+config.approovTokenSecret = 'PUT-YOUR-APPROOV-TOKEN-SECRET-HERE'
+```
+
+Restart everything again, the app should continue to work normally,
+but this time it is authenticated by Approov. If it fails to work,
+check the following:
+1. You have included your Approov token secret in the ShipFast server
+1. The ShipFast app has been signed and registered with the Approov
+cloud service and it is the registered app you are running in the
+emulator (or on a device) and not some variant
+1. The emulator (or device) has not been rooted and does not have
+instrumentation frameworks such as Xposed or Frida installed
+1. The network connection from the emulator (or device) to the ShipFast
+server and Approov Cloud Service is not running through a MitM proxy
+1. The ShipFast app is not being debugged (it is okay to build for
+debug rather than release, but a debugger must not be attached when
+the app is running)
+
+Full Approov documentation can be found at https://approov.io/docs/
+
 
 COMING SOON!
 

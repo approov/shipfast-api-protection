@@ -25,6 +25,9 @@ var shipFastAPIKeys = [
 // The ShipFast HMAC secret used to sign API requests
 const SHIPFAST_HMAC_SECRET = '4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=='
 
+// The Approov token secret
+const APPROOV_TOKEN_SECRET = 'OsMZ/lGRG8a7KrbvRf0qGOOIocANrjxcDZMbm1tguPqUpZuDup+rPVseN3Nd4oq3rKlodPPUnIdJIIVMTbmk3A=='
+
 // Verify the ShipFast API key
 router.use(function(req, res, next) {
 
@@ -46,8 +49,8 @@ router.use(function(req, res, next) {
   }
 
   // Configure the request HMAC verification based on the demo stage
-  if (config.DEMO_STAGE == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
-      || config.DEMO_STAGE == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
+  if (config.currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
+      || config.currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
 
     // Retrieve the ShipFast HMAC used to sign the API request from the request header
     var requestShipFastHMAC = req.get('SF-HMAC')
@@ -60,11 +63,11 @@ router.use(function(req, res, next) {
     // Calculate our version of the HMAC and compare with one sent in the request header
     var secret = SHIPFAST_HMAC_SECRET
     var hmac
-    if (config.DEMO_STAGE == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION) {
+    if (config.currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION) {
       // Just use the static secret during HMAC verification for this demo stage
       hmac = crypto.createHmac('sha256', Buffer.from(secret, 'base64'))
     }
-    else if (config.DEMO_STAGE == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
+    else if (config.currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
       // Obfuscate the static secret to produce a dynamic secret to use during HMAC
       // verification for this demo stage
       var obfuscatedSecretData = Buffer.from(secret, 'base64')
@@ -96,8 +99,28 @@ router.use(function(req, res, next) {
   next()
 })
 
-// Create middleware for checking the JWT
-const checkJwt = jwt({
+// Use the Approov-Token header to authenticate the connecting mobile app
+// if we are in the Approov demo stage
+if (config.currentDemoStage == DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION) {
+  // Verify and decode the Approov token and respond with 403 if the JWT
+  // could not be decoded, has expired, or has an invalid signature
+  const checkApproovTokenJWT = jwt({
+    secret: new Buffer(APPROOV_TOKEN_SECRET, 'base64'),
+    getToken: function fromApproovTokenHeader(req) {
+      // Retrieve the Approov token used to authenticate the mobile app from the request header
+      var approovToken = req.get('Approov-Token')
+      if (!approovToken) {
+        console.log('\tApproov token not specified or in the wrong format')
+      }
+      return approovToken
+    },
+    algorithms: ['HS256']
+  })
+  router.use(checkApproovTokenJWT)
+}
+
+// Create middleware for checking the user's ID token JWT
+const checkUserAuthJWT = jwt({
   // Dynamically provide a signing key based on the kid in the header and the singing keys provided by the JWKS endpoint
   secret: jwksRsa.expressJwtSecret({
     cache: true,
@@ -111,7 +134,7 @@ const checkJwt = jwt({
   issuer: "https://" + config.auth0Domain + "/",
   algorithms: ['RS256']
 })
-router.use(checkJwt)
+router.use(checkUserAuthJWT)
 
 // Add the authentication router to the exports
 module.exports = router

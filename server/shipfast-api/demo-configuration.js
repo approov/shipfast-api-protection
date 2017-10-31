@@ -22,7 +22,7 @@ const DEMO_STAGE = {
 var config = {}
 
 // The ShipFast server host name
-config.serverHostName = "mac-mini" // 'localhost'
+config.serverHostName = 'shipfast.approov.io'
 
 // The flag for whether to run the ShipFast server over HTTPS (true) or HTTP (false)
 config.runSecureServer = true

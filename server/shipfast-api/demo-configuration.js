@@ -25,7 +25,7 @@ var config = {}
 config.serverHostName = "mac-mini" // 'localhost'
 
 // The flag for whether to run the ShipFast server over HTTPS (true) or HTTP (false)
-config.runSecureServer = false
+config.runSecureServer = true
 
 // The Auth0 domain to use for use authentication
 config.auth0Domain = 'approov.auth0.com'

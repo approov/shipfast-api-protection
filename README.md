@@ -912,6 +912,56 @@ OkHttpClient.Builder()
     .build()
 ```
 
+We also need a solution to mitigate stealing of the Approov JWT by
+MitM attacks, so we provide a custom Hostname Verifier which ensures
+the TLS connection used by the app to perform authenticated server
+API requests is tracked by Approov. Essentially, if the connection to
+the Approov Cloud Service or any protected API endpoints is proxied,
+the Approov authentication process can track that and provide an
+invalid token.
+
+It is worth noting here that Approov achieves this
+"dynamic TLS certificate pinning" without you having to embed any
+certificate data in the app and worry about updating it when a
+certificate expires or the certificate's private key is compromised.
+Approov will keep up with changes to your API certificate.
+
+The custom Hostname Verifier is provided in the "shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovHostnameVerifier" file.
+
+This hostname verifier can be included in our OkHttpClient as follows:
+```
+OkHttpClient.Builder()
+    .hostnameVerifier(ApproovHostnameVerifier(OkHttpClient().hostnameVerifier()))
+    .build()
+```
+
+If you are unfamiliar with the concept of hostname verification
+this file may look a little daunting, but I will attempt to
+explain it a little here. A hostname verifier verifies a
+particular host used in a particular HTTPS connection. Before
+the "HTTP" part, layer 7 of the OSI model (https://en.wikipedia.org/wiki/OSI_model), 
+the "S" part, layer 4 of the OSI model, must first be
+established. That is, Transport Layer Security must be applied.
+
+You can read many documents about how this uses asymmetric
+cryptography and X.509 certificates in a handshake to establish
+a symmetric shared key between the client and server used to
+encrypt, decrypt, sign and verify network traffic; but prior to
+this phase, the hostname verifier allows apps to customise the
+validation process of the host server and we use that to synchronise
+the current network session for an API request with Approov so
+the Approov token's validity can reflect the validity of the host
+server certificate. If we are talking to the real thing, we should
+get a valid Approov token. If API traffic is intercepted by a
+proxy decrypting and re-encrypting API traffic so it can spy as
+a MitM, then we should get an invalid Approov token.
+
+So why use a hostname verifier and not just set all this up front
+as a 'pin set' in the trust manager and then use that for API
+requests? That is why it is _dynamic_ pinning, and how we avoid
+the challenge of playing catch-up as many certificate pinning
+solutions are faced with.
+
 Second, when we are done with the app, we need to build the APK, sign it, and
 register it with the Approov Cloud Service by following the documentation at
 https://approov.io/docs/applicationregistration.html

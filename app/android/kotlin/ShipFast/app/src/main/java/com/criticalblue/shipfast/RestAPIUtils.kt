@@ -14,7 +14,8 @@ import android.content.pm.PackageManager
 import android.location.Location
 import android.location.LocationManager
 import android.util.Base64
-import android.util.Log
+import com.criticalblue.attestationlibrary.ApproovAttestation
+import com.criticalblue.attestationlibrary.ApproovConfig
 import com.google.android.gms.maps.model.LatLng
 import okhttp3.*
 import org.json.JSONArray
@@ -41,6 +42,9 @@ const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pV
 /** The HMAC request header */
 const val HMAC_HEADER = "SF-HMAC"
 
+/** The flag for whether Approov has been initialised */
+private var approovInitialised = false
+
 /**
  * Request the nearest available shipment to the given location.
  *
@@ -55,7 +59,7 @@ fun requestNearestShipment(context: Context, originLocation: LatLng, callback: (
             .addHeader(LATITUDE_HEADER, originLocation.latitude.toString())
             .addHeader(LONGITUDE_HEADER, originLocation.longitude.toString())
     val request = requestBuilder.build()
-    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient(context).newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             response?.let {
                 if (!it.isSuccessful) {
@@ -88,7 +92,7 @@ fun requestDeliveredShipments(context: Context, callback: (Response?, List<Shipm
     val url = URL("$SERVER_BASE_URL/shipments/delivered")
     val requestBuilder = createDefaultRequestBuilder(context, url)
     val request = requestBuilder.build()
-    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient(context).newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             var deliveredShipments: MutableList<Shipment>? = null
             response?.body()?.let {
@@ -123,7 +127,7 @@ fun requestActiveShipment(context: Context, callback: (Response?, Shipment?) -> 
     val url = URL("$SERVER_BASE_URL/shipments/active")
     val requestBuilder = createDefaultRequestBuilder(context, url)
     val request = requestBuilder.build()
-    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient(context).newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             response?.let {
                 if (!it.isSuccessful) {
@@ -157,7 +161,7 @@ fun requestShipment(context: Context, shipmentID: Int, callback: (Response?, Shi
     val url = URL("$SERVER_BASE_URL/shipments/$shipmentID")
     val requestBuilder = createDefaultRequestBuilder(context, url)
     val request = requestBuilder.build()
-    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient(context).newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             var shipment: Shipment? = null
             response?.body()?.let {
@@ -192,7 +196,7 @@ fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipme
             .addHeader(LONGITUDE_HEADER, currentLocation.longitude.toString())
             .addHeader(SHIPMENT_STATE_HEADER, newState.ordinal.toString())
     val request = requestBuilder.build()
-    buildDefaultHTTPClient().newCall(request).enqueue(object: Callback {
+    buildDefaultHTTPClient(context).newCall(request).enqueue(object: Callback {
         override fun onResponse(call: Call?, response: Response?) {
             callback(response, response?.isSuccessful ?: false)
         }
@@ -242,13 +246,36 @@ private fun createDefaultRequestBuilder(context: Context, url: URL): Request.Bui
 /**
  * Build a default HTTP client to use for API requests.
  *
+ * @param context the application context
  * @return the HTTP client
  */
-private fun buildDefaultHTTPClient(): OkHttpClient {
-    return OkHttpClient.Builder()
-            .readTimeout(2, TimeUnit.SECONDS)
-            .writeTimeout(2, TimeUnit.SECONDS)
-            .build()
+private fun buildDefaultHTTPClient(context: Context): OkHttpClient {
+
+    when (currentDemoStage) {
+        DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
+            // Initialise Approov, if this hasn't been done before
+            if (!approovInitialised) {
+                ApproovAttestation.initialize(ApproovConfig.getDefaultConfig(context))
+                approovInitialised = true
+            }
+
+            // Use a custom Hostname Verifier and Request Interceptor to enable Approov protection
+            // for this demo stage
+            return OkHttpClient.Builder()
+                    .readTimeout(2, TimeUnit.SECONDS)
+                    .writeTimeout(2, TimeUnit.SECONDS)
+                    .hostnameVerifier(ApproovHostnameVerifier(OkHttpClient().hostnameVerifier()))
+                    .addInterceptor(ApproovRequestInterceptor())
+                    .build()
+        }
+        else -> {
+            // Use a simple client for non-Approov demo stages
+            return OkHttpClient.Builder()
+                    .readTimeout(2, TimeUnit.SECONDS)
+                    .writeTimeout(2, TimeUnit.SECONDS)
+                    .build()
+        }
+    }
 }
 
 /**

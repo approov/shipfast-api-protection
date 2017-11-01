@@ -144,7 +144,7 @@ more if you wish
 
 ### Configuring the Demo
 
-1. Open the file "shipfast-api-protection/server/shipfast-api/demo-configuration.js"
+1. Open the file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js)
 in your favourite text editor and change the server host name to the name of the
 machine which you intend to use to host the ShipFast and ShipRaider servers:
 ```
@@ -154,7 +154,7 @@ config.serverHostName = "PUT-YOUR-SERVER-HOSTNAME-HERE"
 ```
 config.auth0Domain = "PUT-YOUR-DOMAIN-HERE"
 ```
-3. Open the file "shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js"
+3. Open the file [server/shipraider-rogue-web/web/js/shipraider.js](server/shipraider-rogue-web/web/js/shipraider.js)
 in your favourite text editor and enter your Auth0 client ID and domain:
 ```
 // The Auth0 client ID
@@ -171,7 +171,7 @@ node generate-cert.js
 **.crt** file generated in the previous step onto the emulator
 6. Ensure the Android Emulator has sufficient permission to use high accuracy
 location data (Settings->Location->Mode set to "High accuracy")
-7. Open the Android Studio ShipFast project in "shipfast-api-protection/app/android/kotlin"
+7. Open the Android Studio ShipFast project in [app/android/kotlin](app/android/kotlin)
 8. In Android Studio, open the app's manifest "app/manifests/AndroidManifest.xml"
 and enter your Google Maps API key:
 ```
@@ -216,10 +216,10 @@ regenerate sample data around a new origin point.
 
 For reference, this is the structure of the git repo directory:
 
-* **shipfast-api-protection/server/shipfast-api** - The 'genuine' ShipFast API
+* **[server/shipfast-api](server/shipfast-api)** - The 'genuine' ShipFast API
 Node.js server
-* **shipfast-api-protection/server/shipfaster-rogue-web** - The 'rogue' ShipRaider web Node.js server
-* **shipfast-api-protection/app/android/kotlin** - The Android Kotlin mobile app
+* **[server/shipfaster-rogue-web](server/shipfaster-rogue-web)** - The 'rogue' ShipRaider web Node.js server
+* **[app/android/kotlin](app/android/kotlin)** - The Android Kotlin mobile app
 
 ## The Walkthrough
 
@@ -249,7 +249,7 @@ of information, which you can find more about at https://jwt.io/introduction
 
 The ShipFast server validates the authenticated user using Node.js express
 middleware (a bit of code which plays a role in processing a network request) in
-the file "shipfast-api-protection/server/shipfast-api/auth.js". The piece of code
+the file [server/shipfast-api/auth.js](server/shipfast-api/auth.js). The piece of code
 which is responsible for this is:
 ```
 // Create middleware for checking the JWT
@@ -366,7 +366,8 @@ of their choosing as an origin point and a radius to 'sweep' over with a 'step'
 granularity. This is used to construct a virtual geographical area and fire
 authenticated API requests for nearest shipments at various points in this area
 in a brute-force fashion in order to drive out the list of shipments in the
-backend server. The code which performs this task is located in "shipraider-rogue-web/web/js/shipraider.js":
+backend server. The code which performs this task is located in
+[shipraider-rogue-web/web/js/shipraider.js](shipraider-rogue-web/web/js/shipraider.js):
 ```
 for (var lat = latStart; lat <= latEnd; lat += locStep) {
   for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
@@ -447,13 +448,13 @@ authentication bearer token. The result of this HMAC can be transmitted as
 part of API requests from the app and verified by the server.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable in the
-app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+app's "DemoConfiguration.kt" file [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
 ```
 /** The current demo stage */
 val currentDemoStage = DemoStage.HMAC_STATIC_SECRET_PROTECTION
 ```
 Also modify the "config.currentDemoStage" variable in the server's "demo-configuration.js"
-file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js):
 ```
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
@@ -464,7 +465,7 @@ these changes to take affect. The app should work as it did before, but ShipRaid
 no longer appears to work. We will take a look at the changes in more detail.
 
 If we turn our attention to the ShipFast API server code, and in particular the
-"auth.js" Node.js express router (shipfast-api-protection/server/shipfast-api/auth.js)
+"auth.js" Node.js express router [server/shipfast-api/auth.js](server/shipfast-api/auth.js)
 we can observer the changes made to validate the client API requests
 by use of an HMAC.
 
@@ -563,7 +564,7 @@ and therefore continue to authenticate our rogue API requests.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"
-file (shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js):
+file [server/shipraider-rogue-web/web/js/shipraider.js](server/shipraider-rogue-web/web/js/shipraider.js):
 ```
 // The current demo stage
 var currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
@@ -648,13 +649,13 @@ the same secret key and message, and the server ensures both components
 end up with the same answer before authenticating the API request.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable in the
-app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+app's "DemoConfiguration.kt" file [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
 ```
 /** The current demo stage */
 val currentDemoStage = DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION
 ```
 Also modify the "config.currentDemoStage" variable in the server's "demo-configuration.js"
-file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js):
 ```
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION
@@ -745,7 +746,7 @@ To see this process in action, we have prepared a short video:
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"
-file (shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js):
+file [server/shipraider-rogue-web/web/js/shipraider.js](server/shipraider-rogue-web/web/js/shipraider.js):
 ```
 // The current demo stage
 var currentDemoStage = DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION
@@ -851,16 +852,230 @@ a dynamic integrity check using a patented low-level approach based on
 many years of low-level software analysis experience
 1. Is easy to integrate and quick to deploy via a cloud service and
 mobile SDK for Android, iOS and hybrid mobile platforms without
-impacting customer experience (a multi-million user base customer
-with API data-scraping problems going live with Approov in _just over
-a week_)
+impacting customer experience. [Nimses](https://www.approov.io/blog/criticalblues-approov-chosen-by-nimses-to-protect-their-next-generation-social-media-platform.html), a multi-million user base customer
+with API data-scraping problems went live with Approov in _just over
+a week_.
+1. Is a constantly-monitored, enterprise-grade, highly-available and
+highly-performant proven cloud-based API and app protection service
 
 For this defense, we will walk through the process of integrating
 Approov into the ShipFast mobile app and backend Node.js server and
 demonstrate its effectiveness in protecting the ShipFast web API
 from those pesky ShipRaider pirates!
 
-COMING SOON!
+The steps to integrate Approov into a mobile app and backend API are
+really simple. If you do not believe me, check out our recent
+[press release](https://www.approov.io/blog/criticalblues-approov-chosen-by-nimses-to-protect-their-next-generation-social-media-platform.html)
+and you will see a real case of this in action! The steps required are:
+1. Sign up for an Approov 30-day free trial at https://approov.io/demo-reg.html
+where you will receive everything you require for this service
+1. Download the necessary mobile app SDK and add it to your app
+1. Add some code to your mobile app to trigger the app authentication
+process which will communicate with the Approov Cloud Service and issue
+you with an authentication JSON Web Token (JWT) similar to the one
+used by Open ID Connect (OIDC) for authenticating users
+1. Send that token along with any web server API calls which require
+your app to be authenticated
+1. Register your mobile app with the Approov Cloud Service so we can
+verify it at runtime and ensure it is present and unaltered
+1. Add a simple JWT check to your server code to verify the Approov
+JWT in authenticated requests, using one of the many available
+industry-standard JWT libraries from https://jwt.io#libraries
+
+In this walkthrough we have already added a new Android module to our
+Android Studio project so we can include the Approov aar SDK. The
+steps to achieve this can be found at https://approov.io/docs/androidclientapiuserguide.html#importing-the-approov-sdk-into-android-studio
+
+First, we add the code to the ShipFast app in the form of an OkHttpClient
+request "Interceptor" [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovRequestInterceptor](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovRequestInterceptor). This makes Approov pluggable so, if we include this
+interceptor, the Approov authentication process will be performed
+for API requests and the resulting Approov JWT will be added to an
+"Approov-Token" request header as follows:
+```
+/**
+  * Intercept the given request chain to add the Approov token to an 'Approov-Token' header.
+  *
+  * @param chain the request chain to modify
+  * @return the modified response, authenticated by Approov
+  */
+override fun intercept(chain: Interceptor.Chain): Response {
+
+    val originalRequest = chain.request()
+    val approovToken = ApproovAttestation.shared().fetchApproovTokenAndWait(originalRequest.url().toString()).token
+    val approovRequest = originalRequest.newBuilder().addHeader("Approov-Token", approovToken).build()
+    return chain.proceed(approovRequest)
+}
+```
+
+This request interceptor can be included in our OkHttpClient as follows:
+```
+OkHttpClient.Builder()
+    .addInterceptor(ApproovRequestInterceptor())
+    .build()
+```
+
+We also need a solution to mitigate stealing of the Approov JWT by
+MitM attacks, so we provide a custom Hostname Verifier which ensures
+the TLS connection used by the app to perform authenticated server
+API requests is tracked by Approov. Essentially, if the connection to
+the Approov Cloud Service or any protected API endpoints is proxied,
+the Approov authentication process can track that and provide an
+invalid token.
+
+It is worth noting here that Approov achieves this
+"dynamic TLS certificate pinning" without you having to embed any
+certificate data in the app and worry about updating it when a
+certificate expires or the certificate's private key is compromised.
+Approov will keep up with changes to your API certificate.
+
+The custom Hostname Verifier is provided in the [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovHostnameVerifier](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovHostnameVerifier) file.
+
+This hostname verifier can be included in our OkHttpClient as follows:
+```
+OkHttpClient.Builder()
+    .hostnameVerifier(ApproovHostnameVerifier(OkHttpClient().hostnameVerifier()))
+    .build()
+```
+
+If you are unfamiliar with the concept of hostname verification
+this file may look a little daunting, but I will attempt to
+explain it a little here. A hostname verifier verifies a
+particular host used in a particular HTTPS connection. Before
+the "HTTP" part, layer 7 of the [OSI model](https://en.wikipedia.org/wiki/OSI_model), 
+the "S" part, layer 4 of the OSI model, must first be
+established. That is, Transport Layer Security must be applied.
+
+You can read many documents about how this uses asymmetric
+cryptography and X.509 certificates in a handshake to establish
+a symmetric shared key between the client and server used to
+encrypt, decrypt, sign and verify network traffic; but prior to
+this phase, the hostname verifier allows apps to customise the
+validation process of the host server and we use that to synchronise
+the current network session for an API request with Approov so
+the Approov token's validity can reflect the validity of the host
+server certificate. If we are talking to the real thing, we should
+get a valid Approov token. If API traffic is intercepted by a
+proxy decrypting and re-encrypting API traffic so it can spy as
+a MitM, then we should get an invalid Approov token.
+
+So why use a hostname verifier and not just set all this up front
+as a 'pin set' in the trust manager and then use that for API
+requests? That is why it is _dynamic_ pinning, and how we avoid
+the challenge of playing catch-up as many certificate pinning
+solutions are faced with.
+
+Second, when we are done with the app, we need to build the APK, sign it, and
+register it with the Approov Cloud Service by following the documentation at
+https://approov.io/docs/applicationregistration.html
+
+Finally, we need to add the server side changes which will be performed
+using our request authentication express middleware
+[server/shipfast-api/auth.js](server/shipfast-api/auth.js):
+```
+// Verify and decode the Approov token and respond with 403 if the JWT
+// could not be decoded, has expired, or has an invalid signature
+const checkApproovTokenJWT = jwt({
+  secret: new Buffer(config.approovTokenSecret, 'base64'),
+  getToken: function fromApproovTokenHeader(req) {
+    // Retrieve the Approov token used to authenticate the mobile app from the request header
+    var approovToken = req.get('Approov-Token')
+    if (!approovToken) {
+      console.log('\tApproov token not specified or in the wrong format')
+    }
+    return approovToken
+  },
+  algorithms: ['HS256']
+})
+router.use(checkApproovTokenJWT)
+```
+
+The Approov Token Secret is the base 64-encoded HS256 symmetric secret
+you are given when signing up for the Approov service. It is what the
+Approov Cloud Service uses to sign Approov JWTs, and what your web
+service will use to verify these tokens for protected API requests.
+The app does not and should not know whether these tokens are valid
+(i.e. signed correctly and not expired). If your app is genuine and
+untampered and passes the Approov authentication process, you will be
+issued with a valid Approov JWT; otherwise it will be an invalid one.
+The mobile app is simply a carrier of this token.
+
+HINT: Do not put secrets in the app! Please! :-)
+
+To enable this stage of the demo, modify the "currentDemoStage" variable in the
+app's "DemoConfiguration.kt" file
+[app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+```
+/** The current demo stage */
+val currentDemoStage = DemoStage.APPROOV_APP_AUTH_PROTECTION
+```
+Also modify the "config.currentDemoStage" variable and the
+"config.approovTokenSecret" variable in the server's "demo-configuration.js"
+file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js):
+```
+// The current demo stage
+config.currentDemoStage = DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION
+
+// The Approov token secret
+config.approovTokenSecret = 'PUT-YOUR-APPROOV-TOKEN-SECRET-HERE'
+```
+
+Restart everything again, the app should continue to work normally,
+but this time it is authenticated by Approov. If it fails to work,
+check the following:
+1. You have included your Approov token secret in the ShipFast server
+1. The ShipFast app has been signed and registered with the Approov
+cloud service and it is the registered app you are running in the
+emulator (or on a device) and not some variant
+1. The emulator (or device) has not been rooted and does not have
+instrumentation frameworks such as Xposed or Frida installed
+1. The network connection from the emulator (or device) to the ShipFast
+server and Approov Cloud Service is not running through a MitM proxy
+1. The ShipFast app is not being debugged (it is okay to build for
+debug rather than release, but a debugger must not be attached when
+the app is running)
+
+Full Approov documentation can be found at https://approov.io/docs/
+
+### The Challenge (aka homework)
+
+Since we have an Approov-authenticated ShipFast app now, there are a
+number of tests that should be performed to test the app's
+resilience to attack. You can perform these tests and try to request
+the nearest shipment, update the current shipment, etc, all of which
+should now be authenticated by Approov:
+1. Try modifying ShipRaider to include a fake Approov token, or use
+the Linux [cURL](https://en.wikipedia.org/wiki/CURL) command or
+equivalent to perform fake API requests to the ShipFast server. In
+other words, try using the ShipFast API without the genuine
+Approov-registered app. Be as sneaky as you can - attackers will be!
+1. Take the Approov-registered APK, unzip it, try changing something
+such as adding the debug flag to the Android manifest as we did in a
+previous attack, re-sign it, install it and run it on an unrooted
+device. Even without debugging, the app modification of the APK will
+be detected by Approov as the signature has changed.
+1. Follow the previous step, and attach a debugger to the app. Approov
+detects the presence of the debugger.
+1. Try running the original Approov-registered app, unaltered, on a
+rooted device.
+1. Try running the original Approov-registered app, unaltered, on an
+emulator.
+1. Try proxying network traffic from a device to the ShipFast server.
+Use an SSL proxy (MitM attack) such as Charles or mitmproxy to snoop
+the API requests.
+1. Try attaching an instrumentation framework such as Frida or
+Xposed to the Approov-registered app. Install a TLS certificate
+'unpinning' framework to try to circumvent MitM mitigation.
+
+IMPORTANT: Approov's app and API protection features can be enabled
+and disabled. These features will **not all necessarily be running
+during your penetration tests**, so please check the status of your
+Approov Cloud Service first before attempting to elevate our
+engineering team's heart rate considerably. In all seriousness
+though, we are confident that Approov provides highly-competitive
+app and API protection (and we have the customers to back that
+statement up) so if you do have any concerns or queries,
+please get in touch using the form at [https://approov.io/contact-us.html](https://approov.io/contact-us.html) or, depending on the situation,
+[https://www.criticalblue.com/careers.html](https://www.criticalblue.com/careers.html).
 
 ## Wrap Up
 

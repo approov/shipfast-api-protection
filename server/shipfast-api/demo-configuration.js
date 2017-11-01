@@ -22,16 +22,19 @@ const DEMO_STAGE = {
 var config = {}
 
 // The ShipFast server host name
-config.serverHostName = "PUT-YOUR-SERVER-HOSTNAME-HERE"
+config.serverHostName = 'PUT-YOUR-SERVER-HOSTNAME-HERE'
 
 // The flag for whether to run the ShipFast server over HTTPS (true) or HTTP (false)
-config.runSecureServer = false
+config.runSecureServer = true
 
 // The Auth0 domain to use for use authentication
 config.auth0Domain = 'PUT-YOUR-DOMAIN-HERE'
 
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.API_KEY_PROTECTION
+
+// The Approov token secret
+config.approovTokenSecret = 'PUT-YOUR-APPROOV-TOKEN-SECRET-HERE'
 
 module.exports = {
     DEMO_STAGE,

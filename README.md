@@ -144,7 +144,7 @@ more if you wish
 
 ### Configuring the Demo
 
-1. Open the file "shipfast-api-protection/server/shipfast-api/demo-configuration.js"
+1. Open the file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js)
 in your favourite text editor and change the server host name to the name of the
 machine which you intend to use to host the ShipFast and ShipRaider servers:
 ```
@@ -154,7 +154,7 @@ config.serverHostName = "PUT-YOUR-SERVER-HOSTNAME-HERE"
 ```
 config.auth0Domain = "PUT-YOUR-DOMAIN-HERE"
 ```
-3. Open the file "shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js"
+3. Open the file [server/shipraider-rogue-web/web/js/shipraider.js](server/shipraider-rogue-web/web/js/shipraider.js)
 in your favourite text editor and enter your Auth0 client ID and domain:
 ```
 // The Auth0 client ID
@@ -171,7 +171,7 @@ node generate-cert.js
 **.crt** file generated in the previous step onto the emulator
 6. Ensure the Android Emulator has sufficient permission to use high accuracy
 location data (Settings->Location->Mode set to "High accuracy")
-7. Open the Android Studio ShipFast project in "shipfast-api-protection/app/android/kotlin"
+7. Open the Android Studio ShipFast project in [app/android/kotlin](app/android/kotlin)
 8. In Android Studio, open the app's manifest "app/manifests/AndroidManifest.xml"
 and enter your Google Maps API key:
 ```
@@ -216,10 +216,10 @@ regenerate sample data around a new origin point.
 
 For reference, this is the structure of the git repo directory:
 
-* **shipfast-api-protection/server/shipfast-api** - The 'genuine' ShipFast API
+* **[server/shipfast-api](server/shipfast-api)** - The 'genuine' ShipFast API
 Node.js server
-* **shipfast-api-protection/server/shipfaster-rogue-web** - The 'rogue' ShipRaider web Node.js server
-* **shipfast-api-protection/app/android/kotlin** - The Android Kotlin mobile app
+* **[server/shipfaster-rogue-web](server/shipfaster-rogue-web)** - The 'rogue' ShipRaider web Node.js server
+* **[app/android/kotlin](app/android/kotlin)** - The Android Kotlin mobile app
 
 ## The Walkthrough
 
@@ -249,7 +249,7 @@ of information, which you can find more about at https://jwt.io/introduction
 
 The ShipFast server validates the authenticated user using Node.js express
 middleware (a bit of code which plays a role in processing a network request) in
-the file "shipfast-api-protection/server/shipfast-api/auth.js". The piece of code
+the file [server/shipfast-api/auth.js](server/shipfast-api/auth.js). The piece of code
 which is responsible for this is:
 ```
 // Create middleware for checking the JWT
@@ -366,7 +366,8 @@ of their choosing as an origin point and a radius to 'sweep' over with a 'step'
 granularity. This is used to construct a virtual geographical area and fire
 authenticated API requests for nearest shipments at various points in this area
 in a brute-force fashion in order to drive out the list of shipments in the
-backend server. The code which performs this task is located in "shipraider-rogue-web/web/js/shipraider.js":
+backend server. The code which performs this task is located in
+[shipraider-rogue-web/web/js/shipraider.js](shipraider-rogue-web/web/js/shipraider.js):
 ```
 for (var lat = latStart; lat <= latEnd; lat += locStep) {
   for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
@@ -447,13 +448,13 @@ authentication bearer token. The result of this HMAC can be transmitted as
 part of API requests from the app and verified by the server.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable in the
-app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+app's "DemoConfiguration.kt" file [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
 ```
 /** The current demo stage */
 val currentDemoStage = DemoStage.HMAC_STATIC_SECRET_PROTECTION
 ```
 Also modify the "config.currentDemoStage" variable in the server's "demo-configuration.js"
-file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js):
 ```
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
@@ -464,7 +465,7 @@ these changes to take affect. The app should work as it did before, but ShipRaid
 no longer appears to work. We will take a look at the changes in more detail.
 
 If we turn our attention to the ShipFast API server code, and in particular the
-"auth.js" Node.js express router (shipfast-api-protection/server/shipfast-api/auth.js)
+"auth.js" Node.js express router [server/shipfast-api/auth.js](server/shipfast-api/auth.js)
 we can observer the changes made to validate the client API requests
 by use of an HMAC.
 
@@ -563,7 +564,7 @@ and therefore continue to authenticate our rogue API requests.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"
-file (shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js):
+file [server/shipraider-rogue-web/web/js/shipraider.js](server/shipraider-rogue-web/web/js/shipraider.js):
 ```
 // The current demo stage
 var currentDemoStage = DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
@@ -648,13 +649,13 @@ the same secret key and message, and the server ensures both components
 end up with the same answer before authenticating the API request.
 
 To enable this stage of the demo, modify the "currentDemoStage" variable in the
-app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+app's "DemoConfiguration.kt" file [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
 ```
 /** The current demo stage */
 val currentDemoStage = DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION
 ```
 Also modify the "config.currentDemoStage" variable in the server's "demo-configuration.js"
-file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js):
 ```
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION
@@ -745,7 +746,7 @@ To see this process in action, we have prepared a short video:
 
 To enable this stage of the demo, modify the "currentDemoStage" variable
 in the ShipRaider's "shipraider.js"
-file (shipfast-api-protection/server/shipraider-rogue-web/web/js/shipraider.js):
+file [server/shipraider-rogue-web/web/js/shipraider.js](server/shipraider-rogue-web/web/js/shipraider.js):
 ```
 // The current demo stage
 var currentDemoStage = DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION
@@ -885,7 +886,7 @@ Android Studio project so we can include the Approov aar SDK. The
 steps to achieve this can be found at https://approov.io/docs/androidclientapiuserguide.html#importing-the-approov-sdk-into-android-studio
 
 First, we add the code to the ShipFast app in the form of an OkHttpClient
-request "Interceptor" (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovRequestInterceptor). This makes Approov pluggable so, if we include this
+request "Interceptor" [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovRequestInterceptor](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovRequestInterceptor). This makes Approov pluggable so, if we include this
 interceptor, the Approov authentication process will be performed
 for API requests and the resulting Approov JWT will be added to an
 "Approov-Token" request header as follows:
@@ -926,7 +927,7 @@ certificate data in the app and worry about updating it when a
 certificate expires or the certificate's private key is compromised.
 Approov will keep up with changes to your API certificate.
 
-The custom Hostname Verifier is provided in the "shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovHostnameVerifier" file.
+The custom Hostname Verifier is provided in the [app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovHostnameVerifier](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ApproovHostnameVerifier) file.
 
 This hostname verifier can be included in our OkHttpClient as follows:
 ```
@@ -967,7 +968,8 @@ register it with the Approov Cloud Service by following the documentation at
 https://approov.io/docs/applicationregistration.html
 
 Finally, we need to add the server side changes which will be performed
-using our request authentication express middleware (shipfast-api-protection/server/shipfast-api/auth.js):
+using our request authentication express middleware
+[server/shipfast-api/auth.js](server/shipfast-api/auth.js):
 ```
 // Verify and decode the Approov token and respond with 403 if the JWT
 // could not be decoded, has expired, or has an invalid signature
@@ -999,14 +1001,15 @@ The mobile app is simply a carrier of this token.
 HINT: Do not put secrets in the app! Please! :-)
 
 To enable this stage of the demo, modify the "currentDemoStage" variable in the
-app's "DemoConfiguration.kt" file (shipfast-api-protection/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
+app's "DemoConfiguration.kt" file
+[app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt](app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/DemoConfiguration.kt):
 ```
 /** The current demo stage */
 val currentDemoStage = DemoStage.APPROOV_APP_AUTH_PROTECTION
 ```
 Also modify the "config.currentDemoStage" variable and the
 "config.approovTokenSecret" variable in the server's "demo-configuration.js"
-file (shipfast-api-protection/server/shipfast-api/demo-configuration.js):
+file [server/shipfast-api/demo-configuration.js](server/shipfast-api/demo-configuration.js):
 ```
 // The current demo stage
 config.currentDemoStage = DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION

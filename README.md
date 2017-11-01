@@ -852,9 +852,9 @@ a dynamic integrity check using a patented low-level approach based on
 many years of low-level software analysis experience
 1. Is easy to integrate and quick to deploy via a cloud service and
 mobile SDK for Android, iOS and hybrid mobile platforms without
-impacting customer experience (a multi-million user base customer
-with API data-scraping problems going live with Approov in _just over
-a week_)
+impacting customer experience. [Nimses](https://www.approov.io/blog/criticalblues-approov-chosen-by-nimses-to-protect-their-next-generation-social-media-platform.html), a multi-million user base customer
+with API data-scraping problems went live with Approov in _just over
+a week_.
 1. Is a constantly-monitored, enterprise-grade, highly-available and
 highly-performant proven cloud-based API and app protection service
 
@@ -864,7 +864,8 @@ demonstrate its effectiveness in protecting the ShipFast web API
 from those pesky ShipRaider pirates!
 
 The steps to integrate Approov into a mobile app and backend API are
-really simple. If you do not believe me, check out https://approov.io/blog/
+really simple. If you do not believe me, check out our recent
+[press release](https://www.approov.io/blog/criticalblues-approov-chosen-by-nimses-to-protect-their-next-generation-social-media-platform.html)
 and you will see a real case of this in action! The steps required are:
 1. Sign up for an Approov 30-day free trial at https://approov.io/demo-reg.html
 where you will receive everything you require for this service
@@ -940,7 +941,7 @@ If you are unfamiliar with the concept of hostname verification
 this file may look a little daunting, but I will attempt to
 explain it a little here. A hostname verifier verifies a
 particular host used in a particular HTTPS connection. Before
-the "HTTP" part, layer 7 of the OSI model (https://en.wikipedia.org/wiki/OSI_model), 
+the "HTTP" part, layer 7 of the [OSI model](https://en.wikipedia.org/wiki/OSI_model), 
 the "S" part, layer 4 of the OSI model, must first be
 established. That is, Transport Layer Security must be applied.
 
@@ -1035,8 +1036,46 @@ the app is running)
 
 Full Approov documentation can be found at https://approov.io/docs/
 
+### The Challenge (aka homework)
 
-COMING SOON!
+Since we have an Approov-authenticated ShipFast app now, there are a
+number of tests that should be performed to test the app's
+resilience to attack. You can perform these tests and try to request
+the nearest shipment, update the current shipment, etc, all of which
+should now be authenticated by Approov:
+1. Try modifying ShipRaider to include a fake Approov token, or use
+the Linux [cURL](https://en.wikipedia.org/wiki/CURL) command or
+equivalent to perform fake API requests to the ShipFast server. In
+other words, try using the ShipFast API without the genuine
+Approov-registered app. Be as sneaky as you can - attackers will be!
+1. Take the Approov-registered APK, unzip it, try changing something
+such as adding the debug flag to the Android manifest as we did in a
+previous attack, re-sign it, install it and run it on an unrooted
+device. Even without debugging, the app modification of the APK will
+be detected by Approov as the signature has changed.
+1. Follow the previous step, and attach a debugger to the app. Approov
+detects the presence of the debugger.
+1. Try running the original Approov-registered app, unaltered, on a
+rooted device.
+1. Try running the original Approov-registered app, unaltered, on an
+emulator.
+1. Try proxying network traffic from a device to the ShipFast server.
+Use an SSL proxy (MitM attack) such as Charles or mitmproxy to snoop
+the API requests.
+1. Try attaching an instrumentation framework such as Frida or
+Xposed to the Approov-registered app. Install a TLS certificate
+'unpinning' framework to try to circumvent MitM mitigation.
+
+IMPORTANT: Approov's app and API protection features can be enabled
+and disabled. These features will **not all necessarily be running
+during your penetration tests**, so please check the status of your
+Approov Cloud Service first before attempting to elevate our
+engineering team's heart rate considerably. In all seriousness
+though, we are confident that Approov provides highly-competitive
+app and API protection (and we have the customers to back that
+statement up) so if you do have any concerns or queries,
+please get in touch using the form at [https://approov.io/contact-us.html](https://approov.io/contact-us.html) or, depending on the situation,
+[https://www.criticalblue.com/careers.html](https://www.criticalblue.com/careers.html).
 
 ## Wrap Up
 

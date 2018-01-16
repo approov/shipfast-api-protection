@@ -10,3 +10,7 @@ https://www.approov.io/blog/practical-api-protection-walkthrough-part-2.html
 https://www.approov.io/blog/practical-api-protection-walkthrough-part-3.html
 
 https://www.approov.io/blog/practical-api-protection-walkthrough-part-4.html
+
+https://medium.com/@simonrcb
+
+https://www.youtube.com/channel/UC4M9WQlu3NB8SiQ5IoU66fA

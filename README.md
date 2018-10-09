@@ -1,9 +1,3 @@
-**IMPORTANT: This is a special early-access preview of an upcoming mobile
-platform and API protection walkthrough by CriticalBlue. This walkthrough will
-be updated in due course, but you are welcome to browse now. Thank you!**
-
----
-
 # ShipFast API Protection Walkthrough
 
 Welcome! This demo will walk you through the process of defending against various
@@ -474,10 +468,10 @@ First, we have the HMAC secret:
 // The ShipFast HMAC secret used to sign API requests
 const SHIPFAST_HMAC_SECRET = '4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=='
 ```
-Second, we have a new API request header "SF-HMAC":
+Second, we have a new API request header "HMAC":
 ```
 // Retrieve the ShipFast HMAC used to sign the API request from the request header
-var requestShipFastHMAC = req.get('SF-HMAC')
+var requestShipFastHMAC = req.get('HMAC')
 ```
 Finally, we can see the HMAC computation which uses the static HMAC secret
 and a message composed of the request URL and user authorisation
@@ -501,13 +495,13 @@ if (ourShipFastHMAC != requestShipFastHMAC) {
 ```
 
 This Node.js express router is added to all our authenticated API requests
-which means that it will verify the HMAC signature in the "SF-HMAC"
+which means that it will verify the HMAC signature in the "HMAC"
 header and respond with 403 "Forbidden" if things are not right.
 
 ### The Second Attack
 
 If we use a MitM proxy technique to view network activity between the
-app and the server, we can observer that a new "SF-HMAC" header is
+app and the server, we can observer that a new "HMAC" header is
 introduced:
 
 ![ShipRaider Results](images/mitm_hmac.png)
@@ -522,7 +516,7 @@ know there are three things to find to break this protection:
 
 Since we know the app must be computing this HMAC request header, we can attempt
 to decompile it using freely-available reverse engineering tools and perform
-static analysis. We know the result is added to an "SF-HMAC" header. We know
+static analysis. We know the result is added to an "HMAC" header. We know
 an HMAC is used. We can hypothesise that the app must contain an embedded
 secret for the HMAC and probably uses whatever HMAC function comes as part
 of the standard libraries. We will now test our hypothesis.
@@ -667,7 +661,7 @@ for now!
 
 ### The Third Attack
 
-If we MitM the API traffic again, we still see the "SF-HMAC" header.
+If we MitM the API traffic again, we still see the "HMAC" header.
 
 Recall we require three things break this protection:
 1. The HMAC algorithm
@@ -832,7 +826,7 @@ the user and the network channel.
 Although it is possible for ShipFast to develop a suitable solution
 themselves, this requires sophisticated mobile device and cloud server
 security knowledge and experience, incredible creative and persevering
-penetration testing, the ability to analyse, identify and adapt 
+penetration testing, the ability to analyse, identify and adapt
 vulnerabilities yesterday, and a great deal of time
 (I hear [flux capacitors](http://backtothefuture.wikia.com/wiki/Flux_capacitor)
 are good for this too). If ShipFast fail to act quickly and effectively,
@@ -941,7 +935,7 @@ If you are unfamiliar with the concept of hostname verification
 this file may look a little daunting, but I will attempt to
 explain it a little here. A hostname verifier verifies a
 particular host used in a particular HTTPS connection. Before
-the "HTTP" part, layer 7 of the [OSI model](https://en.wikipedia.org/wiki/OSI_model), 
+the "HTTP" part, layer 7 of the [OSI model](https://en.wikipedia.org/wiki/OSI_model),
 the "S" part, layer 4 of the OSI model, must first be
 established. That is, Transport Layer Security must be applied.
 

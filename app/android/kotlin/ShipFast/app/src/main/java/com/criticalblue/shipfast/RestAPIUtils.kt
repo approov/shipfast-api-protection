@@ -30,17 +30,17 @@ import javax.crypto.spec.SecretKeySpec
 /** The authorisation request header */
 const val AUTH_HEADER = "Authorization"
 /** The ShipFast API key header */
-const val SHIPFAST_API_KEY_HEADER = "SF-API_KEY"
+const val SHIPFAST_API_KEY_HEADER = "API-KEY"
 /** The location latitude request header */
-const val LATITUDE_HEADER = "SF-Latitude"
+const val LATITUDE_HEADER = "DRIVER-LATITUDE"
 /** The location longitude request header */
-const val LONGITUDE_HEADER = "SF-Longitude"
+const val LONGITUDE_HEADER = "DRIVER-LONGITUDE"
 /** The shipment state request header */
-const val SHIPMENT_STATE_HEADER = "SF-State"
+const val SHIPMENT_STATE_HEADER = "SHIPMENT-STATE"
 /** The HMAC secret used to sign API requests */
 const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
 /** The HMAC request header */
-const val HMAC_HEADER = "SF-HMAC"
+const val HMAC_HEADER = "HMAC"
 
 /** The flag for whether Approov has been initialised */
 private var approovInitialised = false

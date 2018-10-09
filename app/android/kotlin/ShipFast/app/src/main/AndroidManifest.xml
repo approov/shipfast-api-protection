@@ -17,7 +17,7 @@
         <!--Specify the ShipFast API key-->
         <meta-data android:name="com.criticalblue.shipfast.API_KEY" android:value="QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh"/>
         <!--Specify the Google Maps API key-->
-        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyCDlIIZ5Jm9NOLo-ZJfOVeK2nRlbR_3Uzw"/>
+        <meta-data android:name="com.google.android.geo.API_KEY" android:value="AIzaSyBxVCKQwC0P1IZ0kXJLh_tjU6493LGAQlE"/>
         <activity android:name=".LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />

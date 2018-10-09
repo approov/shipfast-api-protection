@@ -1,5 +1,5 @@
 /*****************************************************************************
- * Project:     ShipFast API Protection (Server)
+ * Project:     ShipRaider API Protection (Server)
  * File:        shipraider.js
  * Original:    Created on 6 Oct 2017 by Simon Rigg
  * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
@@ -7,7 +7,9 @@
  * The rogue ShipFast 'ShipRaider' web server's JQuery logic script.
  *****************************************************************************/
 
- // The enumeration of various stages of the demo.
+// TOOD: Auto generate this file when in a docker container in order to the .env values
+
+// The enumeration of various stages of the demo.
 const DEMO_STAGE = {
     // The demo which uses basic protection by way of API key specified in the app manifest
     API_KEY_PROTECTION: 0,
@@ -20,9 +22,9 @@ const DEMO_STAGE = {
 // The current demo stage
 var currentDemoStage = DEMO_STAGE.API_KEY_PROTECTION
 // The Auth0 client ID
-const AUTH0_CLIENT_ID = "yOqjrArkqM0vuRHjjBv4KrhdFzvnr9kI"
+const AUTH0_CLIENT_ID = "NJO820S566teAPMkaV4Q8uLOkQKRVaWH"
 // The Auth0 domain
-const AUTH0_DOMAIN = "approov.auth0.com"
+const AUTH0_DOMAIN = "prgs.eu.auth0.com"
 
 
 const HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
@@ -37,10 +39,10 @@ var shipments = {}
         "-o-background-size:":"cover",
         "background-size:":"cover",
         "color":"yellow"})
-    
-    $("#server-url-input").val("http://127.0.0.1:3333")
+
+    $("#server-url-input").val("http://localhost:3333")
     $("#shipfast-api-key-input").val("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
-    $("#location-latitude-input").val("51.535472")
+    $("#location-latitude-input").val("51.5355")
     $("#location-longitude-input").val("-0.104971")
     $("#location-sweep-radius-input").val("1.0")
     $("#location-sweep-step-input").val("0.075")
@@ -74,6 +76,7 @@ $("#login-button").click(function() {
 $("#search-shipments-button").click(function(event) {
     event.preventDefault()
     searchForShipments()
+    updateProgressBar(100)
 })
 
 function searchForShipments() {
@@ -101,11 +104,11 @@ function searchForShipments() {
         $.ajax({
             url: url,
             headers: {
-                "SF-API_KEY" : shipFastAPIKey,
+                "API-KEY" : shipFastAPIKey,
                 "Authorization" : auth,
-                "SF-HMAC" : computeHMAC(url, auth),
-                "SF-Latitude" : latVal.toString(),
-                "SF-Longitude" : lonVal.toString()
+                "HMAC" : computeHMAC(url, auth),
+                "DRIVER-LATITUDE" : latVal.toString(),
+                "DRIVER-LONGITUDE" : lonVal.toString()
             },
             method: "GET",
             timeout: 5000,
@@ -113,8 +116,6 @@ function searchForShipments() {
                 var shipmentID = json["id"]
                 var shipmentPickupLatitude = json["pickupLatitude"]
                 var shipmentPickupLongitude = json["pickupLongitude"]
-                json["pickupDistance"] = Math.round(distanceInMiles(parseFloat(shipmentPickupLatitude), parseFloat(shipmentPickupLongitude),
-                    parseFloat(latitude), parseFloat(longitude))).toString()
                 shipments[shipmentID] = json
                 addShipmentsToResults()
                 updateProgressBar(Math.min(Math.round((progress / totalProgress) * 100), 100))
@@ -124,11 +125,16 @@ function searchForShipments() {
     }
 
     fetchNearestShipment(parseFloat(latitude), parseFloat(longitude))
-    
+
     var progress = 0
+    var count = 0
     var totalProgress = Math.pow(parseFloat(locationSweepRadius) / locStep, 2)
     for (var lat = latStart; lat <= latEnd; lat += locStep) {
         for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
+            if (count++ > 10) {
+                totalProgress = 1
+                return
+            }
             fetchNearestShipment(lat, lon)
         }
     }
@@ -137,20 +143,6 @@ function searchForShipments() {
 function updateProgressBar(progress) {
     $(".progress-bar").attr("aria-valuenow", progress).attr("style", "width: " + progress + "%")
     $("#progress-bar-text").text(progress + "% Complete")
-}
-
-function distanceInMiles(lat1, lon1, lat2, lon2) {
-    var R = 3961
-    var dLat = deg2rad(lat2-lat1)
-    var dLon = deg2rad(lon2-lon1)
-    var a = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(lat1)) * Math.cos(deg2rad(lat2)) * Math.sin(dLon/2) * Math.sin(dLon/2)
-    var c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a))
-    var d = R * c;
-    return d;
-}
-  
-function deg2rad(deg) {
-    return deg * (Math.PI/180)
 }
 
 function addShipmentsToResults() {
@@ -175,7 +167,7 @@ function addShipmentsToResults() {
                 + "<td>" + shipmentDelivery + "</td>"
                 + "<td>" + grabShipmentButton + "</td>"
                 + "</tr>")
-        
+
             $("#shipment-" + shipmentID).click(function(event) {
                 event.preventDefault()
                 grabShipment(shipmentID)
@@ -196,12 +188,12 @@ function grabShipment(shipmentID) {
     $.ajax({
         url: url,
         headers: {
-            "SF-API_KEY" : shipFastAPIKey,
+            "API-KEY" : shipFastAPIKey,
             "Authorization" : auth,
-            "SF-HMAC" : computeHMAC(url, auth),
-            "SF-Latitude" : latitude,
-            "SF-Longitude" : longitude,
-            "SF-STATE" : "1"
+            "HMAC" : computeHMAC(url, auth),
+            "DRIVER-LATITUDE" : latitude,
+            "DRIVER-LONGITUDE" : longitude,
+            "SHIPMENT-STATE" : "1"
         },
         method: "POST",
         timeout: 5000,
@@ -235,7 +227,7 @@ function computeHMAC(url, idToken) {
             dynamicSecret = CryptoJS.enc.Base64.stringify(dynamicSecret)
             hmacSecret = dynamicSecret
         }
-        
+
         if (hmacSecret) {
             var parser = document.createElement('a')
             parser.href = url

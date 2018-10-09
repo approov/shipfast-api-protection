@@ -3,7 +3,7 @@
  * File:        model.js
  * Original:    Created on 29 Sept 2017 by Simon Rigg
  * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
- * 
+ *
  * This file contains the server business model.
  *****************************************************************************/
 
@@ -15,48 +15,32 @@ const Rand = new MersenneTwister(Date.now())
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
 const MAX_GRATUITY = 30
-const LAT_LNG_OFFSET = 0.1
-const SHIPMENT_COUNT = 7
-var PICKUP_LOCATIONS = [
-    'ParcelFarce Depot 192',
-    'Q&B DIY Centre',
-    'Quidland',
-    'Magnific Wines',
-    'Stone & Waters Books',
-    'Dobby\'s Gardens',
-    'OfficeMean Suppliers'
-]
-var DELIVERY_LOCATIONS = [
-    'Hugwarts School',
-    'LetGo Land',
-    '123 Fake Street',
-    'Whirring Blue Box',
-    'Terok Nor Promenade',
-    'Getwell Soon Hospital',
-    'Llanfairpwllgwyngyll'
-]
-var SHIPMENT_DESCRIPTIONS = [
-    'Bob\'s Consignment #58332',
-    'Alice\'s Consignment #42981',
-    'Eve\'s Consignment #91113',
-    'Mary\'s Consignment #12125',
-    'Joe\'s Consignment #17700',
-    'Titus\' Consignment #77012',
-    'Pete\'s Consignment #12589'
-]
+const LAT_LNG_OFFSET = 0.2
+const SHIPMENT_COUNT = 10
+
+var SHIPMENT_TOTAL = 0
+const FAKER = require('faker');
 
 // The map of shipments
 var shipments = {}
 
-// A function to shuffle an array in-place randomly
-function shuffleArray(array) {
-    for (var i = array.length - 1; i > 0; i--) {
-        var j = Math.floor(Rand.random() * (i + 1))
-        var temp = array[i]
-        array[i] = array[j]
-        array[j] = temp
+function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
+
+    return FAKER.random.number({
+        'min': min,
+        'max': max
+    })
+}
+
+function randFloat() {
+
+    value = Rand.random()
+
+    if (value < 1.0) {
+        return value
     }
-    return array
+
+    randFloat()
 }
 
 // Calculate and return the distance in miles between the two given points using the haversine formula
@@ -69,7 +53,7 @@ function calculateDistance(originLatitude, originLongitude, destinationLatitude,
         * Math.cos(deg2rad(destinationLatitude)) * Math.sin(dLon/2) * Math.sin(dLon/2)
     var angularRadDistance = 2 * Math.atan2(Math.sqrt(squareHalfChordLen), Math.sqrt(1 - squareHalfChordLen))
     var distance = radiusEarth * angularRadDistance
-    return distance
+    return parseInt(distance)
 }
 
 // Convert the given degrees angle to radians
@@ -80,32 +64,37 @@ function deg2rad(deg) {
 // A function to populate this model with a collection of sample shipment data base on a given location
 function populateShipments(originLatitude, originLongitude) {
 
-    // Shuffle the pickup and delivery locations and the shipment descriptions to ensure these are different between sessions
-    shuffleArray(PICKUP_LOCATIONS)
-    shuffleArray(DELIVERY_LOCATIONS)
-    shuffleArray(SHIPMENT_DESCRIPTIONS)
-
     // Generate the sample data
     var randMultiplier = 2.0 * LAT_LNG_OFFSET
     var randOffset = LAT_LNG_OFFSET
+
     for (i = 0; i < SHIPMENT_COUNT; i++) {
-        var shipmentID = i + 1
-        var description = SHIPMENT_DESCRIPTIONS[i]
+        var shipmentID = SHIPMENT_TOTAL + i + 1
+        var pickupName = FAKER.address.streetAddress()
+        var deliveryName = FAKER.address.streetAddress()
+        var description = FAKER.name.findName() + " #" + randomNumber(1000, 9999)
         var gratuity = i % 2 == 0 ? Math.floor((Rand.random() * MAX_GRATUITY) + MIN_GRATUITY) : MIN_GRATUITY
-        var pickupName = PICKUP_LOCATIONS[i]
-        var pickupLatitude = originLatitude + ((Rand.random() * randMultiplier) - randOffset)
-        var pickupLongitude = originLongitude + ((Rand.random() * randMultiplier) - randOffset)
-        var deliveryName = DELIVERY_LOCATIONS[i]
-        var deliveryLatitude = originLatitude + ((Rand.random() * randMultiplier) - randOffset)
-        var deliveryLongitude = originLongitude + ((Rand.random() * randMultiplier) - randOffset)
+        var pickupLatitude = originLatitude + ((randFloat() * randMultiplier) - randOffset)
+        var pickupLongitude = originLongitude + ((randFloat() * randMultiplier) - randOffset)
+        var deliveryLatitude = originLatitude + ((randFloat() * randMultiplier) - randOffset)
+        var deliveryLongitude = originLongitude + ((randFloat() * randMultiplier) - randOffset)
         var shipment = new Shipment(shipmentID, description, gratuity,
             pickupName, pickupLatitude, pickupLongitude,
             deliveryName, deliveryLatitude, deliveryLongitude)
         shipments[shipmentID] = shipment
     }
-    
-    console.log('Generated Shipments:')
-    console.log(shipments)
+
+    SHIPMENT_TOTAL += i
+
+    //console.log('Generated Shipments:')
+    //console.log(shipments)
+}
+
+const reCalculateNearestShipment = function(originLatitude, originLongitude) {
+
+    populateShipments(originLatitude, originLongitude)
+
+    return findNearestShipment(originLatitude, originLongitude)
 }
 
 // A function to calculate and return the nearest shipment to a given location
@@ -116,21 +105,36 @@ const calculateNearestShipment = function(originLatitude, originLongitude) {
         populateShipments(originLatitude, originLongitude)
     }
 
+    nearestShipment = findNearestShipment(originLatitude, originLongitude)
+
+    if (!nearestShipment) {
+        return reCalculateNearestShipment(originLatitude, originLongitude)
+    }
+
+    return nearestShipment
+}
+
+function findNearestShipment(originLatitude, originLongitude) {
+
     // Iterate through the shipments and find the one closest to our given location
-    var minDistance = Number.MAX_VALUE
     var nearestShipment
+    var maxDistance = 15
+
     Object.entries(shipments).forEach(
         ([shipmentID, shipment]) => {
             if (shipment.getState() == SHIPMENT_STATE.READY) {
                 var distance = calculateDistance(originLatitude, originLongitude,
                     shipment.getPickupLatitude(), shipment.getPickupLongitude())
-                if (distance < minDistance) {
-                    minDistance = distance
+
+                if (distance < maxDistance) {
+                    maxDistance = distance
+                    shipment.setPickupDistance(distance)
                     nearestShipment = shipment
                 }
             }
         }
     )
+
     return nearestShipment
 }
 
@@ -158,6 +162,7 @@ const getActiveShipment = function() {
             return shipment
         }
     }
+
     return undefined
 }
 
@@ -169,6 +174,7 @@ const getShipment = function(shipmentID) {
 // Add the model utility functions to the exports
 module.exports = {
     calculateNearestShipment: calculateNearestShipment,
+    reCalculateNearestShipment: reCalculateNearestShipment,
     getDeliveredShipments: getDeliveredShipments,
     getActiveShipment: getActiveShipment,
     getShipment: getShipment,

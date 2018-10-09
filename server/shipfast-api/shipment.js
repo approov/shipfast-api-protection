@@ -3,7 +3,7 @@
  * File:        shipment.js
  * Original:    Created on 29 Sept 2017 by Simon Rigg
  * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
- * 
+ *
  * This file contains the definition of the Shipment class.
  *****************************************************************************/
 
@@ -47,27 +47,27 @@ class Shipment {
     getPickupName() {
         return this.pickupName
     }
-    
+
     getPickupLatitude() {
         return this.pickupLatitude
     }
-    
+
     getPickupLongitude() {
         return this.pickupLongitude
     }
-    
+
     getDeliveryName() {
         return this.deliveryName
     }
-    
+
     getDeliveryLatitude() {
         return this.deliveryLatitude
     }
-    
+
     getDeliveryLongitude() {
         return this.deliveryLongitude
     }
-    
+
     getState() {
         return this.state
     }
@@ -75,10 +75,14 @@ class Shipment {
     setState(newState) {
         this.state = newState
     }
+
+    setPickupDistance(miles) {
+        this.pickupDistance = miles
+    }
 }
 
 // Add the state and class to exports
 module.exports = {
     SHIPMENT_STATE,
-    Shipment    
+    Shipment
 }

@@ -1,0 +1,31 @@
+#!/bin/sh
+
+set -eu
+
+Main()
+{
+    local _apk_ttl=${1:-5m}
+
+    local _apk_file=./app/android/kotlin/ShipFast/app/build/outputs/apk/debug/app-debug.apk
+
+    local _apk_ttl_file=./registration-tools/last-apk-registed.time
+
+    local _approov_admin_token=./registration-tools/approov.token
+
+    printf "\nThe APK File:\n"
+    ls -al "${_apk_file}"
+    local _output="$(./registration-tools/registration -a ${_apk_file} -t ${_approov_admin_token} -e ${_apk_ttl})"
+
+    printf "\nRegistering the APK file:\n${_output}\n\n"
+
+    case "${_output}" in
+        *"Success:"*) printf "REGISTERED: $(date) \nTTL: ${_apk_ttl}\n" > "${_apk_ttl_file}";;
+    esac
+
+    cat "${_apk_ttl_file}"
+
+    # add empty line
+    echo
+}
+
+Main "${@}"

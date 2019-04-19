@@ -131,7 +131,7 @@ RUN curl https://snapshots.mitmproxy.org/4.0.4/mitmproxy-4.0.4-linux.tar.gz -o m
 RUN curl 'https://dl.google.com/dl/android/studio/ide-zips/3.2.0.26/android-studio-ide-181.5014246-linux.zip' > /tmp/studio.zip && \
     unzip -d /opt /tmp/studio.zip && \
     rm /tmp/studio.zip && \
-    /demo/ssl/add-certificate-to-android-studio.sh "${PROXY_CA_PEM}" && \
+    /demo/ssl/add-certificate-to-android-studio.sh /demo/ssl/"${PROXY_CA_PEM}" && \
 
     apt -y -f install && \
     apt -y autoremove && \

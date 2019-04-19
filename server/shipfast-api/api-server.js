@@ -79,8 +79,8 @@ app.get('/shipments/delivered', function(req, res) {
 
   // Calculate the array of delivered shipments
   var deliveredShipments = model.getDeliveredShipments()
-  console.log(debug("\nDelivered Shipments:"))
-  console.debug(deliveredShipments)
+  //console.log(debug("\nDelivered Shipments:"))
+  // console.debug(deliveredShipments)
   res.status(200).json(deliveredShipments)
 })
 
@@ -97,7 +97,7 @@ app.get('/shipments/active', function(req, res) {
       return
     }
     console.log(debug("\nActive Shipment:"))
-    console.debug(activeShipment)
+    console.debug(activeShipment.description)
     res.status(200).json(activeShipment)
   })
 
@@ -122,7 +122,7 @@ app.get('/shipments/:shipmentID', function(req, res) {
     return
   }
   console.log(debug("\nShipment ID " + shipmentID + ":"))
-  console.log(shipment)
+  console.log(shipment.description)
   res.status(200).json(shipment)
 })
 

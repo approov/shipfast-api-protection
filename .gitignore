@@ -15,3 +15,6 @@ node_modules
 *.token
 *.tok
 .env
+**/cert9.db
+**/key4.db
+.mozilla/

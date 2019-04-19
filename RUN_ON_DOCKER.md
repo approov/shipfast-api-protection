@@ -53,6 +53,21 @@ Build docker image:
 ./shipfast build shipfast-demo
 ```
 
+Start demo:
+
+```bash
+/shipfast start
+```
+
+## Android Studio
+
+* Disable Instant Run on Android studio.
+* Create a mobile device in the emulator.
+* Start the app in the emulator mobile device:
+    + In the editor terminal, use the bash script to add the Proxy certificate to the emulator.
+    + Enable high accuracy location in the emulator mobile device settings.
+    + Add manually the London geo location to the emulator Location settings.
+
 
 # COMMANDS
 

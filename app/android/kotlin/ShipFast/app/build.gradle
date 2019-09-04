@@ -5,8 +5,8 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 26
-    buildToolsVersion '26.0.2'
+    compileSdkVersion 28
+    buildToolsVersion '28.0.2'
     defaultConfig {
         applicationId "com.criticalblue.shipfast"
         minSdkVersion 21
@@ -37,10 +37,10 @@ dependencies {
     })
     implementation "org.jetbrains.kotlin:kotlin-stdlib-jre7:$kotlin_version"
     // Include Google Play Services for Google Maps
-    compile 'com.google.android.gms:play-services:11.2.2'
+    implementation 'com.google.android.gms:play-services:11.2.2'
     // Include Auth0 for user authentication
-    compile 'com.auth0.android:auth0:1.+'
+    implementation 'com.auth0.android:auth0:1.14.1'
     // Include OkHttp3 for REST API requests
-    compile 'com.squareup.okhttp3:okhttp:3.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.9.0'
     implementation project(':approov')
 }

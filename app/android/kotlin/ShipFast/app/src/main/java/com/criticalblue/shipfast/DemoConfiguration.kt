@@ -25,6 +25,20 @@ enum class DemoStage {
 
 /** The current demo stage */
 val currentDemoStage = DemoStage.API_KEY_PROTECTION
+//val currentDemoStage = DemoStage.APPROOV_APP_AUTH_PROTECTION
+
+val latitude = System.getenv("ANDROID_EMULATOR_LATITUDE") ?: "51.5355"
+val longitude = System.getenv("ANDROID_EMULATOR_LONGITUDE") ?: "-0.104971"
+
+val ANDROID_EMULATOR_LATITUDE: Double = latitude.toDouble()
+val ANDROID_EMULATOR_LONGITUDE: Double = longitude.toDouble()
+
 
 /** The ShipFast server's base URL */
-const val SERVER_BASE_URL = "https://shipfast.approov.io"
+//const val SERVER_BASE_URL = "http://10.0.2.2:3333"
+
+val SERVER_PROTOCOL =  System.getenv("SHIP_FAST_HTTP_PROTOCOL") ?: "http"
+
+/** The ShipFast server's base URL */
+val SERVER_DOMAIN =  System.getenv("SHIP_FAST_EMULATOR_DOMAIN") ?: "10.0.2.2:3333"
+val SERVER_BASE_URL =  SERVER_PROTOCOL + "://" + SERVER_DOMAIN

@@ -16,10 +16,32 @@ const model = require('./model')
 const auth = require('./auth')
 const config = require('./demo-configuration').config
 
+const chalk = require('chalk')
+
+// Auto detection of colour support does not work always, thus we need to
+// enforce it to support 256 colors.
+const ctx = new chalk.constructor({level: 2})
+const error = ctx.bold.red
+const warning = ctx.bold.yellow
+const info = ctx.bold.blue
+const debug = ctx.bold.cyan
+
+// needs to be hex colours, otherwise the contrast in the android terminal is very bad.
+const success = ctx.bgHex('#008000').bold.hex('#ffffff')
+const fatalError = ctx.bgHex('#ff0000').bold.hex('#ffffff')
+
 const HOST_NAME = config.serverHostName
+const HTTP_PORT = config.httpPort
+const HTTPS_PORT = config.httpsPort
+const URL = config.httpProtocol + '://' + HOST_NAME
+const BASE_DIR = config.baseDir
 
 // Support CORS
 app.use(cors())
+
+app.get('/', function(req, res) {
+  res.status(200).json({ status: "\nShipFast is ready to accept connections!!!\n"})
+})
 
 // Add the authentication functionality to our server
 app.use(auth)
@@ -27,68 +49,67 @@ app.use(auth)
 // The '/shipments/nearest_shipment' GET request route
 app.get('/shipments/nearest_shipment', function(req, res) {
 
-  console.log("/nearest_shipment from " + req.user)
+  console.log(info("\n\nENDPOINT: ") + "/shipments/nearest_shipment\n")
 
   // Retrieve the location data from the request headers
-  var latitude = parseFloat(req.get('SF-Latitude'))
-  var longitude = parseFloat(req.get('SF-Longitude'))
+  var latitude = parseFloat(req.get('DRIVER-LATITUDE'))
+  var longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
+
   if (!latitude || !longitude) {
-    console.log('\tLocation data not specified or in the wrong format')
+    console.log(error("\nLocation data not specified or in the wrong format\n"))
     res.status(400).send()
     return
   }
-  console.log("\tLat=" + latitude + ", Lon=" + longitude)
+
+  console.log(debug("Latitude: ") + latitude + debug("\nLongitude: ") + longitude)
 
   // Calculate the nearest shipment to the given location
   var nearestShipment = model.calculateNearestShipment(latitude, longitude)
-  if (!nearestShipment) {
-    console.log('\tNo available shipment found')
-    res.status(404).send()
-    return
-  }
-  console.log('\tNearest Shipment:')
+
+  console.log(debug("\nNearest Shipment:"))
   console.log(nearestShipment)
+
   res.status(200).json(nearestShipment)
 })
 
 // The '/shipments/delivered' GET request route
 app.get('/shipments/delivered', function(req, res) {
 
-  console.log("/shipments/delivered from " + req.user)
+  console.log(info("\n\nENDPOINT: ") + "/shipments/delivered\n")
 
   // Calculate the array of delivered shipments
   var deliveredShipments = model.getDeliveredShipments()
-  console.log('\tDelivered Shipments:')
-  console.log(deliveredShipments)
+  console.log(debug("\nDelivered Shipments:"))
+  console.debug(deliveredShipments)
   res.status(200).json(deliveredShipments)
 })
 
 // The '/shipments/active' GET request route
 app.get('/shipments/active', function(req, res) {
-  
-    console.log("/shipments/active from " + req.user)
-  
+
+    console.log(info("\n\nENDPOINT: ") + "/shipments/active\n")
+
     // Calculate the array of active shipments
     var activeShipment = model.getActiveShipment()
     if (!activeShipment) {
-      console.log('\tNo active shipment found')
+      console.log(error("\nNo active shipment found\n"))
       res.status(404).send()
       return
     }
-    console.log('\tActive Shipment:')
-    console.log(activeShipment)
+    console.log(debug("\nActive Shipment:"))
+    console.debug(activeShipment)
     res.status(200).json(activeShipment)
   })
 
 // The '/shipments/:shipmentID' GET request route
 app.get('/shipments/:shipmentID', function(req, res) {
 
-  console.log("/shipments/:shipmentID from " + req.user)
+  console.log(info("\n\nENDPOINT: ") + "/shipments/:shipmentID\n")
 
   // Retrieve the shipment ID from the request header
   var shipmentID = parseInt(req.params.shipmentID)
   if (!shipmentID) {
-    console.log('\tShipment ID not specified or in the wrong format')
+    console.log(error("\nShipment ID not specified or in the wrong format\n"))
     res.status(400).send()
     return
   }
@@ -96,11 +117,11 @@ app.get('/shipments/:shipmentID', function(req, res) {
   // Find the shipment with the given ID
   var shipment = model.getShipment(shipmentID)
   if (!shipment) {
-    console.log("\tNo shipment found for ID " + shipmentID)
+    console.log(error("No shipment found for ID " + shipmentID))
     res.status(404).send()
     return
   }
-  console.log("\tShipment ID " + shipmentID + ":")
+  console.log(debug("\nShipment ID " + shipmentID + ":"))
   console.log(shipment)
   res.status(200).json(shipment)
 })
@@ -108,12 +129,12 @@ app.get('/shipments/:shipmentID', function(req, res) {
 // The '/shipments/update_state/:shipmentID' POST request route
 app.post('/shipments/update_state/:shipmentID', function(req, res) {
 
-  console.log("/shipments/update_state/:shipmentID from " + req.user)
+  console.log(info("\n\nENDPOINT: ") + "/shipments/update_state/:shipmentID\n")
 
   // Retrieve the shipment ID from the request header
   var shipmentID = parseInt(req.params.shipmentID)
   if (!shipmentID) {
-    console.log('\tShipment ID not specified or in the wrong format')
+    console.log(error("\nShipment ID not specified or in the wrong format\n"))
     res.status(400).send()
     return
   }
@@ -121,25 +142,26 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
   // Find the shipment with the given ID
   var shipment = model.getShipment(shipmentID)
   if (!shipment) {
-    console.log("\tNo shipment found for ID " + shipmentID)
+    console.log(error("\nNo shipment found for ID " + shipmentID + "\n"))
     res.status(404).send()
     return
   }
 
   // Retrieve the location data from the request headers
-  var latitude = parseFloat(req.get('SF-Latitude'))
-  var longitude = parseFloat(req.get('SF-Longitude'))
+  var latitude = parseFloat(req.get('DRIVER-LATITUDE'))
+  var longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
   if (!latitude || !longitude) {
-    console.log('\tLocation data not specified or in the wrong format')
+    console.log(error("\nLocation data not specified or in the wrong format\n"))
     res.status(400).send()
     return
   }
-  console.log("\tLat=" + latitude + ", Lon=" + longitude)
+
+  console.log(debug("Latitude: ") + latitude + debug("\nLongitude: ") + longitude)
 
   // Retrieve the new shipment state from the request header
-  var newState = parseInt(req.get('SF-State'))
+  var newState = parseInt(req.get('SHIPMENT-STATE'))
   if (!newState) {
-    console.log('\tShipment state not specified or in the wrong format')
+    console.log(error("\nShipment state not specified or in the wrong format\n"))
     res.status(400).send()
     return
   }
@@ -148,33 +170,33 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
   if (newState <= 0
       || newState != shipment.getState() + 1
       || newState >= Object.keys(model.SHIPMENT_STATE).length) {
-    console.log('\tShipment state invalid')
+    console.log(error("\nShipment state invalid\n"))
     res.status(400).send()
     return
   }
 
   shipment.setState(newState)
-  console.log("\tState of shipment " + shipmentID + " updated to " + newState)
+  console.log(warning("\nState of shipment " + shipmentID + " updated to " + newState + "\n"))
   res.status(200).send()
 })
 
 if (config.runSecureServer) {
   // Load the certificate and key data for our server to be hosted over HTTPS
   var serverOptions = {
-    key: fs.readFileSync(HOST_NAME + ".key"),
-    cert: fs.readFileSync(HOST_NAME + ".pem"),
+    key: fs.readFileSync(BASE_DIR + "/.ssl/" + HOST_NAME + ".key"),
+    cert: fs.readFileSync(BASE_DIR + "/.ssl/" + HOST_NAME + ".pem"),
     requestCert: false,
     rejectUnauthorized: false
   }
 
   // Create and run the HTTPS server
-  https.createServer(serverOptions, app).listen(443, function() {
-    console.log('ShipFast server listening on port 443!')
+  https.createServer(serverOptions, app).listen(HTTPS_PORT, function() {
+    console.log(info("\nSecure ShipFast server listening on " + URL + ":" + HTTPS_PORT + "\n"))
   })
 }
 else {
   // Create and run the HTTP server
-  app.listen(3333, function () {
-    console.log('Insecure ShipFast server listening on port 3333!')
+  app.listen(HTTP_PORT, function () {
+    console.log(info("\nShipFast server listening on " + HOST_NAME + ":" + HTTP_PORT + "\n"))
   })
 }

@@ -3,7 +3,7 @@
  * File:        auth.js
  * Original:    Created on 29 Sept 2017 by Simon Rigg
  * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
- * 
+ *
  * This file contains the API request authentication router.
  *****************************************************************************/
 
@@ -14,6 +14,20 @@ const jwksRsa = require('jwks-rsa')
 const crypto = require('crypto')
 const DEMO_STAGE = require('./demo-configuration').DEMO_STAGE
 const config = require('./demo-configuration').config
+
+const chalk = require('chalk')
+
+// Auto detection of colour support does not work always, thus we need to
+// enforce it to support 256 colors.
+const ctx = new chalk.constructor({level: 2})
+const error = ctx.bold.red
+const warning = ctx.bold.yellow
+const info = ctx.bold.blue
+const debug = ctx.bold.cyan
+
+// needs to be hex colours, otherwise the contrast in the android terminal is very bad.
+const success = ctx.bgHex('#008000').bold.hex('#ffffff')
+const fatalError = ctx.bgHex('#ff0000').bold.hex('#ffffff')
 
 // The array of ShipFast API keys
 var shipFastAPIKeys = [
@@ -28,19 +42,22 @@ const SHIPFAST_HMAC_SECRET = '4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzl
 // Verify the ShipFast API key
 router.use(function(req, res, next) {
 
-  console.log("ShipFast API key verifier invoked from " + req.user)
-  
+  console.log("\n\n-------------------- AUTHENTICATING A NEW REQUEST --------------------\n")
+  console.log(debug("Headers:"))
+  console.debug(req.headers)
+
   // Retrieve the ShipFast API key from the request header
-  var shipFastAPIKey = req.get('SF-API_KEY')
+  var shipFastAPIKey = req.get('API-KEY')
+
   if (!shipFastAPIKey) {
-    console.log('\tShipFast API key not specified or in the wrong format')
+    console.log(error('\tShipFast API key not specified or in the wrong format'))
     res.status(400).send()
     return
   }
 
   // Verify the ShipFast API key
   if (!shipFastAPIKeys.includes(shipFastAPIKey)) {
-    console.log('\tShipFast API key invalid')
+    console.log(error('\tShipFast API key invalid'))
     res.status(403).send()
     return
   }
@@ -50,9 +67,9 @@ router.use(function(req, res, next) {
       || config.currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
 
     // Retrieve the ShipFast HMAC used to sign the API request from the request header
-    var requestShipFastHMAC = req.get('SF-HMAC')
+    var requestShipFastHMAC = req.get('HMAC')
     if (!requestShipFastHMAC) {
-      console.log('\tShipFast HMAC not specified or in the wrong format')
+      console.log(error('\tShipFast HMAC not specified or in the wrong format'))
       res.status(400).send()
       return
     }
@@ -75,7 +92,7 @@ router.use(function(req, res, next) {
       var obfuscatedSecret = new Buffer(obfuscatedSecretData).toString('base64')
       hmac = crypto.createHmac('sha256', Buffer.from(obfuscatedSecret, 'base64'))
     }
-    
+
     // Compute the request HMAC using the HMAC SHA-256 algorithm
     hmac.update(req.protocol)
     hmac.update(req.host)
@@ -86,8 +103,8 @@ router.use(function(req, res, next) {
     // Check to see if our HMAC matches the one sent in the request header
     // and send an error response if it doesn't
     if (ourShipFastHMAC != requestShipFastHMAC) {
-      console.log("\tShipFast HMAC invalid: received " + requestShipFastHMAC
-        + " but should be " + ourShipFastHMAC)
+      console.log(error("\tShipFast HMAC invalid: received " + requestShipFastHMAC
+        + " but should be " + ourShipFastHMAC))
       res.status(403).send()
       return
     }
@@ -107,13 +124,27 @@ if (config.currentDemoStage == DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION) {
       // Retrieve the Approov token used to authenticate the mobile app from the request header
       var approovToken = req.get('Approov-Token')
       if (!approovToken) {
-        console.log('\tApproov token not specified or in the wrong format')
+        console.debug(error('\tApproov token not specified or in the wrong format'))
       }
+
       return approovToken
     },
     algorithms: ['HS256']
   })
+
   router.use(checkApproovTokenJWT)
+
+  router.use(function (req, res, next) {
+    console.log(success('\n APPROOV TOKEN VALIDATED '));
+    next();
+  });
+
+  router.use(function (err, req, res, next) {
+    if (err.name === 'UnauthorizedError') {
+      console.debug(fatalError("\n APPROOV TOKEN INVALID: " + err + " "));
+    }
+    true? next(err) : next();
+  });
 }
 
 // Create middleware for checking the user's ID token JWT

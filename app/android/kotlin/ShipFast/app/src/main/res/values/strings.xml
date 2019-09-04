@@ -1,6 +1,7 @@
 <resources>
+    <!-- TODO: auto generate this file or map it when using in a Docker container  -->
     <string name="app_name">ShipFast</string>
     <!--Specify the Auth0 API key and domain-->
-    <string name="com_auth0_client_id">yOqjrArkqM0vuRHjjBv4KrhdFzvnr9kI"</string>
-    <string name="com_auth0_domain">approov.auth0.com"</string>
+    <string name="com_auth0_client_id">NJO820S566teAPMkaV4Q8uLOkQKRVaWH</string>
+    <string name="com_auth0_domain">prgs.eu.auth0.com</string>
 </resources>

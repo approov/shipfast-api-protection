@@ -5,3 +5,13 @@
 **/*.key
 **/*.DS_Store
 node_modules
+*.token
+*.time
+.idea/
+.local/
+.Trash-1000/
+/docker/demo/.mozilla/firefox/*
+!.gitkeep
+*.token
+*.tok
+.env

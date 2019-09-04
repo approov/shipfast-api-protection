@@ -28,9 +28,21 @@ class ApproovRequestInterceptor : Interceptor {
      */
     override fun intercept(chain: Interceptor.Chain): Response {
 
+        // Intercepts the original request
         val originalRequest = chain.request()
-        val approovToken = ApproovAttestation.shared().fetchApproovTokenAndWait(originalRequest.url().toString()).token
-        val approovRequest = originalRequest.newBuilder().addHeader("Approov-Token", approovToken).build()
+        val url = originalRequest.url().toString()
+
+        // Fetch Approov token from Approov Cloud Service
+        val approovAttestation = ApproovAttestation.shared()
+                .fetchApproovTokenAndWait()
+        val approovToken = approovAttestation.token
+
+        // Adds Approov token to the request header
+        val approovRequest = originalRequest.newBuilder()
+                .addHeader("Approov-Token", approovToken)
+                .build()
+
+        // Continues the request with the Approov token injected in the header
         return chain.proceed(approovRequest)
     }
 }

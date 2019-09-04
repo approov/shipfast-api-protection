@@ -1,0 +1,285 @@
+#!/bin/bash
+
+set -eu
+
+_USER="$(id -un)"
+
+ARG1=${1:---help}
+
+ARG2=${2:-""}
+
+ARG3=${3:-""}
+
+LINES=""
+
+PROJECT_HOST_DIR="${PWD#*${HOME}/}"
+
+PROJECT_HOST_DIR="${PROJECT_HOST_DIR//\//_}"
+
+if [ "${ARG1}" != "register" ]
+    then
+        ./docker/setup/docker-volumes-dirs.sh "${PROJECT_HOST_DIR}"
+fi
+
+function Register_Token()
+{
+    local _registration_token="${1:?--->>> Missing registration token!!!}"
+
+    echo "${_registration_token}" > ./registration-tools/approov.token
+
+    printf "\nREGISTRATION TOKEN ADDED:\n"
+    cat ./registration-tools/approov.token
+
+    # add empty line
+    echo
+}
+
+function Register_APK
+{
+    local _apk_ttl=${1:-1h}
+
+    local _apk_file=./app/android/kotlin/ShipFast/app/build/outputs/apk/debug/app-debug.apk
+
+    local _apk_ttl_file=./registration-tools/last-apk-registed.time
+
+    local _approov_admin_token=./registration-tools/approov.token
+
+    printf "\nThe APK File:\n"
+    ls -al "${_apk_file}"
+    local _output="$(./registration-tools/registration -a ${_apk_file} -t ${_approov_admin_token} -e ${_apk_ttl})"
+
+    printf "\nRegistering the APK file:\n${_output}\n\n"
+
+    case "${_output}" in
+        *"Success:"*) printf "REGISTERED: $(date) \nTTL: ${_apk_ttl}\n" > "${_apk_ttl_file}";;
+    esac
+
+    cat "${_apk_ttl_file}"
+
+    # add empty line
+    echo
+}
+
+function Start_User_Shell
+{
+    sudo docker-compose exec shipfast-demo zsh
+}
+
+function Start_Root_Shell
+{
+    sudo docker-compose exec -u 0 shipfast-demo zsh
+}
+
+function Install_Node_Dependencies
+{
+    sudo docker-compose exec shipfast-demo bash -c "cd /home/mobile/app/shipfast-api && npm install && cd ../shipraider-rogue-web && npm install"
+}
+
+function Start_Editor
+{
+    local _ca_crt_file="./docker/demo/setup/certificates/ProxyCA.crt"
+    local _ca_pem_dir="/etc/ssl/certs"
+    local _ca_pem_filename="ProxyCA.pem"
+    local _ca_pem_file="${_ca_pem_dir}/${_ca_pem_filename}"
+    local _ca_name="ProxyCA"
+
+    printf "\n>>> STARTING ANDROID STUDIO <<<\n"
+
+    # KVM needs to change permissions in order for Android Studio can work.
+    # For some reason the permissions return to original state after we close the editor
+    # TODO: find a permanent solution
+    sudo chown $_USER:$_USER /dev/kvm
+
+    sudo docker-compose up -d shipfast-demo
+
+    #cp -v "${CA_PEM_FILE}" /var/www/html/proxy.crt
+
+    if [ -f "${_ca_crt_file}" ]
+        then
+            #sleep 5
+            printf "\n>>> ADDING PROXY CERTIFICATE <<<\n"
+
+            sudo docker-compose exec -d -u 0 shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
+    fi
+}
+
+function Start_Api_Server
+{
+    # From the android emulator we must use 10.0.2.2:3333 to call localhost
+
+    printf "\n>>> STARTING API SERVER <<<\n"
+    sudo docker-compose exec -d shipfast-demo bash -c "cd /home/mobile/app/shipfast-api && npm start"
+    sleep 5
+    Start_New_Browser "http://localhost:3333"
+}
+
+function Start_Web_Server
+{
+    printf "\n>>> STARTING WEB SERVER <<<\n"
+    sudo docker-compose exec -d shipfast-demo bash -c "cd /home/mobile/app/shipraider-rogue-web && npm start"
+    sleep 5
+    Open_Browser_Tab "http://localhost:4333"
+}
+
+function Start_Proxy_Server
+{
+    printf "\n>>> STARTING PROXY SERVER <<<\n"
+    sudo docker-compose exec -d shipfast-demo mitmweb --ignore-hosts ".*auth0.*" --ignore-hosts ".*google.*" --web-iface 0.0.0.0
+    sleep 8
+    Open_Browser_Tab "http://localhost:8081"
+}
+
+function Start_Nginx_Server
+{
+    printf "\n>>> STARTING NGINX SERVER <<<\n"
+    sudo docker-compose exec -d -u 0 shipfast-demo nginx -g "daemon off;"
+    sleep 5
+    Open_Browser_Tab "http://localhost"
+}
+
+function Start_New_Browser
+{
+    printf "\n>>> STARTING NEW BROWSER INSTANCE FOR: ${@} <<<\n"
+    sudo docker-compose exec -d shipfast-demo firefox --new-instance "${@}"
+}
+
+function Open_Browser_Tab
+{
+    printf "\n>>> OPEN TAB IN BROWSER FOR: ${@} <<<\n"
+    sudo docker-compose exec -d shipfast-demo firefox "${@}"
+}
+
+function Start_Demo {
+    Start_Editor
+    Start_Api_Server
+    #Start_Proxy_Server
+    Start_Web_Server
+    sleep 5
+    Open_Browser_Tab https://docs.google.com/presentation/d/1lL1HRv8B66_cl95N_C0bG790Vl6AU4e5z_ojvlCO-fQ/edit#slide=id.g238e5beb0e_0_35
+}
+
+function Restart_Demo {
+    sudo docker-compose down && Start_Demo
+}
+
+# Updates the env var PROJECT_HOST_DIR
+if grep -q "PROJECT_HOST_DIR" .env && ! grep -q "${PROJECT_HOST_DIR}" .env
+    then
+        while IFS= read -r line
+        do
+            case "${line}" in
+               "PROJECT_HOST_DIR"*) LINES="${LINES}PROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" ;;
+               *) LINES="${LINES}${line}\n" ;;
+            esac
+        done < .env
+
+        if [ ! -z ${LINES} ]
+            then
+                printf "${LINES}" > .env
+        fi
+fi
+
+# Creates the env var PROJECT_HOST_DIR
+if ! grep -q "${PROJECT_HOST_DIR}" .env
+    then
+        printf "\nPROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" >> .env
+fi
+
+if [ "${ARG1}" == "register" ] && [ "${ARG2}" == "access-token" ]
+    then
+        Register_Token "${ARG3}"
+        exit 0
+fi
+
+if [ "${ARG1}" == "register" ] && [ "${ARG2}" == "apk" ]
+    then
+        Register_APK "${ARG3}"
+        exit 0
+fi
+
+if [ "${ARG1}" == "run" ] && [ "${ARG2}" == "shell" ]
+    then
+        Start_User_Shell
+        exit 0
+fi
+
+if [ "${ARG1}" == "run" ] && [ "${ARG2}" == "root-shell" ]
+    then
+        Start_Root_Shell
+        exit 0
+fi
+
+if [ "${ARG1}" == "run" ] && [ "${ARG2}" == "install" ]
+    then
+        Install_Node_Dependencies
+        exit 0
+fi
+
+if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "demo" ]
+    then
+        Start_Demo
+        exit 0
+fi
+
+if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "editor" ]
+    then
+        Start_Editor
+        exit 0
+fi
+
+if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "api" ]
+    then
+        Start_Api_Server
+        exit 0
+fi
+
+if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "web" ]
+    then
+        Start_Web_Server
+        exit 0
+fi
+
+if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "browser" ]
+    then
+        shift 2
+        Open_Browser_Tab "${@}"
+        exit 0
+fi
+
+if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "proxy" ]
+    then
+        Start_Proxy_Server
+        exit 0
+fi
+
+if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "nginx" ]
+    then
+        Start_Nginx_Server
+        exit 0
+fi
+
+if [ "${ARG1}" == "start" ]
+    then
+        Start_Demo
+        exit 0
+fi
+
+if [ "${ARG1}" == "restart" ]
+    then
+        Restart_Demo
+        exit 0
+fi
+
+if [ "${ARG1}" == "stop" ]
+    then
+        sudo docker-compose down
+        exit 0
+fi
+
+if [ "${ARG1}" == "status" ]
+    then
+        sudo docker-compose ps
+        exit 0
+fi
+
+sudo docker-compose "${@}"

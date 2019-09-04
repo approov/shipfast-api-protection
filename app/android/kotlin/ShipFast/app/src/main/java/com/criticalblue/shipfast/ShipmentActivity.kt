@@ -113,8 +113,11 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                 .addApi(LocationServices.API)
                 .build()
 
+        // 51.535472, -0.104971   -> London
+        // 37.441883, -122.143019 -> Palo Alto, California
+        // 55.944879, -3.181546   -> Edinburgh
         mapView.getMapAsync { googleMap ->
-            zoomMapIntoLocation(googleMap, LatLng(51.535472, -0.104971))
+            zoomMapIntoLocation(googleMap, LatLng(ANDROID_EMULATOR_LATITUDE, ANDROID_EMULATOR_LONGITUDE))
         }
     }
 
@@ -185,7 +188,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
         currentShipment?.let {
             startProgress()
-            requestShipmentStateUpdate(this@ShipmentActivity, LatLng(54.3, -4.4),
+            requestShipmentStateUpdate(this@ShipmentActivity, LatLng(ANDROID_EMULATOR_LATITUDE, ANDROID_EMULATOR_LONGITUDE),
                     it.id, it.nextState, { _, isSuccessful ->
 
                 stopProgress()

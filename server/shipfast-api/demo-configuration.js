@@ -41,7 +41,7 @@ config.runSecureServer = (config.httpProtocol === "https")
 // The Auth0 domain to use for use authentication
 config.auth0Domain = process.env.SHIP_FAST_AUTH0_DOMAIN
 
-config.baseDir = process.env.BASE_DIR || '/home/mobile'
+config.baseDir = process.env.BASE_DIR || '/home/developer'
 
 // The Approov token secret
 config.approovTokenSecret = process.env.APPROOV_TOKEN_SECRET || 'add-approov-token-here'

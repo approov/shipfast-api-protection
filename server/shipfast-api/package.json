@@ -5,7 +5,7 @@
   "main": "api-server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon api-server.js > /home/mobile/api.log"
+    "start": "nodemon api-server.js > /home/developer/api.log"
   },
   "author": "Simon Rigg",
   "license": "GPL",

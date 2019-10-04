@@ -6,27 +6,31 @@ services:
     image: ${IMAGE_NAME:-approov/shipfast-demo}
     build:
       context: docker/build
+    container_name: "shipfast-demo"
+    hostname: "shipfast-demo"
     env_file:
       - .env
-    devices:
-      - /dev/dri:/dev/dri
-      - /dev/kvm:/dev/kvm
+    environment:
+      XAUTHORITY: /home/developer/.X11-unix.xauth
+      DISPLAY: "${DISPLAY}"
+    #devices:
+      #- /dev/dri:/dev/dri
+      #- /dev/kvm:/dev/kvm
     volumes:
       - /dev/shm:/dev/shm
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.AndroidStudio3.2:/home/mobile/.AndroidStudio3.2
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/Android:/home/mobile/Android
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.android:/home/mobile/.android
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.gradle:/home/mobile/.gradle
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.java:/home/mobile/.java
-      - ${ANDROID_APP_DIR:-./}:/home/mobile/AndroidStudioProjects
-      - ${DEMO_SETUP_DIR:-./docker/build/setup}:/demo/ssl
-      - ${NODE_DIR:-./server}:/home/mobile/app
-      - ~/.docker-mobile-demo/${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
-      #- ./docker/build/.mozilla:/home/mobile/.mozilla
+      - ./.local/.X11-unix.xauth:/home/developer/.X11-unix.xauth
+      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.AndroidStudio3.2:/home/developer/.AndroidStudio3.2
+      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/Android:/home/developer/Android
+      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.android:/home/developer/.android
+      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.gradle:/home/developer/.gradle
+      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.java:/home/developer/.java
+      - ${ANDROID_APP_DIR:-./}:/home/developer/workspace
+      #- ~/.docker-mobile-demo/${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
+      #- ./docker/build/.mozilla:/home/developer/.mozilla
     networks:
-      - mobile_demo_network
+      - shipfast_demo
 
 networks:
-  mobile_demo_network:
+  shipfast_demo:
     driver: "bridge"

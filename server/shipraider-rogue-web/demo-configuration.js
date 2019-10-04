@@ -24,7 +24,7 @@ config.longitude = process.env.ANDROID_EMULATOR_LONGITUDE || '-0.104971'
 config.runSecureServer = (config.httpProtocol === "https")
 console.log("RUN SECURE SERVER: " + config.runSecureServer)
 
-config.baseDir = process.env.BASE_DIR || '/home/mobile'
+config.baseDir = process.env.BASE_DIR || '/home/developer'
 
 module.exports = {
     config

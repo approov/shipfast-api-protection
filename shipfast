@@ -72,7 +72,7 @@ function Start_Root_Shell
 
 function Install_Node_Dependencies
 {
-    sudo docker-compose exec shipfast-demo bash -c "cd /home/mobile/app/shipfast-api && npm install && cd ../shipraider-rogue-web && npm install"
+    sudo docker-compose exec shipfast-demo bash -c "cd ./server/shipfast-api && npm install && cd ../shipraider-rogue-web && npm install"
 }
 
 function Start_Editor
@@ -84,6 +84,10 @@ function Start_Editor
     local _ca_name="ProxyCA"
 
     printf "\n>>> STARTING ANDROID STUDIO <<<\n"
+
+    if [ ! -f "./app/android/kotlin/ShipFast/approov/approov.aar" ]; then
+        printf "\n\n ---> Approov library is missing. Add it with:\n approov sdk -getLibrary ./app/android/kotlin/ShipFast/approov/approov.aar \n\n"
+    fi
 
     # KVM needs to change permissions in order for Android Studio can work.
     # For some reason the permissions return to original state after we close the editor
@@ -99,7 +103,7 @@ function Start_Editor
             #sleep 5
             printf "\n>>> ADDING PROXY CERTIFICATE <<<\n"
 
-            sudo docker-compose exec -d -u 0 shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
+            #sudo docker-compose exec -d -u root shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
     fi
 }
 
@@ -108,17 +112,27 @@ function Start_Api_Server
     # From the android emulator we must use 10.0.2.2:3333 to call localhost
 
     printf "\n>>> STARTING API SERVER <<<\n"
-    sudo docker-compose exec -d shipfast-demo bash -c "cd /home/mobile/app/shipfast-api && npm start"
+
+    if [ ! -d "./server/shipfast-api/node_modules" ]; then
+        sudo docker-compose exec shipfast-demo bash -c "cd ./server/shipfast-api && npm install"
+    fi
+
+    sudo docker-compose exec -d shipfast-demo bash -c "cd ./server/shipfast-api && npm start"
     sleep 5
-    Start_New_Browser "http://localhost:3333"
+    #Start_New_Browser "https://localhost:3333"
 }
 
 function Start_Web_Server
 {
     printf "\n>>> STARTING WEB SERVER <<<\n"
-    sudo docker-compose exec -d shipfast-demo bash -c "cd /home/mobile/app/shipraider-rogue-web && npm start"
+
+    if [ ! -d "./server/shipraider-rogue-web/node_modules" ]; then
+        sudo docker-compose exec shipfast-demo bash -c "cd ./server/shipraider-rogue-web && npm install"
+    fi
+
+    sudo docker-compose exec -d shipfast-demo bash -c "cd ./server/shipraider-rogue-web && npm start"
     sleep 5
-    Open_Browser_Tab "http://localhost:4333"
+    #Open_Browser_Tab "https://localhost:4333"
 }
 
 function Start_Proxy_Server
@@ -126,27 +140,27 @@ function Start_Proxy_Server
     printf "\n>>> STARTING PROXY SERVER <<<\n"
     sudo docker-compose exec -d shipfast-demo mitmweb --ignore-hosts ".*auth0.*" --ignore-hosts ".*google.*" --web-iface 0.0.0.0
     sleep 8
-    Open_Browser_Tab "http://localhost:8081"
+    #Open_Browser_Tab "https://localhost:8081"
 }
 
 function Start_Nginx_Server
 {
     printf "\n>>> STARTING NGINX SERVER <<<\n"
-    sudo docker-compose exec -d -u 0 shipfast-demo nginx -g "daemon off;"
+    sudo docker-compose exec -d -u root shipfast-demo nginx -g "daemon off;"
     sleep 5
-    Open_Browser_Tab "http://localhost"
+    #Open_Browser_Tab "https://localhost"
 }
 
 function Start_New_Browser
 {
     printf "\n>>> STARTING NEW BROWSER INSTANCE FOR: ${@} <<<\n"
-    sudo docker-compose exec -d shipfast-demo firefox --new-instance "${@}"
+    sudo docker-compose exec -d shipfast-demo firefox --new-instance ${@}
 }
 
 function Open_Browser_Tab
 {
     printf "\n>>> OPEN TAB IN BROWSER FOR: ${@} <<<\n"
-    sudo docker-compose exec -d shipfast-demo firefox "${@}"
+    sudo docker-compose exec -d shipfast-demo firefox --new-tab ${@}
 }
 
 function Start_Demo {
@@ -155,7 +169,9 @@ function Start_Demo {
     #Start_Proxy_Server
     Start_Web_Server
     sleep 5
-    Open_Browser_Tab https://docs.google.com/presentation/d/1lL1HRv8B66_cl95N_C0bG790Vl6AU4e5z_ojvlCO-fQ/edit#slide=id.g238e5beb0e_0_35
+
+    #Open_Browser_Tab https://docs.google.com/presentation/d/1lL1HRv8B66_cl95N_C0bG790Vl6AU4e5z_ojvlCO-fQ/edit#slide=id.g238e5beb0e_0_35
+    Start_New_Browser "http://localhost:3333" "http://localhost:4333" "https://docs.google.com/presentation/d/1lL1HRv8B66_cl95N_C0bG790Vl6AU4e5z_ojvlCO-fQ/edit#slide=id.g238e5beb0e_0_35"
 }
 
 function Restart_Demo {
@@ -242,7 +258,7 @@ fi
 if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "browser" ]
     then
         shift 2
-        Open_Browser_Tab "${@}"
+        #Open_Browser_Tab "${@}"
         exit 0
 fi
 
@@ -282,4 +298,13 @@ if [ "${ARG1}" == "status" ]
         exit 0
 fi
 
-sudo docker-compose "${@}"
+# Setup X11 server authentication
+# @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
+mkdir -p .local
+_XAUTH=./.local/.X11-unix.xauth
+touch "${_XAUTH}"
+xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${_XAUTH}" nmerge -
+
+./docker/setup/docker-volumes-dirs.sh "${PROJECT_HOST_DIR}"
+
+sudo docker-compose ${@}

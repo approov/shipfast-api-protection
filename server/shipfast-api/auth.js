@@ -42,7 +42,7 @@ const SHIPFAST_HMAC_SECRET = '4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzl
 // Verify the ShipFast API key
 router.use(function(req, res, next) {
 
-  console.log("\n\n-------------------- AUTHENTICATING A NEW REQUEST --------------------\n")
+  console.log("\n\n-------------------- START AUTHENTICATING A NEW REQUEST --------------------\n")
   console.log(debug("Headers:"))
   console.debug(req.headers)
 
@@ -63,8 +63,7 @@ router.use(function(req, res, next) {
   }
 
   // Configure the request HMAC verification based on the demo stage
-  if (config.currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
-      || config.currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
+  if (config.currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION || config.currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
 
     // Retrieve the ShipFast HMAC used to sign the API request from the request header
     var requestShipFastHMAC = req.get('HMAC')
@@ -109,6 +108,8 @@ router.use(function(req, res, next) {
       return
     }
   }
+
+  console.log("\n\n-------------------- END AUTHENTICATING A NEW REQUEST --------------------\n")
 
   next()
 })

@@ -3,7 +3,9 @@
 The blog post about Shipfast demo can be found [here](https://blog.approov.io/tag/a-series-shipfast).
 
 
-# REQUIREMENTS
+# SETUP
+
+## Requirements
 
 Your computer needs to have installed:
 
@@ -12,24 +14,20 @@ Your computer needs to have installed:
 * Git
 
 
-# INSTALL
-
-Clone repository:
+## Clone Repository
 
 ```bash
 git clone git@github.com:approov/shipfast-api-protection.git && cd shipfast-api-protection
 ```
 
+## Approov CLI Tool
 
-# ENVIRONMENT CONFIGURATION
+To use the Shipfast demo we need to install the [Approov CLI tool](https://approov.io/docs/v2.0/approov-cli-tool-reference/) by following the [installation documentation](https://approov.io/docs/v2.0/approov-installation/).
 
-An Approov [trial subscription](https://info.approov.io/demo) is necessary to get a [registration access token](https://approov.io/docs/starthere.html#app-registration) and the [Approov Token Secret](https://approov.io/docs/starthere.html#setup).
+> **ALERT:** Do not forget to set the Approov development token in your environment, as per instructions on the docs.
 
-After receiving the email with the token:
 
-```bash
-./shipfast register access-token paste-here-the-registration-access-token
-```
+## Environment
 
 Let's use the `.env.example` file as starting point for our `.env` file:
 
@@ -39,13 +37,13 @@ cp .env.example .env
 
 Now we need to add values for:
 
-* APPROOV_TOKEN_SECRET - see how to get it [here](https://approov.io/docs/starthere.html#setup)
-* SHIP_FAST_AUTH0_DOMAIN - you can get one from [here](https://auth0.com/)
+* APPROOV_TOKEN_SECRET - follow the [Appoov docs](https://approov.io/docs/v2.0/approov-usage-documentation/#token-secret-extraction) to get the Appoov secret.
+* SHIP_FAST_AUTH0_DOMAIN - you can get one from your [Auth0 Dashboard](https://manage.auth0.com/dashboard)
 
 All other defaults in the`.env` file are fine to run the demo.
 
 
-# SETUP
+## Build the Docker Stack
 
 Build docker image:
 
@@ -53,13 +51,15 @@ Build docker image:
 ./shipfast build shipfast-demo
 ```
 
+## Run the Demo
+
 Start demo:
 
 ```bash
-/shipfast start
+./shipfast start
 ```
 
-## Android Studio
+### Android Studio
 
 * Disable Instant Run on Android studio.
 * Create a mobile device in the emulator.
@@ -69,7 +69,7 @@ Start demo:
     + Add manually the London geo location to the emulator Location settings.
 
 
-# COMMANDS
+## Stack Commands
 
 The bash script `./shipfast` is a wrapper around `sudo docker-compose`, thus any
 docker compose command will work, but for the developer convenience it includes

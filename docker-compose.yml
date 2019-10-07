@@ -13,11 +13,11 @@ services:
     environment:
       XAUTHORITY: /home/developer/.X11-unix.xauth
       DISPLAY: "${DISPLAY}"
-    #devices:
+    devices:
       #- /dev/dri:/dev/dri
-      #- /dev/kvm:/dev/kvm
+      - /dev/kvm:/dev/kvm
     volumes:
-      - /dev/shm:/dev/shm
+      #- /dev/shm:/dev/shm
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ./.local/.X11-unix.xauth:/home/developer/.X11-unix.xauth
       - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.AndroidStudio3.2:/home/developer/.AndroidStudio3.2

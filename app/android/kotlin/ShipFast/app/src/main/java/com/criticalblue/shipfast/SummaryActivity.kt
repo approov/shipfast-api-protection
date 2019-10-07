@@ -10,7 +10,7 @@
 package com.criticalblue.shipfast
 
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
@@ -47,13 +47,13 @@ class SummaryActivity : AppCompatActivity() {
     private fun updateDeliveredShipments() {
 
         startProgress()
-        requestDeliveredShipments(this@SummaryActivity, { _, shipments ->
+        requestDeliveredShipments(this@SummaryActivity) { _, shipments ->
             stopProgress()
             runOnUiThread {
                 deliveredShipmentsListView.adapter = DeliveredShipmentsAdapter(this@SummaryActivity,
                         R.layout.listview_shipment, shipments ?: arrayListOf())
             }
-        })
+        }
     }
 
     /**
@@ -81,7 +81,7 @@ class SummaryActivity : AppCompatActivity() {
 class DeliveredShipmentsAdapter(context: Context, resource: Int, private val shipments: List<Shipment>)
     : ArrayAdapter<Shipment>(context, resource, shipments)  {
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
 
         // Get the shipment for the list view row index
         val shipment = shipments[position]

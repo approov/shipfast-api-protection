@@ -3,7 +3,7 @@ version: "2.1"
 services:
 
   shipfast-demo:
-    image: ${IMAGE_NAME:-approov/shipfast-demo}
+    image: ${IMAGE_NAME:-approov/shipfast-demo}:${ANDROID_STUDIO_VERSION:-3.5}
     build:
       context: docker/build
     container_name: "shipfast-demo"
@@ -20,11 +20,11 @@ services:
       #- /dev/shm:/dev/shm
       - /tmp/.X11-unix:/tmp/.X11-unix
       - ./.local/.X11-unix.xauth:/home/developer/.X11-unix.xauth
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.AndroidStudio3.2:/home/developer/.AndroidStudio3.2
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/Android:/home/developer/Android
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.android:/home/developer/.android
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.gradle:/home/developer/.gradle
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.java:/home/developer/.java
+      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}:/home/developer/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}
+      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/Android:/home/developer/Android
+      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.android:/home/developer/.android
+      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.gradle:/home/developer/.gradle
+      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.java:/home/developer/.java
       - ${ANDROID_APP_DIR:-./}:/home/developer/workspace
       #- ~/.docker-mobile-demo/${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
       #- ./docker/build/.mozilla:/home/developer/.mozilla

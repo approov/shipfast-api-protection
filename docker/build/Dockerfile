@@ -94,9 +94,11 @@ RUN \
 ARG PROXY_CA_NAME="ProxyCA"
 ENV PROXY_CA_PEM="${PROXY_CA_NAME}.pem"
 
-RUN curl 'https://dl.google.com/dl/android/studio/ide-zips/3.2.0.26/android-studio-ide-181.5014246-linux.zip' > /tmp/studio.zip && \
-    unzip -d /opt /tmp/studio.zip && \
-    rm /tmp/studio.zip && \
+ARG ANDROID_STUDIO_DOWNLOAD_URL="https://dl.google.com/dl/android/studio/ide-zips/3.5.1.0/android-studio-ide-191.5900203-linux.tar.gz"
+
+RUN curl "${ANDROID_STUDIO_DOWNLOAD_URL}" > /tmp/studio.tar.gz && \
+    tar xf /tmp/studio.tar.gz -C /opt && \
+    rm /tmp/studio.tar.gz && \
     "${DOCKER_BUILD}"/scripts/custom-ssl/android/add-certificate-to-android-studio.sh \
       "${SSL_CA_DIR}/${PROXY_CA_PEM}"
 

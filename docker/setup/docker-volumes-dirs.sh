@@ -2,11 +2,12 @@
 
 set -eu
 
-PROJECT_HOST_DIR=${1?}
+PROJECT_HOST_DIR=${1? Missing Project host dir.}
+VERSION=${2? Missing Android studio version.}
 
 mkdir -v -p \
-    ~/.docker-android-studio/${PROJECT_HOST_DIR}/Android \
-    ~/.docker-android-studio/${PROJECT_HOST_DIR}/.AndroidStudio3.2 \
-    ~/.docker-android-studio/${PROJECT_HOST_DIR}/.android \
-    ~/.docker-android-studio/${PROJECT_HOST_DIR}/.gradle \
-    ~/.docker-android-studio/${PROJECT_HOST_DIR}/.java \
+    ~/.docker-shipfast-demo/android-studio/${VERSION}/${PROJECT_HOST_DIR}/Android \
+    ~/.docker-shipfast-demo/android-studio/${VERSION}/${PROJECT_HOST_DIR}/.AndroidStudio${VERSION} \
+    ~/.docker-shipfast-demo/android-studio/${VERSION}/${PROJECT_HOST_DIR}/.android \
+    ~/.docker-shipfast-demo/android-studio/${VERSION}/${PROJECT_HOST_DIR}/.gradle \
+    ~/.docker-shipfast-demo/android-studio/${VERSION}/${PROJECT_HOST_DIR}/.java \

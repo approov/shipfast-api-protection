@@ -10,9 +10,9 @@
 package com.criticalblue.shipfast
 
 import android.content.pm.PackageManager
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
+import androidx.core.app.ActivityCompat
 import android.Manifest
 import android.content.Intent
 import android.graphics.Color
@@ -37,6 +37,8 @@ import com.google.android.gms.location.LocationRequest
 
 /** The maximum number of attempts to fetch the next shipment before reporting a failure */
 const val FETCH_NEXT_SHIPMENT_ATTEMPTS = 3
+
+const val TAG = "SHIPFAST_DEMO"
 
 /**
  * The Shipment activity class.
@@ -174,11 +176,11 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     }
 
     override fun onConnectionSuspended(cause: Int) {
-        Log.i("ShipFast", "Location update suspended: $cause")
+        Log.i(TAG, "---> Location update suspended: $cause")
     }
 
     override fun onConnectionFailed(result: ConnectionResult) {
-        Log.e("ShipFast", "Location update failed: $result")
+        Log.e(TAG, "---> Location update failed: $result")
     }
 
     /**
@@ -189,7 +191,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         currentShipment?.let {
             startProgress()
             requestShipmentStateUpdate(this@ShipmentActivity, LatLng(ANDROID_EMULATOR_LATITUDE, ANDROID_EMULATOR_LONGITUDE),
-                    it.id, it.nextState, { _, isSuccessful ->
+                    it.id, it.nextState) { _, isSuccessful ->
 
                 stopProgress()
                 when (it.nextState) {
@@ -206,7 +208,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                     val intent = Intent(this@ShipmentActivity, SummaryActivity::class.java)
                     startActivity(intent)
                 }
-            })
+            }
         }
     }
 
@@ -248,7 +250,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
         startProgress()
 
-        requestActiveShipment(this@ShipmentActivity, { _, shipment ->
+        requestActiveShipment(this@ShipmentActivity) { _, shipment ->
             if (shipment == null) {
                 if (lastLocation == null) {
                     stopProgress()
@@ -258,7 +260,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                 else {
                     lastLocation?.let {
                         startProgress()
-                        requestNearestShipment(this@ShipmentActivity, it.toLatLng(), { _, shipment ->
+                        requestNearestShipment(this@ShipmentActivity, it.toLatLng()) { _, shipment ->
                             stopProgress()
                             this@ShipmentActivity.currentShipment = shipment
                             runOnUiThread {
@@ -268,7 +270,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                             if (shipment == null && activityActive) {
                                 fetchNextShipment(remainingRetries - 1)
                             }
-                        })
+                        }
                     }
                 }
             }
@@ -279,7 +281,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                     updateState()
                 }
             }
-        })
+        }
     }
 
     /**
@@ -289,11 +291,11 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
         currentShipment?.id?.let {
             startProgress()
-            requestShipment(this@ShipmentActivity, it, { _, shipment ->
+            requestShipment(this@ShipmentActivity, it) { _, shipment ->
                 stopProgress()
                 this@ShipmentActivity.currentShipment = shipment
                 runOnUiThread { updateState() }
-            })
+            }
         }
     }
 

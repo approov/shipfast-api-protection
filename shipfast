@@ -12,14 +12,12 @@ ARG3=${3:-""}
 
 LINES=""
 
+ANDROID_STUDIO_VERSION=3.5.1.0
+ANDROID_STUDIO_MAJOR_VERSION=3.5
+
 PROJECT_HOST_DIR="${PWD#*${HOME}/}"
 
 PROJECT_HOST_DIR="${PROJECT_HOST_DIR//\//_}"
-
-if [ "${ARG1}" != "register" ]
-    then
-        ./docker/setup/docker-volumes-dirs.sh "${PROJECT_HOST_DIR}"
-fi
 
 function Register_Token()
 {
@@ -305,6 +303,6 @@ _XAUTH=./.local/.X11-unix.xauth
 touch "${_XAUTH}"
 xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${_XAUTH}" nmerge -
 
-./docker/setup/docker-volumes-dirs.sh "${PROJECT_HOST_DIR}"
+./docker/setup/docker-volumes-dirs.sh "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 
 sudo docker-compose ${@}

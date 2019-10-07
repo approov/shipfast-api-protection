@@ -42,6 +42,7 @@ const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pV
 /** The HMAC request header */
 const val HMAC_HEADER = "HMAC"
 
+
 /** The flag for whether Approov has been initialised */
 private var approovInitialised = false
 
@@ -399,7 +400,7 @@ private fun parseJSONForShipment(json: JSONObject?): Shipment? {
  */
 private fun loadShipFastAPIKey(context: Context): String {
     return context.packageManager.getApplicationInfo( context.packageName, PackageManager.GET_META_DATA)
-            .metaData.getString("com.criticalblue.shipfast.API_KEY")
+            .metaData.getString("com.criticalblue.shipfast.API_KEY").toString()
 }
 
 /**

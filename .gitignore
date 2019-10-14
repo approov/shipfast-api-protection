@@ -10,11 +10,9 @@ node_modules
 .idea/
 .local/
 .Trash-1000/
-/docker/demo/.mozilla/firefox/*
 !.gitkeep
 *.token
 *.tok
 .env
 **/cert9.db
 **/key4.db
-.mozilla/

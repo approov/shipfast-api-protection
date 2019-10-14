@@ -87,9 +87,11 @@ RUN \
 
   "${DOCKER_BUILD}"/scripts/debian/install/inotify-tools.sh && \
 
-  "${DOCKER_BUILD}"/scripts/custom-ssl/operating-system/add-custom-authority-certificate.sh \
+  if [ -f "/.certificates/ProxyCA.crt" ]; then \
+    "${DOCKER_BUILD}"/scripts/custom-ssl/operating-system/add-custom-authority-certificate.sh \
       "/.certificates/ProxyCA.crt" \
-      "/usr/local/share/ca-certificates"
+      "/usr/local/share/ca-certificates"; \
+  fi
 
 ARG PROXY_CA_NAME="ProxyCA"
 ENV PROXY_CA_PEM="${PROXY_CA_NAME}.pem"
@@ -99,8 +101,9 @@ ARG ANDROID_STUDIO_DOWNLOAD_URL="https://dl.google.com/dl/android/studio/ide-zip
 RUN curl "${ANDROID_STUDIO_DOWNLOAD_URL}" > /tmp/studio.tar.gz && \
     tar xf /tmp/studio.tar.gz -C /opt && \
     rm /tmp/studio.tar.gz && \
-    "${DOCKER_BUILD}"/scripts/custom-ssl/android/add-certificate-to-android-studio.sh \
-      "${SSL_CA_DIR}/${PROXY_CA_PEM}"
+    if [ -f "/.certificates/ProxyCA.crt" ]; then \
+      "${DOCKER_BUILD}"/scripts/custom-ssl/android/add-certificate-to-android-studio.sh \
+        "${SSL_CA_DIR}/${PROXY_CA_PEM}"; fi
 
 RUN curl -sL https://deb.nodesource.com/setup_10.x | bash - && \
     apt install -y nodejs
@@ -156,14 +159,16 @@ RUN "${DOCKER_BUILD}"/scripts/utils/debian/add-user-with-bin-folder.sh \
     "${ROOT_CA_NAME}" \
     "${CONTAINER_HOME}" && \
 
-  "${DOCKER_BUILD}"/scripts/custom-ssl/browsers/add-certificate-to-browser.sh \
-    "${SSL_CA_DIR}/${PROXY_CA_PEM}" \
-    "${PROXY_CA_NAME}" \
-    "${CONTAINER_HOME}" && \
+  if [ -f "/.certificates/ProxyCA.crt" ]; then \
+    "${DOCKER_BUILD}"/scripts/custom-ssl/browsers/add-certificate-to-browser.sh \
+      "${SSL_CA_DIR}/${PROXY_CA_PEM}" \
+      "${PROXY_CA_NAME}" \
+      "${CONTAINER_HOME}"; fi && \
 
-  "${DOCKER_BUILD}"/scripts/custom-ssl/nodejs/add-certificate-to-server.sh \
-    "${SSL_CA_DIR}/${PROXY_CA_PEM}" \
-    "${CONTAINER_HOME}"
+  if [ -f "/.certificates/ProxyCA.crt" ]; then \
+    "${DOCKER_BUILD}"/scripts/custom-ssl/nodejs/add-certificate-to-server.sh \
+      "${SSL_CA_DIR}/${PROXY_CA_PEM}" \
+      "${CONTAINER_HOME}"; fi
 
 RUN mkdir ${CONTAINER_HOME}/.ssl && \
     cp -v "${DOMAIN_CA_NAME}".crt ${CONTAINER_HOME}/.ssl/"${DOMAIN_CA_NAME}".pem && \

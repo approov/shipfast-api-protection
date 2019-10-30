@@ -12,16 +12,31 @@ const SHIPMENT_STATE = require('./shipment').SHIPMENT_STATE
 const MersenneTwister = require('mersenne-twister')
 const Rand = new MersenneTwister(Date.now())
 
+const chalk = require('chalk')
+
+// Auto detection of colour support does not work always, thus we need to
+// enforce it to support 256 colors.
+const ctx = new chalk.constructor({level: 2})
+const error = ctx.bold.red
+const warning = ctx.bold.yellow
+const info = ctx.bold.blue
+const debug = ctx.bold.cyan
+
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
 const MAX_GRATUITY = 30
-const LAT_LNG_OFFSET = 0.2
-const SHIPMENT_COUNT = 10
+const LAT_LNG_OFFSET = 0.1
 
-var SHIPMENT_TOTAL = 0
+// Shipments
+const TOTAL_SHIPMENTS_TO_CREATE = 20 // NEVER TWEAK TO BE LESS THEN 10, unless for testing purposes.
+const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 2 // 10 * 2 = 20
+const MAX_DELIVERED_SHIPMENTS = TOTAL_SHIPMENTS_TO_CREATE / 2 // 10 / 2 = 5
+var TOTAL_SHIPMENT_COUNT = 0
+var NEXT_SHIPMENT_TO_DELETE = 0
+
 const FAKER = require('faker');
 
-// The map of shipments
+// The shipments object
 var shipments = {}
 
 function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
@@ -68,12 +83,12 @@ function populateShipments(originLatitude, originLongitude) {
     var randMultiplier = 2.0 * LAT_LNG_OFFSET
     var randOffset = LAT_LNG_OFFSET
 
-    for (i = 0; i < SHIPMENT_COUNT; i++) {
-        var shipmentID = SHIPMENT_TOTAL + i + 1
+    for (var i = 0; i < TOTAL_SHIPMENTS_TO_CREATE; i++) {
+        var shipmentID = TOTAL_SHIPMENT_COUNT // + i + 1
         var pickupName = FAKER.address.streetAddress()
         var deliveryName = FAKER.address.streetAddress()
         var description = FAKER.name.findName() + " #" + randomNumber(1000, 9999)
-        var gratuity = i % 2 == 0 ? Math.floor((Rand.random() * MAX_GRATUITY) + MIN_GRATUITY) : MIN_GRATUITY
+        var gratuity = shipmentID % 2 == 0 ? Math.floor((Rand.random() * MAX_GRATUITY) + MIN_GRATUITY) : MIN_GRATUITY
         var pickupLatitude = originLatitude + ((randFloat() * randMultiplier) - randOffset)
         var pickupLongitude = originLongitude + ((randFloat() * randMultiplier) - randOffset)
         var deliveryLatitude = originLatitude + ((randFloat() * randMultiplier) - randOffset)
@@ -82,12 +97,15 @@ function populateShipments(originLatitude, originLongitude) {
             pickupName, pickupLatitude, pickupLongitude,
             deliveryName, deliveryLatitude, deliveryLongitude)
         shipments[shipmentID] = shipment
+
+        TOTAL_SHIPMENT_COUNT++
+
+        if (Object.keys(shipments).length > MAX_TOTAL_SHIPMENT_COUNT) {
+            // remove first element
+            delete shipments[NEXT_SHIPMENT_TO_DELETE]
+            NEXT_SHIPMENT_TO_DELETE++
+        }
     }
-
-    SHIPMENT_TOTAL += i
-
-    //console.log('Generated Shipments:')
-    //console.log(shipments)
 }
 
 const reCalculateNearestShipment = function(originLatitude, originLongitude) {
@@ -138,17 +156,51 @@ function findNearestShipment(originLatitude, originLongitude) {
     return nearestShipment
 }
 
+const updateShipmentState = function(shipmentID, newState) {
+
+    // Find the shipment with the given ID
+    var shipment = getShipment(shipmentID)
+
+    if (!shipment) {
+      console.log(error("\nNo shipment found for ID " + shipmentID + "\n"))
+      return false
+    }
+
+    // Perform basic validation of the new shipment state
+    if (newState <= 0
+        || newState != shipment.getState() + 1
+        || newState >= Object.keys(SHIPMENT_STATE).length) {
+      console.log(error("\nShipment state invalid\n"))
+      return false
+    }
+
+    shipment.setState(newState)
+
+    return true
+}
+
 // A function to calculate and return an array of shipments in a 'DELIVERED' state
 const getDeliveredShipments = function() {
 
+    var countDelivered = 0
     var deliveredShipments = []
-    Object.entries(shipments).forEach(
+
+    Object.entries(shipments).reverse().filter(
         ([shipmentID, shipment]) => {
+
+            // We don't need to display all the delivered shipments in the mobile app.
+            if (countDelivered >= MAX_DELIVERED_SHIPMENTS) {
+                return false
+            }
+
             if (shipment.getState() == SHIPMENT_STATE.DELIVERED) {
                 deliveredShipments.push(shipment)
+                countDelivered++
+                return true
             }
         }
     )
+
     return deliveredShipments
 }
 
@@ -178,5 +230,6 @@ module.exports = {
     getDeliveredShipments: getDeliveredShipments,
     getActiveShipment: getActiveShipment,
     getShipment: getShipment,
+    updateShipmentState: updateShipmentState,
     SHIPMENT_STATE: SHIPMENT_STATE
 }

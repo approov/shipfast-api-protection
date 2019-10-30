@@ -5,7 +5,7 @@
   "main": "rogue-web-server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon rogue-web-server.js > /home/developer/web.log"
+    "start": "nodemon rogue-web-server.js"
   },
   "author": "Simon Rigg",
   "license": "GPL",

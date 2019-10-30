@@ -19,6 +19,10 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.criticalblue.shipfast.api.RestAPI
+import com.criticalblue.shipfast.dto.Shipment
+import com.criticalblue.shipfast.utils.ViewShow
+
 
 /**
  * The Summary activity class.
@@ -32,7 +36,9 @@ class SummaryActivity : AppCompatActivity() {
     private lateinit var deliveredShipmentsListView: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_summary)
         title = "Delivered Shipments"
 
@@ -47,8 +53,13 @@ class SummaryActivity : AppCompatActivity() {
     private fun updateDeliveredShipments() {
 
         startProgress()
-        requestDeliveredShipments(this@SummaryActivity) { _, shipments ->
+        RestAPI.requestDeliveredShipments(this@SummaryActivity) { shipments ->
             stopProgress()
+
+            if (shipments == null) {
+                ViewShow.warning(findViewById(R.id.shipmentState), "No Delivered Shipments Available!!!")
+            }
+
             runOnUiThread {
                 deliveredShipmentsListView.adapter = DeliveredShipmentsAdapter(this@SummaryActivity,
                         R.layout.listview_shipment, shipments ?: arrayListOf())
@@ -81,7 +92,7 @@ class SummaryActivity : AppCompatActivity() {
 class DeliveredShipmentsAdapter(context: Context, resource: Int, private val shipments: List<Shipment>)
     : ArrayAdapter<Shipment>(context, resource, shipments)  {
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup): View {
+    override fun getView(position: Int, convertView: android.view.View?, parent: ViewGroup): android.view.View {
 
         // Get the shipment for the list view row index
         val shipment = shipments[position]

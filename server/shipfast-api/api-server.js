@@ -36,6 +36,7 @@ const HTTPS_PORT = config.httpsPort
 const URL = config.httpProtocol + '://' + HOST_NAME
 const BASE_DIR = config.baseDir
 
+
 // Support CORS
 app.use(cors())
 
@@ -79,8 +80,7 @@ app.get('/shipments/delivered', function(req, res) {
 
   // Calculate the array of delivered shipments
   var deliveredShipments = model.getDeliveredShipments()
-  //console.log(debug("\nDelivered Shipments:"))
-  // console.debug(deliveredShipments)
+
   res.status(200).json(deliveredShipments)
 })
 
@@ -108,7 +108,7 @@ app.get('/shipments/:shipmentID', function(req, res) {
 
   // Retrieve the shipment ID from the request header
   var shipmentID = parseInt(req.params.shipmentID)
-  if (!shipmentID) {
+  if (!Number.isInteger(shipmentID)) {
     console.log(error("\nShipment ID not specified or in the wrong format\n"))
     res.status(400).send()
     return
@@ -121,9 +121,11 @@ app.get('/shipments/:shipmentID', function(req, res) {
     res.status(404).send()
     return
   }
+
   console.log(debug("\nShipment ID " + shipmentID + ":"))
   console.log(shipment.description)
   res.status(200).json(shipment)
+
 })
 
 // The '/shipments/update_state/:shipmentID' POST request route
@@ -133,17 +135,9 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
 
   // Retrieve the shipment ID from the request header
   var shipmentID = parseInt(req.params.shipmentID)
-  if (!shipmentID) {
+  if (!Number.isInteger(shipmentID)) {
     console.log(error("\nShipment ID not specified or in the wrong format\n"))
     res.status(400).send()
-    return
-  }
-
-  // Find the shipment with the given ID
-  var shipment = model.getShipment(shipmentID)
-  if (!shipment) {
-    console.log(error("\nNo shipment found for ID " + shipmentID + "\n"))
-    res.status(404).send()
     return
   }
 
@@ -160,24 +154,21 @@ app.post('/shipments/update_state/:shipmentID', function(req, res) {
 
   // Retrieve the new shipment state from the request header
   var newState = parseInt(req.get('SHIPMENT-STATE'))
-  if (!newState) {
+  if (!Number.isInteger(newState)) {
     console.log(error("\nShipment state not specified or in the wrong format\n"))
     res.status(400).send()
     return
   }
 
-  // Perform basic validation of the new shipment state
-  if (newState <= 0
-      || newState != shipment.getState() + 1
-      || newState >= Object.keys(model.SHIPMENT_STATE).length) {
-    console.log(error("\nShipment state invalid\n"))
-    res.status(400).send()
-    return
+  isUpdated = model.updateShipmentState(shipmentID, newState)
+
+  if (isUpdated) {
+      console.log(warning("\nState of shipment " + shipmentID + " updated to " + newState + "\n"))
+      res.status(200).send()
+      return
   }
 
-  shipment.setState(newState)
-  console.log(warning("\nState of shipment " + shipmentID + " updated to " + newState + "\n"))
-  res.status(200).send()
+  res.status(400).send()
 })
 
 if (config.runSecureServer) {
@@ -200,3 +191,4 @@ else {
     console.log(info("\nShipFast server listening on " + HOST_NAME + ":" + HTTP_PORT + "\n"))
   })
 }
+

@@ -22,24 +22,24 @@ const DEMO_STAGE = {
 var config = {}
 
 // The current demo stage
-config.currentDemoStage = process.env.SHIP_FAST_API_DEMO_STAGE || DEMO_STAGE.API_KEY_PROTECTION
-//config.currentDemoStage = DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION
+//config.currentDemoStage = process.env.SHIPFAST_API_DEMO_STAGE || DEMO_STAGE.API_KEY_PROTECTION
+config.currentDemoStage = DEMO_STAGE.APPROOV_APP_AUTH_PROTECTION
 
 console.log("CURRENT DEMO STAGE: " + config.currentDemoStage)
 
 // The ShipFast server host name
-config.serverHostName = process.env.SHIP_FAST_API_DOMAIN || 'localhost'
+config.serverHostName = process.env.SHIPFAST_API_DOMAIN || 'localhost'
 
-config.httpProtocol = process.env.SHIP_FAST_HTTP_PROTOCOL || 'https'
-config.httpPort = process.env.SHIP_FAST_HTTP_PORT || '3333'
-config.httpsPort = process.env.SHIP_FAST_HTTPS_PORT || '3443'
+config.httpProtocol = process.env.SHIPFAST_HTTP_PROTOCOL || 'https'
+config.httpPort = process.env.SHIPFAST_HTTP_PORT || '3333'
+config.httpsPort = process.env.SHIPFAST_HTTPS_PORT || '3443'
 
 // The flag for whether to run the ShipFast server over HTTPS (true) or HTTP (false)
 config.runSecureServer = (config.httpProtocol === "https")
 //console.log("RUN SECURE SERVER: " + config.runSecureServer)
 
 // The Auth0 domain to use for use authentication
-config.auth0Domain = process.env.SHIP_FAST_AUTH0_DOMAIN
+config.auth0Domain = process.env.AUTH0_DOMAIN
 
 config.baseDir = process.env.BASE_DIR || '/home/developer'
 

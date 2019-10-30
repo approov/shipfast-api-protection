@@ -13,9 +13,9 @@ var config = {}
 // The ShipFast server host name
 config.serverHostName = process.env.SHIP_RAIDER_DOMAIN || 'localhost'
 
-config.httpProtocol = process.env.SHIP_RAIDER_HTTP_PROTOCOL || 'https'
-config.httpPort = process.env.SHIP_RAIDER_HTTP_PORT || '4333'
-config.httpsPort = process.env.SHIP_RAIDER_HTTPS_PORT || '4443'
+config.httpProtocol = process.env.SHIPRAIDER_HTTP_PROTOCOL || 'https'
+config.httpPort = process.env.SHIPRAIDER_HTTP_PORT || '4333'
+config.httpsPort = process.env.SHIPRAIDER_HTTPS_PORT || '4443'
 
 config.latitude = process.env.ANDROID_EMULATOR_LATITUDE || '51.5355'
 config.longitude = process.env.ANDROID_EMULATOR_LONGITUDE || '-0.104971'

@@ -7,7 +7,7 @@
  * The user credentials manager.
  *****************************************************************************/
 
-package com.criticalblue.shipfast
+package com.criticalblue.shipfast.user
 
 import android.content.Context
 import com.auth0.android.result.Credentials

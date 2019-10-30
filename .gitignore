@@ -16,3 +16,4 @@ node_modules
 .env
 **/cert9.db
 **/key4.db
+sftp-config.json

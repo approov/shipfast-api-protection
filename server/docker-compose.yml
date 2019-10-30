@@ -1,0 +1,55 @@
+version: "2.1"
+
+services:
+
+  shipfast-api:
+    image: approov/shipfast-nodejs
+    build:
+      context: docker/build
+    container_name: "shipfast-api"
+    hostname: "shipfast-api"
+    env_file:
+      - .env
+    volumes:
+      - ./shipfast-api:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=approov-protected.shipfast-api"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPFAST_HTTP_PORT}"
+      - "traefik.frontend.rule=Host:approov-protected.shipfast-api.pdm.approov.io"
+
+  shipraider-web:
+    image: approov/shipfast-nodejs
+    build:
+      context: docker/build
+    container_name: "shipraider-web"
+    hostname: "shipraider-web"
+    env_file:
+      - .env
+    volumes:
+      - ./shipraider-rogue-web:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=shipraider-web"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPRAIDER_HTTP_PORT}"
+      - "traefik.frontend.rule=Host:shipraider-web.pdm.approov.io"
+
+networks:
+  shipfast:
+    driver: "bridge"
+  traefik:
+    external: true

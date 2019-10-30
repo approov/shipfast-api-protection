@@ -43,7 +43,7 @@ cp .env.example .env
 Now we need to add values for:
 
 * APPROOV_TOKEN_SECRET - follow the [Appoov docs](https://approov.io/docs/v2.0/approov-usage-documentation/#token-secret-extraction) to get the Appoov secret.
-* SHIP_FAST_AUTH0_DOMAIN - you can get one from your [Auth0 Dashboard](https://manage.auth0.com/dashboard)
+* AUTH0_DOMAIN - you can get one from your [Auth0 Dashboard](https://manage.auth0.com/dashboard)
 
 All other defaults in the`.env` file are fine to run the demo.
 

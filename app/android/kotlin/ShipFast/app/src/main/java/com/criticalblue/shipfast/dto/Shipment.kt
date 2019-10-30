@@ -1,0 +1,224 @@
+/*****************************************************************************
+ * Project:     ShipFast API Protection (App)
+ * File:        Shipment.kt
+ * Original:    Created on 3 Oct 2017 by Simon Rigg
+ * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
+ *
+ * The class which represents a shipment.
+ *****************************************************************************/
+
+package com.criticalblue.shipfast.dto
+
+import com.criticalblue.shipfast.utils.JsonParser
+import com.google.android.gms.maps.model.LatLng
+import okhttp3.Response
+import org.json.JSONException
+import org.json.JSONObject
+import java.io.IOException
+
+/**
+ * The enumeration of various states a shipment may be in
+ */
+enum class ShipmentState(val nextStateActionName: String) {
+    READY("Accept"),
+    ACCEPTED("Collect"),
+    COLLECTED("Deliver"),
+    DELIVERED("")
+}
+
+/**
+ * This class receives the OkHttp3 Response? object and an IOException? and will build a local
+ *  ShipmentResult object, from where the Shipment data object and the ShipmentResponse success
+ *  status will be extracted.
+ *
+ * @param response  The response for the Shipment request, if available.
+ * @param exception The IO exception occurred during the request/response life cycle, if any.
+ */
+class ShipmentResponse (
+    private val response: Response?,
+    private val exception: IOException?
+) {
+
+    /**
+     * Tells where the response is a successful one or not.
+     */
+    private var isOk: Boolean = false
+
+    /**
+     * The data Shipment object.
+     */
+    var shipment: Shipment? = null
+
+    /**
+     * The error message from IOException.
+     */
+    var errorMessage: String = "Unknown error!"
+
+    /**
+     * Processes the injected constructor parameters during the class initialization.
+     */
+    init {
+        if (this.exception != null) {
+            this.isOk = false
+            this.errorMessage = exception.message ?: this.errorMessage
+        } else {
+            this.response?.let {
+                if (it.isSuccessful) {
+                    it.body()?.let {
+                        buildShipmentResponse(it.string())
+                    }
+                } else {
+                    this.isOk = false
+                    this.errorMessage = response.message() ?: this.errorMessage
+                }
+            }
+        }
+    }
+
+    /**
+     * Builds a local ShipmentResult object in order to extract the Shipment data object, and
+     *  determine that the ShipmentResponse was successful.
+     */
+    private fun buildShipmentResponse(bodyPayload: String) {
+        val json = JsonParser.toJSONObject(bodyPayload)
+        val shipmentResult = ShipmentResult(json)
+        this.isOk = shipmentResult.isOk()
+        this.shipment = shipmentResult.get()
+    }
+
+    /**
+     * Tells that the response is a successful one.
+     *
+     * @return True when the response has a success http status code.
+     */
+    fun isOk(): Boolean {
+        return this.isOk
+    }
+
+    /**
+     * Tells that the response is a not successful one.
+     *
+     * @return True when the response have a http status code for a client or server error.
+     */
+    fun isNotOk(): Boolean {
+        return !this.isOk
+    }
+
+    /**
+     * Get the Shipment data object.
+     */
+    fun get(): Shipment? {
+        return this.shipment
+    }
+}
+
+
+/**
+ * This class accepts a JSONObject? and will extract from it the Shipment data object and if the
+ *  result of parsing it was successful.
+ *
+ * @param json The json object from the Shipment response.
+ */
+class ShipmentResult (
+    private val json: JSONObject?
+) {
+
+    private var isOk = false
+    private var shipment: Shipment? = null
+
+    init {
+        if (this.json != null) {
+            try {
+                this.shipment = Shipment(
+                    this.json.getInt("id"),
+                    this.json.getString("description"),
+                    this.json.getDouble("gratuity"),
+                    this.json.getString("pickupName"),
+                    LatLng(this.json.getDouble("pickupLatitude"), this.json.getDouble("pickupLongitude")),
+                    this.json.getString("deliveryName"),
+                    LatLng(this.json.getDouble("deliveryLatitude"), this.json.getDouble("deliveryLongitude")),
+                    ShipmentState.values().get(this.json.getInt("state"))
+                )
+
+                this.isOk = true
+
+            } catch (e: JSONException) {
+                this.isOk = false
+            }
+        }
+    }
+
+    /**
+     * Tells that the we where able to build the Shipment from the given json object.
+     *
+     * @return True when the Shipment was built successfully.
+     */
+    fun isOk(): Boolean {
+        return this.isOk
+    }
+
+    /**
+     * Tells that the we failed to build the Shipment from the given json object.
+     *
+     * @return True when a json exception occurred, while building the Shipment.
+     */
+    fun isNotOk(): Boolean {
+        return !this.isOk
+    }
+
+    /**
+     * Get the Shipment data object.
+     */
+    fun get(): Shipment? {
+        return this.shipment
+    }
+}
+
+/**
+ * The data class to represent a shipment.
+ *
+ * @param id the unique shipment identifier
+ * @param description the brief description of the shipment
+ * @param gratuity the gratuity associated with the shipment
+ * @param pickupName the name of the shipment's pickup location
+ * @param pickupLocation the shipment's pickup location
+ * @param deliveryName the name of the shipment's delivery location
+ * @param deliveryLocation the shipment's delivery location
+ * @param state the state of the shipment
+ */
+data class Shipment(
+    val id: Int,
+    val description: String,
+    val gratuity: Double,
+    val pickupName: String,
+    val pickupLocation: LatLng,
+    val deliveryName: String,
+    val deliveryLocation: LatLng,
+    var state: ShipmentState
+) {
+    /**
+     * Builds a string to represent this data object.
+     *
+     * @return This object public data as a string.
+     */
+    override fun toString(): String {
+        return "Shipment(id=$id, description='$description', gratuity=$gratuity," +
+                "pickupName='$pickupName', pickupLocation=$pickupLocation," +
+                "deliveryName='$deliveryName', deliveryLocation=$deliveryLocation," +
+                "state=$state)"
+    }
+
+    /**
+     * Advances the Shipment state to the next logical state.
+     *
+     * @return The next logical state for the Shipment.
+     */
+    val nextState: ShipmentState
+        get() {
+            return when (state) {
+                ShipmentState.DELIVERED -> ShipmentState.DELIVERED
+                else -> ShipmentState.values()[state.ordinal + 1]
+            }
+        }
+}
+

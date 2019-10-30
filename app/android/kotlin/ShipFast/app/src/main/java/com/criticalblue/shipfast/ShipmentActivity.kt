@@ -9,6 +9,7 @@
 
 package com.criticalblue.shipfast
 
+
 import android.content.pm.PackageManager
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
@@ -17,9 +18,18 @@ import android.Manifest
 import android.content.Intent
 import android.graphics.Color
 import android.location.Location
+import android.location.LocationManager
 import android.util.Log
 import android.view.View
 import android.widget.*
+import com.criticalblue.approov.ApproovSdk
+import com.criticalblue.shipfast.api.*
+import com.criticalblue.shipfast.config.DRIVER_LATITUDE
+import com.criticalblue.shipfast.config.DRIVER_LONGITUDE
+import com.criticalblue.shipfast.dto.Shipment
+import com.criticalblue.shipfast.dto.ShipmentResponse
+import com.criticalblue.shipfast.dto.ShipmentState
+import com.criticalblue.shipfast.utils.ViewShow
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -33,12 +43,13 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
+import java.util.concurrent.TimeUnit
 
 
 /** The maximum number of attempts to fetch the next shipment before reporting a failure */
 const val FETCH_NEXT_SHIPMENT_ATTEMPTS = 3
 
-const val TAG = "SHIPFAST_DEMO"
+const val TAG = "SHIPFAST"
 
 /**
  * The Shipment activity class.
@@ -87,8 +98,12 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     /** The availability switch */
     private lateinit var availabilitySwitch: Switch
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        ApproovSdk.initialize(applicationContext)
+
         setContentView(R.layout.activity_shipment)
         title = "Current Shipment"
 
@@ -119,7 +134,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         // 37.441883, -122.143019 -> Palo Alto, California
         // 55.944879, -3.181546   -> Edinburgh
         mapView.getMapAsync { googleMap ->
-            zoomMapIntoLocation(googleMap, LatLng(ANDROID_EMULATOR_LATITUDE, ANDROID_EMULATOR_LONGITUDE))
+            zoomMapIntoLocation(googleMap, LatLng(DRIVER_LATITUDE, DRIVER_LONGITUDE))
         }
     }
 
@@ -190,19 +205,22 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
         currentShipment?.let {
             startProgress()
-            requestShipmentStateUpdate(this@ShipmentActivity, LatLng(ANDROID_EMULATOR_LATITUDE, ANDROID_EMULATOR_LONGITUDE),
-                    it.id, it.nextState) { _, isSuccessful ->
+            RestAPI.requestShipmentStateUpdate(this@ShipmentActivity, LatLng(DRIVER_LATITUDE, DRIVER_LONGITUDE),
+                    it.id, it.nextState) { isSuccessful ->
 
                 stopProgress()
+                
+                updateShipment()
+
                 when (it.nextState) {
                     ShipmentState.DELIVERED -> {
                         runOnUiThread {
-                            Toast.makeText(this@ShipmentActivity, "Congratulations! You've delivered ${it.description}",
-                                    Toast.LENGTH_LONG)
+                            ViewShow.success(findViewById(R.id.shipmentState), "You've delivered to: ${it.description}")
                         }
+
+                        TimeUnit.SECONDS.sleep(3L)
                     }
                 }
-                updateShipment()
 
                 if (it.nextState == ShipmentState.DELIVERED) {
                     val intent = Intent(this@ShipmentActivity, SummaryActivity::class.java)
@@ -238,49 +256,53 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
             runOnUiThread {
                 availabilitySwitch.isChecked = false
                 updateState()
-                Toast.makeText(this@ShipmentActivity, "No shipment available!", Toast.LENGTH_LONG).show()
+                ViewShow.warning(findViewById(R.id.shipmentState), "No shipment available!")
             }
             return
         }
         else {
             runOnUiThread {
-                Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
+                ViewShow.info(findViewById(R.id.shipmentState), "Waiting for shipment...")
             }
         }
 
         startProgress()
 
-        requestActiveShipment(this@ShipmentActivity) { _, shipment ->
-            if (shipment == null) {
+        RestAPI.requestActiveShipment(this@ShipmentActivity) { shipmentResponse: ShipmentResponse ->
+
+            if (shipmentResponse.isNotOk()) {
                 if (lastLocation == null) {
-                    stopProgress()
                     Thread.sleep(1000)
                     fetchNextShipment(remainingRetries - 1)
-                }
-                else {
+                } else {
                     lastLocation?.let {
                         startProgress()
-                        requestNearestShipment(this@ShipmentActivity, it.toLatLng()) { _, shipment ->
-                            stopProgress()
-                            this@ShipmentActivity.currentShipment = shipment
-                            runOnUiThread {
-                                updateState()
-                            }
-                            Thread.sleep(1000)
-                            if (shipment == null && activityActive) {
+                        RestAPI.requestNearestShipment(this@ShipmentActivity, it.toLatLng()) { shipmentResponse: ShipmentResponse ->
+
+                            if (shipmentResponse.isNotOk() && activityActive) {
                                 fetchNextShipment(remainingRetries - 1)
+                            } else {
+
+                                this@ShipmentActivity.currentShipment = shipmentResponse.get()
+
+                                runOnUiThread {
+                                    updateState()
+                                }
+
+                                Thread.sleep(1000)
                             }
                         }
                     }
                 }
-            }
-            else {
-                stopProgress()
-                this@ShipmentActivity.currentShipment = shipment
+
+            } else {
+                this@ShipmentActivity.currentShipment = shipmentResponse.get()
                 runOnUiThread {
                     updateState()
                 }
             }
+
+            stopProgress()
         }
     }
 
@@ -291,9 +313,15 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
         currentShipment?.id?.let {
             startProgress()
-            requestShipment(this@ShipmentActivity, it) { _, shipment ->
+            RestAPI.requestShipment(this@ShipmentActivity, it) { shipmentResponse: ShipmentResponse ->
                 stopProgress()
-                this@ShipmentActivity.currentShipment = shipment
+
+                if (shipmentResponse.isNotOk()) {
+                    ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage!!)
+                    return@requestShipment
+                }
+
+                this@ShipmentActivity.currentShipment = shipmentResponse.get()
                 runOnUiThread { updateState() }
             }
         }
@@ -384,5 +412,26 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         runOnUiThread {
             updateShipmentProgressBar.visibility = View.INVISIBLE
         }
+    }
+
+    /**
+     * Allows Location objects to be converted to LatLng objects.
+     *
+     * @return the LatLng value
+     */
+    fun Location.toLatLng(): LatLng {
+        return LatLng(this.latitude, this.longitude)
+    }
+
+    /**
+     * Allows LatLng objects to be converted to Location objects.
+     *
+     * @return the Location value
+     */
+    fun LatLng.toLocation(): Location {
+        val location = Location(LocationManager.GPS_PROVIDER)
+        location.latitude = this.latitude
+        location.longitude = this.longitude
+        return location
     }
 }

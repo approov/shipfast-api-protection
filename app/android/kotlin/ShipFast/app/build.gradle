@@ -16,13 +16,24 @@ android {
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
-        // Add Auth0 manifest placeholders for domain and scheme
-        manifestPlaceholders = [auth0Domain: "@string/com_auth0_domain", auth0Scheme: "demo"]
+        // Required by the Auth0 Android Manifest
+        manifestPlaceholders = [auth0Domain: "$System.env.AUTH0_DOMAIN", auth0Scheme: "$System.env.AUTH0_SCHEME"]
+
+        resValue "string", "ANDROID_GEO_API_KEY", "$System.env.ANDROID_GEO_API_KEY"
     }
     buildTypes {
         release {
             minifyEnabled true
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+        }
+    }
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    externalNativeBuild {
+        cmake {
+            path file('src/main/cpp/CMakeLists.txt')
         }
     }
 }
@@ -41,6 +52,7 @@ dependencies {
     // Include Auth0 for user authentication
     implementation 'com.auth0.android:auth0:1.14.1'
     // Include OkHttp3 for REST API requests
-    implementation 'com.squareup.okhttp3:okhttp:3.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:3.14.2'
     implementation project(':approov')
+    implementation 'com.google.android.material:material:1.0.0'
 }

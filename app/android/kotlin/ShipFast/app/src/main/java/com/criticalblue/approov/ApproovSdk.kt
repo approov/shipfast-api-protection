@@ -80,7 +80,7 @@ object ApproovSdk {
             throw ApproovSdkFatalException("Unexpected null object for the Approov dynamic configuration.")
         }
 
-        val approovTokenFetchResult = Approov.fetchApproovTokenAndWait(UrlUtil.extractHostname(url))
+        val approovTokenFetchResult = Approov.fetchApproovTokenAndWait(url)
         val approovToken = ApproovTokenFetchResult(this.config!!).parse(approovTokenFetchResult)
 
         // When the Approov dynamic config changes, we may have new certificate pins, thus we need

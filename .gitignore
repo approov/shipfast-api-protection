@@ -17,3 +17,4 @@ node_modules
 **/cert9.db
 **/key4.db
 sftp-config.json
+CB_INTERNAL_ONLY

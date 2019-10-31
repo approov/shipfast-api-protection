@@ -6,7 +6,6 @@ import com.criticalblue.approov.dto.ApproovToken
 import com.criticalblue.approovsdk.Approov
 import com.criticalblue.approov.exceptions.ApproovSdkFatalException
 import com.criticalblue.approov.http.okhttp3.OkHttp3ClientBuilder
-import com.criticalblue.approov.utils.UrlUtil
 
 /**
  * This singleton to wrap the Approov SDK, for initialization, getting certificate pins and fetch

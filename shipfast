@@ -15,9 +15,21 @@ LINES=""
 ANDROID_STUDIO_VERSION=3.5.1.0
 ANDROID_STUDIO_MAJOR_VERSION=3.5
 
-PROJECT_HOST_DIR="${PWD#*${HOME}/}"
+PROJECT_DIR="${PWD#*${HOME}/}"
+PROJECT_NAME="${PROJECT_DIR//\//_}"
 
-PROJECT_HOST_DIR="${PROJECT_HOST_DIR//\//_}"
+#PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo/${PROJECT_NAME//\//_}"
+PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo"
+
+./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
+
+
+# Setup X11 server authentication
+# @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
+_XAUTH="${PROJECT_HOST_DIR}"/.X11-unix.xauth
+touch "${_XAUTH}"
+xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${_XAUTH}" nmerge -
+
 
 function Register_Token()
 {
@@ -176,6 +188,24 @@ function Restart_Demo {
     sudo docker-compose down && Start_Demo
 }
 
+
+# Updates the env var PROJECT_NAME
+if grep -q "PROJECT_NAME" .env && ! grep -q "${PROJECT_NAME}" .env
+    then
+        while IFS= read -r line
+        do
+            case "${line}" in
+               "PROJECT_NAME"*) LINES="${LINES}PROJECT_NAME=${PROJECT_NAME}\n" ;;
+               *) LINES="${LINES}${line}\n" ;;
+            esac
+        done < .env
+
+        if [ ! -z ${LINES} ]
+            then
+                printf "${LINES}" > .env
+        fi
+fi
+
 # Updates the env var PROJECT_HOST_DIR
 if grep -q "PROJECT_HOST_DIR" .env && ! grep -q "${PROJECT_HOST_DIR}" .env
     then
@@ -193,11 +223,18 @@ if grep -q "PROJECT_HOST_DIR" .env && ! grep -q "${PROJECT_HOST_DIR}" .env
         fi
 fi
 
+# Creates the env var PROJECT_NAME
+if ! grep -q "${PROJECT_NAME}" .env
+    then
+        printf "\nPROJECT_NAME=${PROJECT_NAME}\n" >> .env
+fi
+
 # Creates the env var PROJECT_HOST_DIR
 if ! grep -q "${PROJECT_HOST_DIR}" .env
     then
         printf "\nPROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" >> .env
 fi
+
 
 if [ "${ARG1}" == "register" ] && [ "${ARG2}" == "access-token" ]
     then
@@ -295,14 +332,5 @@ if [ "${ARG1}" == "status" ]
         sudo docker-compose ps
         exit 0
 fi
-
-# Setup X11 server authentication
-# @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
-mkdir -p .local
-_XAUTH=./.local/.X11-unix.xauth
-touch "${_XAUTH}"
-xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${_XAUTH}" nmerge -
-
-./docker/setup/docker-volumes-dirs.sh "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 
 sudo docker-compose ${@}

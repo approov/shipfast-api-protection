@@ -19,14 +19,14 @@ services:
     volumes:
       #- /dev/shm:/dev/shm
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ./.local/.X11-unix.xauth:/home/developer/.X11-unix.xauth
-      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}:/home/developer/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}
-      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/Android:/home/developer/Android
-      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.android:/home/developer/.android
-      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.gradle:/home/developer/.gradle
-      - ~/.docker-shipfast-demo/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_HOST_DIR}/.java:/home/developer/.java
+      - ${PROJECT_HOST_DIR}/.X11-unix.xauth:/home/developer/.X11-unix.xauth
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}:/home/developer/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/Android:/home/developer/Android
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.android:/home/developer/.android
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.gradle:/home/developer/.gradle
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.java:/home/developer/.java
       - ${ANDROID_APP_DIR:-./}:/home/developer/workspace
-      #- ~/.docker-mobile-demo/${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
+      #- ${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
       #- ./docker/build/.mozilla:/home/developer/.mozilla
     networks:
       - shipfast_demo

@@ -56,7 +56,7 @@ object ApproovSdk {
      *
      * @return A list of all certificate pins for the API domains registered in the Approov account
      */
-    fun getCertificatePins(): MutableMap<String, MutableList<String>> {
+    fun getCertificatePins(): Map<String, List<String>> {
         this.abortWhenApproovSdkNotInitialized()
         return Approov.getPins("public-key-sha256")
     }

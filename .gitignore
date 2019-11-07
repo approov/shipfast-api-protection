@@ -18,3 +18,4 @@ node_modules
 **/key4.db
 sftp-config.json
 CB_INTERNAL_ONLY
+apis.json

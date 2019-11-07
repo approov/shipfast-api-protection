@@ -3,6 +3,7 @@ package com.criticalblue.shipfast.utils
 import android.graphics.Color
 import android.view.View
 import com.google.android.material.snackbar.Snackbar
+import java.util.concurrent.TimeUnit
 
 /**
  * Util object to show alert messages in an Android View.

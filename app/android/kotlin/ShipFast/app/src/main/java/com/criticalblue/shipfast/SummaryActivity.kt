@@ -12,6 +12,7 @@ package com.criticalblue.shipfast
 import android.content.Context
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -44,25 +45,73 @@ class SummaryActivity : AppCompatActivity() {
 
         updateSummaryProgressBar = findViewById(R.id.updateSummaryProgressBar)
         deliveredShipmentsListView = findViewById(R.id.deliveredShipmentsListView)
-        updateDeliveredShipments()
+        updateDeliveredShipments(3)
     }
 
     /**
      * Update the current delivered shipments list view by requesting data from the server.
      */
-    private fun updateDeliveredShipments() {
+    private fun updateDeliveredShipments(remainingRetries: Int) {
 
-        startProgress()
-        RestAPI.requestDeliveredShipments(this@SummaryActivity) { shipments ->
+        if (remainingRetries <= 0) {
+
             stopProgress()
 
-            if (shipments == null) {
-                ViewShow.warning(findViewById(R.id.shipmentState), "No Delivered Shipments Available!!!")
+            runOnUiThread {
+                ViewShow.warning(findViewById(R.id.shipmentState), "Unable to fetch the delivered shipments.")
             }
 
-            runOnUiThread {
-                deliveredShipmentsListView.adapter = DeliveredShipmentsAdapter(this@SummaryActivity,
-                        R.layout.listview_shipment, shipments ?: arrayListOf())
+            return
+        } else {
+            Thread.sleep(1000)
+        }
+
+        startProgress()
+
+        RestAPI.requestDeliveredShipments(this@SummaryActivity) { shipmentsResponse ->
+
+            stopProgress()
+
+            if (shipmentsResponse.isOk()) {
+
+                if (shipmentsResponse.hasNoData()) {
+                    runOnUiThread {
+                        ViewShow.warning(findViewById(R.id.shipmentState), "No Delivered Shipments Available!")
+                    }
+                }
+
+                runOnUiThread {
+                    deliveredShipmentsListView.adapter = DeliveredShipmentsAdapter(this@SummaryActivity,
+                            R.layout.listview_shipment, shipmentsResponse.get())
+                }
+
+                return@requestDeliveredShipments
+            }
+
+            if (shipmentsResponse.hasApproovTransientError()) {
+                Log.i(TAG, shipmentsResponse.errorMessage())
+                runOnUiThread {
+                    ViewShow.error(findViewById(R.id.shipmentState), shipmentsResponse.errorMessage())
+                }
+                updateDeliveredShipments(remainingRetries - 1)
+                return@requestDeliveredShipments
+            }
+
+            if (shipmentsResponse.hasApproovFatalError()) {
+                Log.i(TAG, shipmentsResponse.errorMessage())
+                runOnUiThread {
+                    ViewShow.error(findViewById(R.id.shipmentState), shipmentsResponse.errorMessage())
+                }
+                return@requestDeliveredShipments
+            }
+
+            if (shipmentsResponse.isNotOk()) {
+                Log.i(TAG, shipmentsResponse.errorMessage())
+                runOnUiThread {
+                    ViewShow.info(findViewById(R.id.shipmentState), "Retrying to fetch the delivered shipments.")
+                }
+                updateDeliveredShipments(remainingRetries - 1)
+                return@requestDeliveredShipments
             }
         }
     }

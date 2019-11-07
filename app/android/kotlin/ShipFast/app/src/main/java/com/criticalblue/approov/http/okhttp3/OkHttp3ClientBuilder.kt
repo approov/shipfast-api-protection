@@ -1,78 +1,63 @@
+/*****************************************************************************
+ * Project:     Approov Kotlin Framework
+ * Copyright(c) 2019 by CriticalBlue Ltd.
+ *****************************************************************************/
+
 package com.criticalblue.approov.http.okhttp3
 
-import com.criticalblue.approov.dto.ApproovToken
+import android.util.Log
+import com.criticalblue.approov.ApproovFramework
+import com.criticalblue.approovsdk.Approov
 import java.util.concurrent.TimeUnit
 import okhttp3.*
 
 /**
- * This object is responsible to build and rebuild an `OkHttpClient` instance with or without Appoov.
+ * This object is responsible to build and rebuild an `OkHttpClient` instance with a Certificate
+ *  Pinner and Approov interceptors.
  */
 object OkHttp3ClientBuilder {
 
-    private lateinit var okHttp3BaseClient: OkHttpClient
-    private lateinit var okHttp3ApproovClient: OkHttpClient
-    private var initialisedWithApproov: Boolean = false
-    private var initialisedWithoutApproov: Boolean = false
+    private lateinit var builder: OkHttpClient.Builder
+    private var initialised: Boolean = false
 
     /**
-     * Build a default `OkHttpClient` to use for API requests.
+     * On first call it will build an OkHttpClient.Builder with the certificate pins retrieved from
+     *  Approov.
      *
-     * @return OkHttpClient
-     */
-     fun buildWithoutApproov(): OkHttpClient {
-
-        if (this.initialisedWithoutApproov) {
-            return this.okHttp3BaseClient
-        }
-
-        this.okHttp3BaseClient = baseClient().build()
-
-        this.initialisedWithoutApproov = true
-
-        return this.okHttp3BaseClient
-    }
-
-    /**
-     * On first call it will build an OkHttpClient with the certificate pins retrieved from the
-     *  Approov dynamic configuration.
      * This instance is persisted in a private member for reuse in subsequent calls to this method.
-     * We can rebuild the persisted instance by calling `this.rebuildWithApproovWhenConfigChanges(approovToken: ApproovToken)`
+     *
+     * We can rebuild the persisted instance by calling `this.rebuild()`.
      *
      * @return OkHttpClient
      */
-    fun buildWithApproov(): OkHttpClient {
+    fun getOkHttpClientBuilder(): OkHttpClient.Builder {
 
-        if (this.initialisedWithApproov) {
-            return this.okHttp3ApproovClient
+        if (this.initialised) {
+            return this.builder
         }
 
         // now we can construct the OkHttpClient with the correct pins preset
-        this.okHttp3ApproovClient = baseClient()
-                .certificatePinner(OkHttp3CertificatePinner().build())
+        this.builder = baseClient()
+                .certificatePinner(this.buildCertificatePinner())
                 .addInterceptor(OkHttp3RequestInterceptor())
-                .build()
+                .addInterceptor(OkHttp3CertificatePinningExceptionInterceptor())
 
-        this.initialisedWithApproov = true
+        this.initialised = true
 
-        return this.okHttp3ApproovClient
+        return this.builder
     }
 
     /**
-     * Rebuilds the persisted instance with Approov, but just if the Approov dynamic configuration
-     *  have changed in the given `ApproovToken` data object.
+     * Rebuilds the OkHttpClient Builder.
      *
-     *  @param  approovToken The data object for the `ApproovToken`.
+     * This is called when we want to ensure that the persisted instance for the builder gets the
+     *  new certificates pins, that where present in the last Approov Token fetch.
      *
      *  @return OkHttp3Client
 .    */
-    fun rebuildWithApproovWhenConfigChanges(approovToken: ApproovToken): OkHttp3Client {
-
-        if (approovToken.hasNewConfig) {
-            this.initialisedWithApproov = false
-            return OkHttp3Client(this.buildWithApproov(), true)
-        }
-
-        return OkHttp3Client(this.okHttp3ApproovClient, false)
+    fun rebuild(): OkHttpClient.Builder {
+        this.initialised = false
+        return this.getOkHttpClientBuilder()
     }
 
     /**
@@ -85,5 +70,29 @@ object OkHttp3ClientBuilder {
                 .connectTimeout(2, TimeUnit.SECONDS)
                 .readTimeout(2, TimeUnit.SECONDS)
                 .writeTimeout(2, TimeUnit.SECONDS)
+    }
+
+    /**
+     * Builds the `CertificatePinner` with all the pins returned from the Approov SDK.
+     * Currently the pins returned are for all the API domains registered in the Approov account.
+     *
+     * @return CertificatePinner
+     */
+    private fun buildCertificatePinner(): CertificatePinner {
+
+        var pinBuilder: CertificatePinner.Builder = CertificatePinner.Builder()
+
+        // Get the certificate pins from the Approov SDK, and currently this means the pins for all
+        //  API domains registered in the Approov account.
+        val pins: Map<String, List<String>> = Approov.getPins("public-key-sha256")
+
+        for ((key, value) in pins) {
+            for (pin in value) {
+                pinBuilder.add(key, "sha256/$pin")
+                Log.i(ApproovFramework.TAG, "Adding to OkHttp the pin $key:sha256/$pin")
+            }
+        }
+
+        return pinBuilder.build()
     }
 }

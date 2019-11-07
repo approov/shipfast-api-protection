@@ -22,12 +22,10 @@ import com.criticalblue.shipfast.config.API_BASE_URL
 import com.criticalblue.shipfast.config.DemoStage
 import com.criticalblue.shipfast.config.JniEnv
 import com.criticalblue.shipfast.config.currentDemoStage
-import com.criticalblue.shipfast.dto.Shipment
-import com.criticalblue.shipfast.dto.ShipmentResponse
-import com.criticalblue.shipfast.dto.ShipmentResult
-import com.criticalblue.shipfast.dto.ShipmentState
+import com.criticalblue.shipfast.dto.*
 import com.criticalblue.shipfast.user.loadUserCredentials
 import com.criticalblue.shipfast.utils.JsonParser
+import java.util.concurrent.TimeUnit
 
 
 object RestAPI {
@@ -81,7 +79,7 @@ object RestAPI {
      * @param context the application context
      * @param callback the callback to invoke on success or failure
      */
-    fun requestDeliveredShipments(context: Context, callback: (List<Shipment>?) -> Unit) {
+    fun requestDeliveredShipments(context: Context, callback: (shipmentResponse: ShipmentsResponse) -> Unit) {
 
         val url = URL("$API_BASE_URL/shipments/delivered")
 
@@ -89,24 +87,11 @@ object RestAPI {
         val request = requestBuilder.build()
         buildDefaultHTTPClient(context).newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call?, response: Response?) {
-                var deliveredShipments: MutableList<Shipment>? = null
-                response?.body()?.let {
-                    val json = JsonParser.toJSONArray(it.string())
-                    json?.let {
-                        deliveredShipments = mutableListOf()
-                        for (i in 0 until it.length()) {
-                            val shipment = ShipmentResult(it.getJSONObject(i)).get()
-                            shipment?.let {
-                                deliveredShipments?.add(it)
-                            }
-                        }
-                    }
-                }
-                callback(deliveredShipments)
+                callback(ShipmentsResponse(response, null))
             }
 
             override fun onFailure(call: Call?, exception: IOException?) {
-                callback(null)
+                callback(ShipmentsResponse(null, exception))
             }
         })
     }
@@ -166,7 +151,7 @@ object RestAPI {
      * @param callback the callback to invoke on success or failure
      */
     fun requestShipmentStateUpdate(context: Context, currentLocation: LatLng, shipmentID: Int, newState: ShipmentState,
-                                   callback: (Boolean) -> Unit) {
+                                   callback: (ShipmentResponse) -> Unit) {
 
         val url = URL("$API_BASE_URL/shipments/update_state/$shipmentID")
         val request = createDefaultRequestBuilder(context, url)
@@ -178,11 +163,11 @@ object RestAPI {
 
         buildDefaultHTTPClient(context).newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call?, response: Response?) {
-                callback(response?.isSuccessful ?: false)
+                callback(ShipmentResponse(response, null))
             }
 
             override fun onFailure(call: Call?, exception: IOException?) {
-                callback(false)
+                callback(ShipmentResponse(null, exception))
             }
         })
     }
@@ -235,11 +220,15 @@ object RestAPI {
             DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
 
                 // now we can construct the OkHttpClient with the correct pins preset
-                return OkHttp3ClientBuilder.buildWithApproov()
+                return OkHttp3ClientBuilder.getOkHttpClientBuilder().build()
             }
             else -> {
                 // Use a simple client for non-Approov demo stages
-                return OkHttp3ClientBuilder.buildWithoutApproov()
+                return OkHttpClient.Builder()
+                        .connectTimeout(2, TimeUnit.SECONDS)
+                        .readTimeout(2, TimeUnit.SECONDS)
+                        .writeTimeout(2, TimeUnit.SECONDS)
+                        .build()
             }
         }
     }

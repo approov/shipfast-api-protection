@@ -1,64 +1,97 @@
 /*****************************************************************************
- * Project:     ShipFast API Protection (App)
- * File:        OkHttp3RequestInterceptor.kt
- * Original:    Created on 30 Oct 2017 by Simon Rigg
- * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
- *
- * An HTTP request Interceptor used to add Approov tokens to requests.
+ * Project:     Approov Kotlin Framework
+ * Copyright(c) 2019 by CriticalBlue Ltd.
  *****************************************************************************/
 
 package com.criticalblue.approov.http.okhttp3
 
-import android.util.Log
 import okhttp3.Interceptor
 import okhttp3.Response
-import com.criticalblue.approov.ApproovSdk
-import com.criticalblue.approov.ApproovSdk.TAG
+import com.criticalblue.approovsdk.Approov
+import com.criticalblue.approovsdk.Approov.TokenFetchStatus.*
+import com.criticalblue.approov.ApproovFramework
+import com.criticalblue.approov.exceptions.ApproovIOFatalException
+import com.criticalblue.approov.exceptions.ApproovIOTransientException
 
 /**
- * The OkHttp3RequestInterceptor class is responsible for intercepting HTTP
- *  requests and adding the Approov token, and if necessary to cancel the request chain and execute
- *  a new OkHttpClient call.
+ * The OkHttp3RequestInterceptor class is responsible for intercepting HTTP requests and to add the
+ *  Approov token header, and if a new dynamic config is present in the Approov token fetch result,
+ *  it also triggers an update to the persisted one.
  */
 class OkHttp3RequestInterceptor : Interceptor {
 
     /**
      * Intercept the given request chain to add the Approov token to an 'Approov-Token' header.
-     * When the Approv token has a new Approov dynamic configuration we interrupt the current
-     *  request chain and execute a new call with the new OkHttpClient, that was automatically
-     *  rebuilt after the Approov token fetch.
+     *
+     * When the Approv token has a new Approov dynamic configuration we save the new configuration.
      *
      * @param  chain    The request chain to intercept and modify.
      *
-     * @return Response The modified response, authenticated by Approov.
+     * @return Response The response authenticated by Approov.
      */
     override fun intercept(chain: Interceptor.Chain): Response {
 
         val originalRequest = chain.request()
-
         val url = originalRequest.url().toString()
-        Log.i(TAG, "API REQUEST URL: $url")
+        val approovResult = Approov.fetchApproovTokenAndWait(url)
+        val approovStatus = approovResult.status
+        val approovToken = approovResult.token
 
-        val approovToken = ApproovSdk.fetchApproovTokenAndWait(url)
-        Log.i(TAG, "APPROOV TOKEN: $approovToken")
-
-        val approovRequest = originalRequest.newBuilder()
-                .addHeader("Approov-Token", approovToken.token)
-                .build()
-
-        if (approovToken.hasNewConfig) {
-            // When the Approov dynamic config changes the OkHttp3Client is automatically rebuilt,
-            //  because we may have a new certificate pin.
-            val okHttp3Client = OkHttp3ClientBuilder.buildWithApproov()
-            Log.i(TAG, "Approov dynamic config change detected. Request will be executed with a new OkHttp3Client call.")
-
-            // Now that we have a new instance of the OkHttp3Client we cannot proceed with the
-            //  current request chain. Instead we will execute a new call with the Approov token
-            //  injected in the header.
-            return okHttp3Client.newCall(approovRequest).execute()
+        if (approovResult.isConfigChanged) {
+            ApproovFramework.saveDynamicConfig()
         }
 
-        // Continues the original request chain, but now with the Approov token injected in the header.
-        return chain.proceed(approovRequest)
+        if (this.isToAddApproovHeader(approovStatus)) {
+            return chain.proceed(originalRequest.newBuilder()
+                    .addHeader("Approov-Token", approovToken)
+                    .build())
+        }
+
+        // Continues the original request chain, but without the Approov token injected in the header.
+        return chain.proceed(originalRequest)
+    }
+
+    /**
+     * Based on the result status of fetching an Approov token we will return true, false or throw
+     *  a ApproovIOTransientException or a ApproovIOFatalException.
+     *
+     * It will return true:
+     *  - SUCCESS
+     *  - NO_APPROOV_SERVICE
+     *
+     * It will return false:
+     *  - BAD_URL
+     *  - UNKNOWN_URL
+     *
+     * @throws ApproovIOTransientException For NO_NETWORK, POOR_NETWORK or MITM_DETECTED status.
+     * @throws ApproovIOFatalException     For any other status.
+     *
+     * return true or false depending on the Approov token fetch status.
+     */
+    private fun isToAddApproovHeader(status: Approov.TokenFetchStatus): Boolean {
+
+        when (status) {
+            SUCCESS -> {
+                return true
+            }
+            NO_APPROOV_SERVICE -> {
+                // Check why we consider it here as a valid status at https://approov.io/docs/v2.0/approov-usage-documentation/#token-fetch-errors
+                return true
+            }
+            BAD_URL, UNKNOWN_URL -> {
+                // This means that the given url is not registered as an API domain to be protected
+                //  by Approov, therefore we will not consider valid, and as consequence the Approov
+                //  token header will not be added into the request.
+                return false
+            }
+            NO_NETWORK, POOR_NETWORK, MITM_DETECTED -> {
+                // The developer needs to catch this transient error in order to retry the request.
+                throw ApproovIOTransientException("Transient Error: $status")
+            }
+            else -> {
+                // There has been some fatal error event that should be reported
+                throw ApproovIOFatalException("Fatal Error: $status")
+            }
+        }
     }
 }

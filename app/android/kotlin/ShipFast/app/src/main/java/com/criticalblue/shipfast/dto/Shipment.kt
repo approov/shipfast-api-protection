@@ -9,6 +9,10 @@
 
 package com.criticalblue.shipfast.dto
 
+import android.util.Log
+import com.criticalblue.approov.exceptions.ApproovIOFatalException
+import com.criticalblue.approov.exceptions.ApproovIOTransientException
+import com.criticalblue.shipfast.TAG
 import com.criticalblue.shipfast.utils.JsonParser
 import com.google.android.gms.maps.model.LatLng
 import okhttp3.Response
@@ -26,6 +30,140 @@ enum class ShipmentState(val nextStateActionName: String) {
     DELIVERED("")
 }
 
+class ShipmentsResponse (
+        private val response: Response?,
+        private val exception: IOException?
+) {
+
+    private var hasTransientError: Boolean = false;
+    private var hasFatalError: Boolean = false;
+
+    /**
+     * Tells where the response is a successful one or not.
+     */
+    private var isOk: Boolean = false
+
+    private var hasData: Boolean = false
+
+    /**
+     * The list of delivered shipments.
+     */
+    private var deliveredShipments: MutableList<Shipment>? = null
+
+    /**
+     * The error message from IOException.
+     */
+    private var errorMessage: String = "Unknown error!"
+
+    /**
+     * Processes the injected constructor parameters during the class initialization.
+     */
+    init {
+        if (this.exception != null) {
+            this.isOk = false
+            this.errorMessage = exception.message ?: this.errorMessage
+            this.tryCatchApproovException(exception)
+        } else {
+            this.response?.let {
+                if (it.isSuccessful) {
+                    this.isOk = true
+                    it.body()?.let {
+                        buildShipmentsResponse(it.string())
+                    }
+                } else {
+                    this.isOk = false
+
+                    if (! response.message().isNullOrEmpty()) {
+                        this.errorMessage = response.message()
+                    } else {
+                        this.errorMessage = "Unsuccessful Response."
+                    }
+                }
+            }
+        }
+    }
+
+    fun hasApproovTransientError(): Boolean {
+        return this.hasTransientError
+    }
+
+    fun hasApproovFatalError(): Boolean {
+        return this.hasFatalError
+    }
+
+    private fun tryCatchApproovException(exception: IOException) {
+
+        try {
+            throw exception
+        } catch (e: ApproovIOTransientException) {
+            this.hasTransientError = true
+        } catch (e: ApproovIOFatalException) {
+            this.hasFatalError = false
+        }
+    }
+
+    /**
+     * Builds a local ShipmentResult object in order to extract the Shipment data object, and
+     *  determine that the ShipmentResponse was successful.
+     */
+    private fun buildShipmentsResponse(bodyPayload: String) {
+        Log.i(TAG, "BODY: " + bodyPayload)
+
+        val json = JsonParser.toJSONArray(bodyPayload)
+
+        json?.let {
+            this.deliveredShipments = mutableListOf()
+
+            for (i in 0 until it.length()) {
+                val shipment = ShipmentResult(it.getJSONObject(i)).get()
+                shipment?.let {
+                    this.deliveredShipments?.add(it)
+                }
+            }
+        }
+
+        this.hasData = deliveredShipments!!.isNotEmpty()
+    }
+
+    /**
+     * Tells that the response is a successful one.
+     *
+     * @return True when the response has a success http status code.
+     */
+    fun isOk(): Boolean {
+        return this.isOk
+    }
+
+    /**
+     * Tells that the response is a not successful one.
+     *
+     * @return True when the response have a http status code for a client or server error.
+     */
+    fun isNotOk(): Boolean {
+        return !this.isOk
+    }
+
+    fun hasNoData(): Boolean {
+        return !this.hasData
+    }
+
+    /**
+     * Accesses the error message for the Shipment response.
+     */
+    fun errorMessage(): String {
+        return this.errorMessage
+    }
+
+
+    /**
+     * Get the Shipment data object.
+     */
+    fun get(): List<Shipment> {
+        return this.deliveredShipments ?: arrayListOf()
+    }
+}
+
+
 /**
  * This class receives the OkHttp3 Response? object and an IOException? and will build a local
  *  ShipmentResult object, from where the Shipment data object and the ShipmentResponse success
@@ -39,20 +177,25 @@ class ShipmentResponse (
     private val exception: IOException?
 ) {
 
+    private var hasTransientError: Boolean = false;
+    private var hasFatalError: Boolean = false;
+
     /**
      * Tells where the response is a successful one or not.
      */
     private var isOk: Boolean = false
 
+    private var hasData: Boolean = false
+
     /**
      * The data Shipment object.
      */
-    var shipment: Shipment? = null
+    private var shipment: Shipment? = null
 
     /**
      * The error message from IOException.
      */
-    var errorMessage: String = "Unknown error!"
+    private var errorMessage: String = "Unknown error!"
 
     /**
      * Processes the injected constructor parameters during the class initialization.
@@ -61,17 +204,43 @@ class ShipmentResponse (
         if (this.exception != null) {
             this.isOk = false
             this.errorMessage = exception.message ?: this.errorMessage
+            this.tryCatchApproovException(exception)
         } else {
             this.response?.let {
                 if (it.isSuccessful) {
+                    this.isOk = true
                     it.body()?.let {
                         buildShipmentResponse(it.string())
                     }
                 } else {
                     this.isOk = false
-                    this.errorMessage = response.message() ?: this.errorMessage
+
+                    if (! response.message().isNullOrEmpty()) {
+                        this.errorMessage = response.message()
+                    } else {
+                        this.errorMessage = "Unsuccessful Response."
+                    }
                 }
             }
+        }
+    }
+
+    fun hasApproovTransientError(): Boolean {
+        return this.hasTransientError
+    }
+
+    fun hasApproovFatalError(): Boolean {
+        return this.hasFatalError
+    }
+
+    private fun tryCatchApproovException(exception: IOException) {
+
+        try {
+            throw exception
+        } catch (e: ApproovIOTransientException) {
+            this.hasTransientError = true
+        } catch (e: ApproovIOFatalException) {
+            this.hasFatalError = false
         }
     }
 
@@ -82,7 +251,7 @@ class ShipmentResponse (
     private fun buildShipmentResponse(bodyPayload: String) {
         val json = JsonParser.toJSONObject(bodyPayload)
         val shipmentResult = ShipmentResult(json)
-        this.isOk = shipmentResult.isOk()
+        this.hasData = shipmentResult.hasData()
         this.shipment = shipmentResult.get()
     }
 
@@ -104,6 +273,17 @@ class ShipmentResponse (
         return !this.isOk
     }
 
+    fun hasNoData(): Boolean {
+        return !this.hasData
+    }
+
+    /**
+     * Accesses the error message for the Shipment response.
+     */
+    fun errorMessage(): String {
+        return this.errorMessage
+    }
+
     /**
      * Get the Shipment data object.
      */
@@ -123,7 +303,7 @@ class ShipmentResult (
     private val json: JSONObject?
 ) {
 
-    private var isOk = false
+    private var hasData = false
     private var shipment: Shipment? = null
 
     init {
@@ -140,10 +320,11 @@ class ShipmentResult (
                     ShipmentState.values().get(this.json.getInt("state"))
                 )
 
-                this.isOk = true
+                this.hasData = true
 
             } catch (e: JSONException) {
-                this.isOk = false
+                Log.e(TAG, e.message)
+                this.hasData = false
             }
         }
     }
@@ -153,17 +334,8 @@ class ShipmentResult (
      *
      * @return True when the Shipment was built successfully.
      */
-    fun isOk(): Boolean {
-        return this.isOk
-    }
-
-    /**
-     * Tells that the we failed to build the Shipment from the given json object.
-     *
-     * @return True when a json exception occurred, while building the Shipment.
-     */
-    fun isNotOk(): Boolean {
-        return !this.isOk
+    fun hasData(): Boolean {
+        return this.hasData
     }
 
     /**

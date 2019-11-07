@@ -92,8 +92,8 @@ app.get('/shipments/active', function(req, res) {
     // Calculate the array of active shipments
     var activeShipment = model.getActiveShipment()
     if (!activeShipment) {
-      console.log(error("\nNo active shipment found\n"))
-      res.status(404).send()
+      console.log(warning("\nNo active shipment found\n"))
+      res.status(200).json({})
       return
     }
     console.log(debug("\nActive Shipment:"))

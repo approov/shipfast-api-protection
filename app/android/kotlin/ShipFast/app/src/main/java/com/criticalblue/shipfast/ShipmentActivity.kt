@@ -208,6 +208,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
             stopProgress()
 
             runOnUiThread {
+                availabilitySwitch.isChecked = false
                 ViewShow.warning(findViewById(R.id.shipmentState), message)
             }
 

@@ -16,6 +16,7 @@ import com.criticalblue.approov.exceptions.ApproovIOFatalException
  */
 object ApproovFramework {
 
+    private var tokenBindingHeader: String? = null
     private var initialized: Boolean = false
 
     val TAG = "APPROOV_FRAMEWORK"
@@ -31,17 +32,28 @@ object ApproovFramework {
      * @param context The application context.
      */
     fun initialize(context: Context, config: ApproovSdkConfigurationInterface) {
+        this.initializeApproovSdk(context, config, null)
+    }
+
+    fun initialize(context: Context, config: ApproovSdkConfigurationInterface, tokenBindingHeader: String) {
+        this.initializeApproovSdk(context, config, tokenBindingHeader)
+    }
+
+    private fun initializeApproovSdk(context: Context, config: ApproovSdkConfigurationInterface, tokenBindingHeader: String?) {
 
         this.config = config
+        this.tokenBindingHeader = tokenBindingHeader
 
         // The Approov SDK cannot be initialize more than once.
         if (this.initialized) {
             return
         }
 
+        val dynamicConfig: String = this.config.readDynamicConfig()
+
         try {
 
-            Approov.initialize(context.applicationContext, this.config.readInitialConfig(), this.config.readDynamicConfig(), null)
+            Approov.initialize(context.applicationContext, this.config.readInitialConfig(), dynamicConfig, null)
             this.initialized = true
 
         } catch (e: IllegalArgumentException) {
@@ -55,7 +67,14 @@ object ApproovFramework {
             throw ApproovIOFatalException("Approov SDK initialization failed.")
         }
 
-        this.config.saveDynamicConfig()
+        // It's only an empty configuration if we are installing the app.
+        if (dynamicConfig == "") {
+            this.config.saveDynamicConfig()
+        }
+    }
+
+    fun getTokenBindingHeader(): String? {
+        return this.tokenBindingHeader
     }
 
     /**

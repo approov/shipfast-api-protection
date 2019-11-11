@@ -5,7 +5,7 @@
 
 package com.criticalblue.approov
 
-import android.content.res.AssetManager
+import android.content.Context
 import android.util.Log
 import com.criticalblue.approov.exceptions.ApproovIOFatalException
 import com.criticalblue.approovsdk.Approov
@@ -14,7 +14,7 @@ import java.io.*
 /**
  * This class will handle the Approov dynamic configuration for read and write operations.
  */
-class ApproovSdkConfiguration(val assets: AssetManager, val outputStream: FileOutputStream): ApproovSdkConfigurationInterface {
+class ApproovSdkConfiguration(val context: Context): ApproovSdkConfigurationInterface {
 
     /**
      * Reads the Approov initial configuration, that MUST be present when the app is compiled.
@@ -63,7 +63,7 @@ class ApproovSdkConfiguration(val assets: AssetManager, val outputStream: FileOu
      */
     private fun readFile(filename: String): String {
 
-        val stream = this.assets.open(filename)
+        val stream = this.context.assets.open(filename)
         val reader = BufferedReader(InputStreamReader(stream, "UTF-8"))
         val config = reader.readLine()
         reader.close()
@@ -84,7 +84,7 @@ class ApproovSdkConfiguration(val assets: AssetManager, val outputStream: FileOu
         val dynamicConfig: String = Approov.fetchConfig()
 
         return try {
-            val printStream = PrintStream(this.outputStream)
+            val printStream = PrintStream(context.openFileOutput("approov-dynamic.config", Context.MODE_PRIVATE))
             printStream.print(dynamicConfig)
             printStream.close()
             Log.i(ApproovFramework.TAG, "Wrote Approov dynamic configuration into the app assets folder.")

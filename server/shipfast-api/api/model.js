@@ -1,26 +1,8 @@
-/*****************************************************************************
- * Project:     ShipFast API Protection (Server)
- * File:        model.js
- * Original:    Created on 29 Sept 2017 by Simon Rigg
- * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
- *
- * This file contains the server business model.
- *****************************************************************************/
-
 const Shipment = require('./shipment').Shipment
 const SHIPMENT_STATE = require('./shipment').SHIPMENT_STATE
 const MersenneTwister = require('mersenne-twister')
 const Rand = new MersenneTwister(Date.now())
-
-const chalk = require('chalk')
-
-// Auto detection of colour support does not work always, thus we need to
-// enforce it to support 256 colors.
-const ctx = new chalk.constructor({level: 2})
-const error = ctx.bold.red
-const warning = ctx.bold.yellow
-const info = ctx.bold.blue
-const debug = ctx.bold.cyan
+const log = require('./utils/logging')
 
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
@@ -162,7 +144,7 @@ const updateShipmentState = function(shipmentID, newState) {
     var shipment = getShipment(shipmentID)
 
     if (!shipment) {
-      console.log(error("\nNo shipment found for ID " + shipmentID + "\n"))
+      log.error("\nNo shipment found for ID " + shipmentID + "\n")
       return false
     }
 
@@ -170,7 +152,7 @@ const updateShipmentState = function(shipmentID, newState) {
     if (newState <= 0
         || newState != shipment.getState() + 1
         || newState >= Object.keys(SHIPMENT_STATE).length) {
-      console.log(error("\nShipment state invalid\n"))
+      log.error("\nShipment state invalid\n")
       return false
     }
 

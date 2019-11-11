@@ -17,14 +17,13 @@ import java.io.IOException
 import java.net.URL
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import com.criticalblue.approov.http.okhttp3.OkHttp3ClientBuilder
+import com.criticalblue.approov.http.okhttp3.OkHttp3Client
 import com.criticalblue.shipfast.config.API_BASE_URL
 import com.criticalblue.shipfast.config.DemoStage
 import com.criticalblue.shipfast.config.JniEnv
 import com.criticalblue.shipfast.config.currentDemoStage
 import com.criticalblue.shipfast.dto.*
 import com.criticalblue.shipfast.user.loadUserCredentials
-import com.criticalblue.shipfast.utils.JsonParser
 import java.util.concurrent.TimeUnit
 
 
@@ -220,7 +219,7 @@ object RestAPI {
             DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
 
                 // now we can construct the OkHttpClient with the correct pins preset
-                return OkHttp3ClientBuilder.getOkHttpClientBuilder().build()
+                return OkHttp3Client.getOkHttpClient()
             }
             else -> {
                 // Use a simple client for non-Approov demo stages

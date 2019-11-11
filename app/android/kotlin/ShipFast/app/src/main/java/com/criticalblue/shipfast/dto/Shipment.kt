@@ -19,6 +19,7 @@ import okhttp3.Response
 import org.json.JSONException
 import org.json.JSONObject
 import java.io.IOException
+import javax.net.ssl.SSLPeerUnverifiedException
 
 /**
  * The enumeration of various states a shipment may be in
@@ -61,7 +62,6 @@ class ShipmentsResponse (
     init {
         if (this.exception != null) {
             this.isOk = false
-            this.errorMessage = exception.message ?: this.errorMessage
             this.tryCatchApproovException(exception)
         } else {
             this.response?.let {
@@ -95,10 +95,15 @@ class ShipmentsResponse (
 
         try {
             throw exception
+        } catch (e: SSLPeerUnverifiedException) {
+            this.errorMessage = "Transient Error: Certificate pinning mismatch!"
+            this.hasTransientError = true
         } catch (e: ApproovIOTransientException) {
+            this.errorMessage = exception.message ?: this.errorMessage
             this.hasTransientError = true
         } catch (e: ApproovIOFatalException) {
-            this.hasFatalError = false
+            this.errorMessage = exception.message ?: this.errorMessage
+            this.hasFatalError = true
         }
     }
 
@@ -203,7 +208,6 @@ class ShipmentResponse (
     init {
         if (this.exception != null) {
             this.isOk = false
-            this.errorMessage = exception.message ?: this.errorMessage
             this.tryCatchApproovException(exception)
         } else {
             this.response?.let {
@@ -237,10 +241,15 @@ class ShipmentResponse (
 
         try {
             throw exception
+        } catch (e: SSLPeerUnverifiedException) {
+            this.errorMessage = "Transient Error: Certificate pinning mismatch!"
+            this.hasTransientError = true
         } catch (e: ApproovIOTransientException) {
+            this.errorMessage = exception.message ?: this.errorMessage
             this.hasTransientError = true
         } catch (e: ApproovIOFatalException) {
-            this.hasFatalError = false
+            this.errorMessage = exception.message ?: this.errorMessage
+            this.hasFatalError = true
         }
     }
 

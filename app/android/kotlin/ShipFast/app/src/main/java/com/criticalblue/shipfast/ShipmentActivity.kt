@@ -104,8 +104,8 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val approovSdkConfiguration: ApproovSdkConfigurationInterface = ApproovSdkConfiguration(applicationContext.assets, applicationContext.openFileOutput("approov-dynamic.config", Context.MODE_PRIVATE))
-        ApproovFramework.initialize(applicationContext, approovSdkConfiguration)
+        val approovSdkConfiguration: ApproovSdkConfigurationInterface = ApproovSdkConfiguration(applicationContext)
+        ApproovFramework.initialize(applicationContext, approovSdkConfiguration, "Authorization")
 
         setContentView(R.layout.activity_shipment)
         title = "Current Shipment"
@@ -343,10 +343,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
             }
 
             if (shipmentResponse.hasApproovFatalError()) {
-                Log.i(TAG, shipmentResponse.errorMessage())
-                runOnUiThread{
-                    ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
-                }
+                showFatalError(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
                 return@requestActiveShipment
             }
 
@@ -593,5 +590,14 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         location.latitude = this.latitude
         location.longitude = this.longitude
         return location
+    }
+
+    private fun showFatalError(view: View, errorMessage: String) {
+        Log.i(TAG,errorMessage)
+        stopProgress()
+        runOnUiThread{
+            availabilitySwitch.isChecked = false
+            ViewShow.error(view, errorMessage)
+        }
     }
 }

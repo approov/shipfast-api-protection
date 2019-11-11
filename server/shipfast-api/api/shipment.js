@@ -1,12 +1,3 @@
-/*****************************************************************************
- * Project:     ShipFast API Protection (Server)
- * File:        shipment.js
- * Original:    Created on 29 Sept 2017 by Simon Rigg
- * Copyright(c) 2002 - 2017 by CriticalBlue Ltd.
- *
- * This file contains the definition of the Shipment class.
- *****************************************************************************/
-
  // The various states a Shipment may be in
  const SHIPMENT_STATE = {
     READY: 0,

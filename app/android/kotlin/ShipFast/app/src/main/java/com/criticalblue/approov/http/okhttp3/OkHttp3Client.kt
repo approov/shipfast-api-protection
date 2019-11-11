@@ -15,14 +15,46 @@ import okhttp3.*
  * This object is responsible to build and rebuild an `OkHttpClient` instance with a Certificate
  *  Pinner and Approov interceptors.
  */
-object OkHttp3ClientBuilder {
+object OkHttp3Client {
 
-    private lateinit var builder: OkHttpClient.Builder
+    private lateinit var client: OkHttpClient
+    private var customClient: OkHttp3CustomClient? = null
     private var initialised: Boolean = false
 
     /**
-     * On first call it will build an OkHttpClient.Builder with the certificate pins retrieved from
-     *  Approov.
+     * Get the OkHttpClient with Approov included, but without any customization.
+     *
+     * @return The OkHttpClient instance.
+     */
+    fun getOkHttpClient(): OkHttpClient {
+        return this.buildOkHttpClient()
+    }
+
+    /**
+     * Get the OkHttpClient with Approov included, and with the custom client customization.
+     *
+     * @return The OkHttpClient instance.
+     */
+    fun getOkHttpClient(customClient: OkHttp3CustomClient): OkHttpClient {
+        this.customClient = customClient
+        return this.buildOkHttpClient()
+    }
+
+    /**
+     * Rebuilds the OkHttpClient Builder.
+     *
+     * This is called when we want to ensure that the persisted instance for the client gets the
+     *  new certificates pins, that where present in the last Approov Token fetch.
+     *
+     *  @return OkHttp3Client
+.    */
+    fun rebuild(): OkHttpClient {
+        this.initialised = false
+        return this.buildOkHttpClient()
+    }
+
+    /**
+     * On first call it will build an OkHttpClient with:
      *
      * This instance is persisted in a private member for reuse in subsequent calls to this method.
      *
@@ -30,34 +62,35 @@ object OkHttp3ClientBuilder {
      *
      * @return OkHttpClient
      */
-    fun getOkHttpClientBuilder(): OkHttpClient.Builder {
+    private fun buildOkHttpClient(): OkHttpClient {
 
         if (this.initialised) {
-            return this.builder
+            return this.client
         }
 
-        // now we can construct the OkHttpClient with the correct pins preset
-        this.builder = baseClient()
-                .certificatePinner(this.buildCertificatePinner())
-                .addInterceptor(OkHttp3RequestInterceptor())
-                .addInterceptor(OkHttp3CertificatePinningExceptionInterceptor())
+        if (this.customClient != null) {
+            return this.buildWithApproov(this.customClient!!.customize(this.baseClient()))
+        }
 
-        this.initialised = true
-
-        return this.builder
+        return this.buildWithApproov(this.baseClient())
     }
 
     /**
-     * Rebuilds the OkHttpClient Builder.
-     *
-     * This is called when we want to ensure that the persisted instance for the builder gets the
-     *  new certificates pins, that where present in the last Approov Token fetch.
-     *
-     *  @return OkHttp3Client
-.    */
-    fun rebuild(): OkHttpClient.Builder {
-        this.initialised = false
-        return this.getOkHttpClientBuilder()
+     * It will build an OkHttpClient with:
+     *  - The certificate pins retrieved from Approov.
+     *  - The Approov interceptor to add the Approov Token header, and to trigger a rebuild of the
+     *    OkHttp2Client when its detected an SSLPeerUnverifiedException.
+     */
+    private fun buildWithApproov(clientBuilder: OkHttpClient.Builder): OkHttpClient {
+
+        this.client = clientBuilder
+                .certificatePinner(this.buildCertificatePinner())
+                .addInterceptor(OkHttp3RequestInterceptor())
+                .build()
+
+        this.initialised = true
+
+        return this.client
     }
 
     /**

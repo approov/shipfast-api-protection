@@ -21,6 +21,8 @@ import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.TextView
 import com.criticalblue.shipfast.api.RestAPI
+import com.criticalblue.shipfast.config.API_REQUEST_ATTEMPTS
+import com.criticalblue.shipfast.config.API_REQUEST_RETRY_SLEEP_MILLESECONDS
 import com.criticalblue.shipfast.dto.Shipment
 import com.criticalblue.shipfast.utils.ViewShow
 
@@ -45,7 +47,7 @@ class SummaryActivity : AppCompatActivity() {
 
         updateSummaryProgressBar = findViewById(R.id.updateSummaryProgressBar)
         deliveredShipmentsListView = findViewById(R.id.deliveredShipmentsListView)
-        updateDeliveredShipments(3)
+        updateDeliveredShipments(API_REQUEST_ATTEMPTS)
     }
 
     /**
@@ -63,7 +65,7 @@ class SummaryActivity : AppCompatActivity() {
 
             return
         } else {
-            Thread.sleep(1000)
+            Thread.sleep(API_REQUEST_RETRY_SLEEP_MILLESECONDS.toLong())
         }
 
         startProgress()

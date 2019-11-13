@@ -27,8 +27,7 @@ import com.criticalblue.approov.ApproovFramework
 import com.criticalblue.approov.ApproovSdkConfiguration
 import com.criticalblue.approov.ApproovSdkConfigurationInterface
 import com.criticalblue.shipfast.api.*
-import com.criticalblue.shipfast.config.DRIVER_LATITUDE
-import com.criticalblue.shipfast.config.DRIVER_LONGITUDE
+import com.criticalblue.shipfast.config.*
 import com.criticalblue.shipfast.dto.Shipment
 import com.criticalblue.shipfast.dto.ShipmentResponse
 import com.criticalblue.shipfast.dto.ShipmentState
@@ -46,10 +45,6 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
-
-
-/** The maximum number of attempts to try to make an API request before reporting a failure */
-const val API_REQUEST_ATTEMPTS = 3
 
 const val TAG = "SHIPFAST"
 
@@ -214,7 +209,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
             return true
         } else {
-            Thread.sleep(1000)
+            Thread.sleep(API_REQUEST_RETRY_SLEEP_MILLESECONDS.toLong())
             return false
         }
     }
@@ -268,13 +263,13 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                 when (it.nextState) {
                     ShipmentState.DELIVERED -> {
                         // Hack to wait for the previous message to be displayed.
-                        Thread.sleep(3000)
+                        Thread.sleep(SNACKBAR_THREAD_SLEAP_MILLESECONDS.toLong())
                         runOnUiThread {
                             ViewShow.success(findViewById(R.id.shipmentState), "You've delivered to: ${it.description}")
                         }
 
                         // Hack to run only the intent after the user had a chance to see the success message.
-                        Thread.sleep(3000)
+                        Thread.sleep(SNACKBAR_THREAD_SLEAP_MILLESECONDS.toLong())
                         val intent = Intent(this@ShipmentActivity, SummaryActivity::class.java)
                         startActivity(intent)
                     }

@@ -2,8 +2,9 @@ package com.criticalblue.shipfast.utils
 
 import android.graphics.Color
 import android.view.View
+import com.criticalblue.shipfast.config.SNACKBAR_DISPLAY_MILLESECONDS
 import com.google.android.material.snackbar.Snackbar
-import java.util.concurrent.TimeUnit
+
 
 /**
  * Util object to show alert messages in an Android View.
@@ -64,7 +65,7 @@ object ViewShow {
      * @param backgroundColor The background color for the snack bar that will display the message.
      */
     private fun showAlertMessage(view: View, alertMessage: String, backgroundColor: Int) {
-        val snackbar = Snackbar.make(view, alertMessage, Snackbar.LENGTH_LONG)
+        val snackbar = Snackbar.make(view, alertMessage, SNACKBAR_DISPLAY_MILLESECONDS)
         val snackbarView = snackbar.view
         snackbarView.setBackgroundColor(backgroundColor)
         snackbar.show()

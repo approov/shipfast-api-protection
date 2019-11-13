@@ -39,3 +39,17 @@ val DRIVER_LONGITUDE: Double = jniEnv.getDriverLongitude()
 /** The ShipFast server's base URL */
 //const val API_BASE_URL = "http://10.0.2.2:3333"
 val API_BASE_URL = jniEnv.getApiBaseUrl()
+
+/** The maximum number of attempts to try to make an API request before reporting a failure */
+const val API_REQUEST_ATTEMPTS = 3
+
+const val API_REQUEST_RETRY_SLEEP_MILLESECONDS = 1000
+
+const val SNACKBAR_DISPLAY_MILLESECONDS = 2000
+
+// Hack to:
+//  * wait for the previous message to be displayed.
+//  * run only the intent after the user had a chance to see the snack bar success message.
+const val SNACKBAR_THREAD_SLEAP_MILLESECONDS = 2000
+
+

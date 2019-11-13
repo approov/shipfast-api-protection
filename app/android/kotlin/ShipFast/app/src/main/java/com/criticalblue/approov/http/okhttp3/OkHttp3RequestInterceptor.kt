@@ -12,7 +12,6 @@ import com.criticalblue.approovsdk.Approov.TokenFetchStatus.*
 import com.criticalblue.approov.ApproovFramework
 import com.criticalblue.approov.exceptions.ApproovIOFatalException
 import com.criticalblue.approov.exceptions.ApproovIOTransientException
-import javax.net.ssl.SSLPeerUnverifiedException
 
 /**
  * The OkHttp3RequestInterceptor class is responsible for intercepting HTTP requests and to add the
@@ -65,6 +64,10 @@ class OkHttp3RequestInterceptor : Interceptor {
 
         if (approovResult.isConfigChanged) {
             ApproovFramework.saveDynamicConfig()
+
+            // We will clearClient the OkHttp3Client with the new certificate pins, that will be fetched
+            //  from the Approov dynamic config.
+            OkHttp3Client.clearClient()
         }
 
         when (approovResult.status) {
@@ -85,14 +88,6 @@ class OkHttp3RequestInterceptor : Interceptor {
             }
         }
 
-        try {
-            return chain.proceed(request)
-        } catch (exception: SSLPeerUnverifiedException) {
-            // We will rebuild the OkHttp3Client with the new certificate pins, that will be fetched
-            //  from the Approov dynamic config.
-            OkHttp3Client.rebuild()
-
-            throw exception
-        }
+        return chain.proceed(request)
     }
 }

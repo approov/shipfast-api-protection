@@ -8,17 +8,16 @@ package com.criticalblue.approov.http.okhttp3
 import android.util.Log
 import com.criticalblue.approov.ApproovFramework
 import com.criticalblue.approovsdk.Approov
-import java.util.concurrent.TimeUnit
 import okhttp3.*
 
 /**
  * This object is responsible to build and rebuild an `OkHttpClient` instance with a Certificate
- *  Pinner and Approov interceptors.
+ *  Pinner and Approov interceptor.
  */
 object OkHttp3Client {
 
     private lateinit var client: OkHttpClient
-    private var customClient: OkHttp3CustomClient? = null
+    private var clientCustomizer: OkHttp3ClientCustomizer? = null
     private var initialised: Boolean = false
 
     /**
@@ -35,22 +34,20 @@ object OkHttp3Client {
      *
      * @return The OkHttpClient instance.
      */
-    fun getOkHttpClient(customClient: OkHttp3CustomClient): OkHttpClient {
-        this.customClient = customClient
+    fun getOkHttpClient(clientCustomizer: OkHttp3ClientCustomizer): OkHttpClient {
+        this.clientCustomizer = clientCustomizer
         return this.buildOkHttpClient()
     }
 
     /**
-     * Rebuilds the OkHttpClient Builder.
+     * Marks the OkHttpClient as non initialized yet, thus next time it needs to be fetched it will
+     *  be constructed again.
      *
      * This is called when we want to ensure that the persisted instance for the client gets the
      *  new certificates pins, that where present in the last Approov Token fetch.
-     *
-     *  @return OkHttp3Client
 .    */
-    fun rebuild(): OkHttpClient {
+    fun clearClient() {
         this.initialised = false
-        return this.buildOkHttpClient()
     }
 
     /**
@@ -58,7 +55,7 @@ object OkHttp3Client {
      *
      * This instance is persisted in a private member for reuse in subsequent calls to this method.
      *
-     * We can rebuild the persisted instance by calling `this.rebuild()`.
+     * We can trigger the persisted instance to be constructed again by calling `this.clearClient()`.
      *
      * @return OkHttpClient
      */
@@ -68,8 +65,8 @@ object OkHttp3Client {
             return this.client
         }
 
-        if (this.customClient != null) {
-            return this.buildWithApproov(this.customClient!!.customize(this.baseClient()))
+        if (this.clientCustomizer != null) {
+            return this.buildWithApproov(this.clientCustomizer!!.customize(this.baseClient()))
         }
 
         return this.buildWithApproov(this.baseClient())
@@ -78,7 +75,7 @@ object OkHttp3Client {
     /**
      * It will build an OkHttpClient with:
      *  - The certificate pins retrieved from Approov.
-     *  - The Approov interceptor to add the Approov Token header, and to trigger a rebuild of the
+     *  - The Approov interceptor to add the Approov Token header, and to trigger a clearClient of the
      *    OkHttp2Client when its detected an SSLPeerUnverifiedException.
      */
     private fun buildWithApproov(clientBuilder: OkHttpClient.Builder): OkHttpClient {
@@ -100,9 +97,6 @@ object OkHttp3Client {
      */
     private fun baseClient(): OkHttpClient.Builder {
         return OkHttpClient.Builder()
-                .connectTimeout(2, TimeUnit.SECONDS)
-                .readTimeout(2, TimeUnit.SECONDS)
-                .writeTimeout(2, TimeUnit.SECONDS)
     }
 
     /**

@@ -3,23 +3,36 @@ const SHIPMENT_STATE = require('./shipment').SHIPMENT_STATE
 const MersenneTwister = require('mersenne-twister')
 const Rand = new MersenneTwister(Date.now())
 const log = require('./utils/logging')
+const FAKER = require('faker');
+const config = require('./config/server').config
+const randomLocation = require('random-location')
 
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
 const MAX_GRATUITY = 30
-const LAT_LNG_OFFSET = 0.1
+const DRIVER_COORDINATES = {
+  latitude: config.DRIVER_LATITUDE,
+  longitude: config.DRIVER_LONGITUDE
+}
 
-// Shipments
-const TOTAL_SHIPMENTS_TO_CREATE = 20 // NEVER TWEAK TO BE LESS THEN 10, unless for testing purposes.
-const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 2 // 10 * 2 = 20
-const MAX_DELIVERED_SHIPMENTS = TOTAL_SHIPMENTS_TO_CREATE / 2 // 10 / 2 = 5
-var TOTAL_SHIPMENT_COUNT = 0
-var NEXT_SHIPMENT_TO_DELETE = 0
+// DANGER: tweaking any of the following constant values can lead to unexpected behavior when Shipraider queries the API.
+//
+// The reason is that when we try to find the nearest shipment we try to find one stored in `shipments`, and if none is
+//  within the MAX_SHIPMENT_DISTANCE_IN_METRES, we generate a new one, and when the MAX_TOTAL_SHIPMENT_COUNT is reached
+//  we start to remove the oldest entry from `shipments` in order to protect against memory leaks.
+// So if the MAX_SHIPMENT_DISTANCE_IN_METRES is to short it will be hard to find a shipment, and new ones will be
+//  constantly generated, meaning that when a Shipraider asks for a batch it can have the first entries on that batch
+//   already removed from `shipments`, therefore any subsequent calls to that shipmentID will fail.
+const MAX_SHIPMENT_DISTANCE_IN_METRES = 20000
+const TOTAL_SHIPMENTS_TO_CREATE = 100 // 10 * 5 = 50 shipments to create in each batch.
+const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 2 // 50 * 5 = 250 shipments max in memory at any given time.
+const MAX_DELIVERED_SHIPMENTS = 10 // Max of last delivered shipments to return to the mobile app.
 
-const FAKER = require('faker');
+let TOTAL_SHIPMENT_COUNT = 0 // keeps track of total shipments created since server was started/re-started.
+let NEXT_SHIPMENT_TO_DELETE = 0 // keeps track of the oldest shipment ID in the `shipments` object.
 
 // The shipments object
-var shipments = {}
+let shipments = {}
 
 function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
 
@@ -29,65 +42,58 @@ function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
     })
 }
 
-function randFloat() {
-
-    value = Rand.random()
-
-    if (value < 1.0) {
-        return value
-    }
-
-    randFloat()
-}
-
-// Calculate and return the distance in miles between the two given points using the haversine formula
-function calculateDistance(originLatitude, originLongitude, destinationLatitude, destinationLongitude) {
-
-    var radiusEarth = 3961 // radius of Earth in miles
-    var dLat = deg2rad(destinationLatitude - originLatitude)
-    var dLon = deg2rad(destinationLongitude - originLongitude)
-    var squareHalfChordLen = Math.sin(dLat/2) * Math.sin(dLat/2) + Math.cos(deg2rad(originLatitude))
-        * Math.cos(deg2rad(destinationLatitude)) * Math.sin(dLon/2) * Math.sin(dLon/2)
-    var angularRadDistance = 2 * Math.atan2(Math.sqrt(squareHalfChordLen), Math.sqrt(1 - squareHalfChordLen))
-    var distance = radiusEarth * angularRadDistance
-    return parseInt(distance)
-}
-
-// Convert the given degrees angle to radians
-function deg2rad(deg) {
-    return deg * (Math.PI/180)
+function calculateShipmentGratuity(shipmentID) {
+    let gratuity = shipmentID % 2 == 0 ? Math.floor((Rand.random() * MAX_GRATUITY) + 1) : 0
+    return config.CURRENCY_SYMBOL + gratuity
 }
 
 // A function to populate this model with a collection of sample shipment data base on a given location
 function populateShipments(originLatitude, originLongitude) {
 
-    // Generate the sample data
-    var randMultiplier = 2.0 * LAT_LNG_OFFSET
-    var randOffset = LAT_LNG_OFFSET
+    log.info("--------------------------- START ------------------------")
+    log.info("MAX_TOTAL_SHIPMENT_COUNT: " + MAX_TOTAL_SHIPMENT_COUNT)
+    log.info("TOTAL_SHIPMENTS_TO_CREATE: " + TOTAL_SHIPMENTS_TO_CREATE)
+    log.info("TOTAL_SHIPMENT_COUNT_BEFORE: " + TOTAL_SHIPMENT_COUNT)
 
-    for (var i = 0; i < TOTAL_SHIPMENTS_TO_CREATE; i++) {
-        var shipmentID = TOTAL_SHIPMENT_COUNT // + i + 1
-        var pickupName = FAKER.address.streetAddress()
-        var deliveryName = FAKER.address.streetAddress()
-        var description = FAKER.name.findName() + " #" + randomNumber(1000, 9999)
-        var gratuity = shipmentID % 2 == 0 ? Math.floor((Rand.random() * MAX_GRATUITY) + MIN_GRATUITY) : MIN_GRATUITY
-        var pickupLatitude = originLatitude + ((randFloat() * randMultiplier) - randOffset)
-        var pickupLongitude = originLongitude + ((randFloat() * randMultiplier) - randOffset)
-        var deliveryLatitude = originLatitude + ((randFloat() * randMultiplier) - randOffset)
-        var deliveryLongitude = originLongitude + ((randFloat() * randMultiplier) - randOffset)
-        var shipment = new Shipment(shipmentID, description, gratuity,
-            pickupName, pickupLatitude, pickupLongitude,
-            deliveryName, deliveryLatitude, deliveryLongitude)
-        shipments[shipmentID] = shipment
+    for (let i = 0; i < TOTAL_SHIPMENTS_TO_CREATE; i++) {
+        let shipmentID = TOTAL_SHIPMENT_COUNT // + i + 1
+        let pickupName = FAKER.address.streetAddress()
+        let deliveryName = FAKER.address.streetAddress()
+        let description = FAKER.name.findName() + " #" + randomNumber(1000, 9999)
+        let gratuity = calculateShipmentGratuity(shipmentID)
+
+        // Get pickup random coordinates from within `MAX_SHIPMENT_DISTANCE_IN_METRES` of the `DRIVER_COORDINATES`.`
+        const pickup = randomLocation.randomCirclePoint(DRIVER_COORDINATES, MAX_SHIPMENT_DISTANCE_IN_METRES)
+
+        // Get deliver coordinates at the exactly `MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3` from the pickup coordinates..
+        const deliver = randomLocation.randomCircumferencePoint(pickup, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3)
+
+        shipments[shipmentID] = new Shipment(
+            shipmentID,
+            description,
+            gratuity,
+            pickupName,
+            pickup.latitude,
+            pickup.longitude,
+            deliveryName,
+            deliver.latitude,
+            deliver.longitude,
+        )
 
         TOTAL_SHIPMENT_COUNT++
 
         if (Object.keys(shipments).length > MAX_TOTAL_SHIPMENT_COUNT) {
+
+            log.warning("SHIPMENT_TO_DELETE: " + NEXT_SHIPMENT_TO_DELETE)
+
             // remove first element
             delete shipments[NEXT_SHIPMENT_TO_DELETE]
             NEXT_SHIPMENT_TO_DELETE++
         }
     }
+
+    log.info("TOTAL_SHIPMENT_COUNT_AFTER: " + TOTAL_SHIPMENT_COUNT)
+    log.info("--------------------------- END ------------------------")
 }
 
 const reCalculateNearestShipment = function(originLatitude, originLongitude) {
@@ -116,32 +122,56 @@ const calculateNearestShipment = function(originLatitude, originLongitude) {
 
 function findNearestShipment(originLatitude, originLongitude) {
 
+    let pickup = {
+        latitude: originLatitude,
+        longitude: originLongitude
+    }
+
     // Iterate through the shipments and find the one closest to our given location
-    var nearestShipment
-    var maxDistance = 15
+    for (let shipmentID in shipments) {
 
-    Object.entries(shipments).forEach(
-        ([shipmentID, shipment]) => {
-            if (shipment.getState() == SHIPMENT_STATE.READY) {
-                var distance = calculateDistance(originLatitude, originLongitude,
-                    shipment.getPickupLatitude(), shipment.getPickupLongitude())
+        let shipment = shipments[shipmentID]
 
-                if (distance < maxDistance) {
-                    maxDistance = distance
-                    shipment.setPickupDistance(distance)
-                    nearestShipment = shipment
-                }
+        if (shipment.getState() == SHIPMENT_STATE.READY) {
+
+            let deliver = {
+                latitude: shipment.deliveryLatitude,
+                longitude: shipment.deliveryLongitude
+            }
+
+            let distance_in_metres = Math.floor(randomLocation.distance(pickup, deliver))
+
+            if (distance_in_metres <= MAX_SHIPMENT_DISTANCE_IN_METRES) {
+                shipment.setPickupDistance(formatShipmentDistance(distance_in_metres))
+                return shipment
             }
         }
-    )
+    }
 
-    return nearestShipment
+    return undefined
+}
+
+const formatShipmentDistance = function(distance) {
+
+    let distance_unit
+
+    if (config.DISTANCE_IN_MILES === true) {
+        distance = distance * 0.00062137 // metres to miles
+        distance_unit = "miles"
+    } else {
+        distance = distance / 1000
+        distance_unit = "kms"
+    }
+
+    formatted_distance = Math.floor(distance)
+
+    return formatted_distance + " " + distance_unit
 }
 
 const updateShipmentState = function(shipmentID, newState) {
 
     // Find the shipment with the given ID
-    var shipment = getShipment(shipmentID)
+    let shipment = getShipment(shipmentID)
 
     if (!shipment) {
       log.error("\nNo shipment found for ID " + shipmentID + "\n")
@@ -164,8 +194,8 @@ const updateShipmentState = function(shipmentID, newState) {
 // A function to calculate and return an array of shipments in a 'DELIVERED' state
 const getDeliveredShipments = function() {
 
-    var countDelivered = 0
-    var deliveredShipments = []
+    let countDelivered = 0
+    let deliveredShipments = []
 
     Object.entries(shipments).reverse().filter(
         ([shipmentID, shipment]) => {
@@ -189,8 +219,8 @@ const getDeliveredShipments = function() {
 // A function to retrieve the active shipment, if available (i.e. in an 'ACCEPTED' or 'COLLECTED' state)
 const getActiveShipment = function() {
 
-    for (var shipmentID in shipments) {
-        var shipment = shipments[shipmentID]
+    for (let shipmentID in shipments) {
+        let shipment = shipments[shipmentID]
         if (shipment.getState() == SHIPMENT_STATE.ACCEPTED
          || shipment.getState() == SHIPMENT_STATE.COLLECTED) {
             return shipment

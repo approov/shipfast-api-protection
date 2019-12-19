@@ -1,18 +1,19 @@
-version: "2.1"
+version: "2.3"
 
 services:
 
   shipfast-demo:
-    image: ${IMAGE_NAME:-approov/shipfast-demo}:${ANDROID_STUDIO_VERSION:-3.5}
+    image: ${IMAGE_NAME:-approov/shipfast-android-studio}:${ANDROID_STUDIO_VERSION:-3.5}
     build:
-      context: docker/build
+      context: ./docker/build
+      dockerfile: editor.Dockerfile
     container_name: "shipfast-demo"
     hostname: "shipfast-demo"
     env_file:
       - .env
     environment:
       XAUTHORITY: /home/developer/.X11-unix.xauth
-      DISPLAY: "${DISPLAY}"
+      DISPLAY: "${DISPLAY:-0:}"
     devices:
       #- /dev/dri:/dev/dri
       - /dev/kvm:/dev/kvm
@@ -29,8 +30,60 @@ services:
       #- ${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
       #- ./docker/build/.mozilla:/home/developer/.mozilla
     networks:
-      - shipfast_demo
+      - shipfast
+
+  shipfast-api:
+    image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
+    build:
+      context: ./docker/build
+      dockerfile: nodejs.Dockerfile
+    container_name: "${ENVIRONMENT:-dev}.shipfast-api"
+    hostname: "${ENVIRONMENT:-dev}.shipfast-api"
+    working_dir: /home/node/workspace/server/shipfast-api
+    env_file:
+      - ./.env
+    volumes:
+      - ./:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipfast-api"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPFAST_HTTP_PORT}"
+      - "traefik.frontend.rule=Host:${SHIPFAST_PUBLIC_DOMAIN:-localhost}"
+
+  shipraider-web:
+    image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
+    build:
+      context: ./docker/build
+      dockerfile: nodejs.Dockerfile
+    container_name: "${ENVIRONMENT:-dev}.shipraider-web"
+    hostname: "${ENVIRONMENT:-dev}.shipraider-web"
+    working_dir: /home/node/workspace/server/shipraider-rogue-web
+    env_file:
+      - .env
+    volumes:
+      - ./:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPRAIDER_HTTP_PORT}"
+      - "traefik.frontend.rule=Host:${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
 
 networks:
-  shipfast_demo:
+  shipfast:
     driver: "bridge"
+  traefik:
+    external: true

@@ -27,8 +27,8 @@ enum class DemoStage {
 val jniEnv = JniEnv()
 
 /** The current demo stage */
-// val currentDemoStage = DemoStage.API_KEY_PROTECTION
-val currentDemoStage = DemoStage.APPROOV_APP_AUTH_PROTECTION
+val currentDemoStage = DemoStage.API_KEY_PROTECTION
+//val currentDemoStage = DemoStage.APPROOV_APP_AUTH_PROTECTION
 
 // 51.535472, -0.104971   -> London
 // 37.441883, -122.143019 -> Palo Alto, California
@@ -45,11 +45,9 @@ const val API_REQUEST_ATTEMPTS = 3
 
 const val API_REQUEST_RETRY_SLEEP_MILLESECONDS = 1000
 
-const val SNACKBAR_DISPLAY_MILLESECONDS = 2000
+const val SNACKBAR_DISPLAY_MILLESECONDS = 1000
 
 // Hack to:
 //  * wait for the previous message to be displayed.
 //  * run only the intent after the user had a chance to see the snack bar success message.
-const val SNACKBAR_THREAD_SLEAP_MILLESECONDS = 2000
-
-
+const val SNACKBAR_THREAD_SLEAP_MILLESECONDS = 1000

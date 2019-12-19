@@ -4,6 +4,17 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+// Reads the `.env` file in the root of the project and creates the file `app/android/kotlin/ShipFast/app/src/main/cpp/.jni.env.h`
+//  with the environment variables that will be injected inside native C code when it compiles the
+//  mobile app. This variables will be made available to the Kotlin code via the JNI interface.
+preBuild.doFirst {
+    println("Creating JNI ENV")
+    String path = "src/main/cpp"
+    String workingDir = file(path).absolutePath
+    def proc = "$workingDir/gradle-build-jni-env-h.bash".execute()
+    proc.waitForProcessOutput(System.out, System.err)
+}
+
 android {
     compileSdkVersion 29
     buildToolsVersion '28.0.2'
@@ -33,7 +44,7 @@ android {
     }
     externalNativeBuild {
         cmake {
-            path file('src/main/cpp/CMakeLists.txt')
+            path file('./src/main/cpp/CMakeLists.txt')
         }
     }
 }

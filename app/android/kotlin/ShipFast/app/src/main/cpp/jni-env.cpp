@@ -6,9 +6,10 @@
 #include <string>
 #include ".jni.env.h"
 
-// To add the env variables to the mobile app when is compiled you need to:
-//   * copy `.jni.env.h.example` to `.jni.env.h`
-//   * edit the file and replace the placeholder with your values
+// Every time a Gradle build runs, the bash script `gradle-build-jni-env-h.bash` will run from the
+//  `preBuild.doFirst{}` hook, and will read the `.env` file in the root of this repo to retrieve
+//  and save the env variables needed for the current file into the `.jni.env.h` file, that
+//  later, at compile time, is used to inject the same env variables im the current file.
 
 extern "C" JNIEXPORT jstring JNICALL
 Java_com_criticalblue_shipfast_config_JniEnv_getApiKey(

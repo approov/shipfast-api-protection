@@ -1,5 +1,4 @@
 const model = require('./model')
-const config = require('./config/server').config
 const log = require('./utils/logging')
 const approovMiddleware = require('./middleware/approov')
 const hmacMiddleware = require('./middleware/hmac')
@@ -56,7 +55,7 @@ api.get('/shipments/nearest_shipment', function(req, res) {
 
   // Retrieve the location data from the request headers
   var latitude = parseFloat(req.get('DRIVER-LATITUDE'))
-  var longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
+  let longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
 
   if (!latitude || !longitude) {
     log.error("\nLocation data not specified or in the wrong format\n")
@@ -67,7 +66,7 @@ api.get('/shipments/nearest_shipment', function(req, res) {
   log.debug("\nLatitude: " + latitude + "\nLongitude: " + longitude + "\n")
 
   // Calculate the nearest shipment to the given location
-  var nearestShipment = model.calculateNearestShipment(latitude, longitude)
+  let nearestShipment = model.calculateNearestShipment(latitude, longitude)
 
   log.debug("\nNearest Shipment:")
   log.raw(nearestShipment)
@@ -81,7 +80,7 @@ api.get('/shipments/delivered', function(req, res) {
   log.info("\n\nENDPOINT: /shipments/delivered\n")
 
   // Calculate the array of delivered shipments
-  var deliveredShipments = model.getDeliveredShipments()
+  let deliveredShipments = model.getDeliveredShipments()
 
   res.status(200).json(deliveredShipments)
 })
@@ -92,7 +91,7 @@ api.get('/shipments/active', function(req, res) {
     log.info("\n\nENDPOINT: /shipments/active\n")
 
     // Calculate the array of active shipments
-    var activeShipment = model.getActiveShipment()
+    let activeShipment = model.getActiveShipment()
     if (!activeShipment) {
       log.warning("\nNo active shipment found\n")
       res.status(200).json({})
@@ -109,7 +108,7 @@ api.get('/shipments/:shipmentID', function(req, res) {
   log.info("\n\nENDPOINT: /shipments/:shipmentID\n")
 
   // Retrieve the shipment ID from the request header
-  var shipmentID = parseInt(req.params.shipmentID)
+  let shipmentID = parseInt(req.params.shipmentID)
   if (!Number.isInteger(shipmentID)) {
     log.error("\nShipment ID not specified or in the wrong format\n")
     res.status(400).send()
@@ -117,7 +116,7 @@ api.get('/shipments/:shipmentID', function(req, res) {
   }
 
   // Find the shipment with the given ID
-  var shipment = model.getShipment(shipmentID)
+  let shipment = model.getShipment(shipmentID)
   if (!shipment) {
     log.error("\nNo shipment found for ID: " + shipmentID)
     res.status(404).send()
@@ -137,7 +136,7 @@ api.post('/shipments/update_state/:shipmentID', function(req, res) {
   log.info("\n\nENDPOINT: /shipments/update_state/:shipmentID\n")
 
   // Retrieve the shipment ID from the request header
-  var shipmentID = parseInt(req.params.shipmentID)
+  let shipmentID = parseInt(req.params.shipmentID)
   if (!Number.isInteger(shipmentID)) {
     log.error("\nShipment ID not specified or in the wrong format\n")
     res.status(400).send()
@@ -145,8 +144,8 @@ api.post('/shipments/update_state/:shipmentID', function(req, res) {
   }
 
   // Retrieve the location data from the request headers
-  var latitude = parseFloat(req.get('DRIVER-LATITUDE'))
-  var longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
+  let latitude = parseFloat(req.get('DRIVER-LATITUDE'))
+  let longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
   if (!latitude || !longitude) {
     log.error("\nLocation data not specified or in the wrong format\n")
     res.status(400).send()
@@ -156,7 +155,7 @@ api.post('/shipments/update_state/:shipmentID', function(req, res) {
   log.debug("\nLatitude: " + latitude + "\nLongitude: " + longitude + "\n")
 
   // Retrieve the new shipment state from the request header
-  var newState = parseInt(req.get('SHIPMENT-STATE'))
+  let newState = parseInt(req.get('SHIPMENT-STATE'))
   if (!Number.isInteger(newState)) {
     log.error("\nShipment state not specified or in the wrong format\n")
     res.status(400).send()

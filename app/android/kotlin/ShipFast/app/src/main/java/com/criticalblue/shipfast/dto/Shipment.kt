@@ -321,7 +321,7 @@ class ShipmentResult (
                 this.shipment = Shipment(
                     this.json.getInt("id"),
                     this.json.getString("description"),
-                    this.json.getDouble("gratuity"),
+                    this.json.getString("gratuity"),
                     this.json.getString("pickupName"),
                     LatLng(this.json.getDouble("pickupLatitude"), this.json.getDouble("pickupLongitude")),
                     this.json.getString("deliveryName"),
@@ -370,7 +370,7 @@ class ShipmentResult (
 data class Shipment(
     val id: Int,
     val description: String,
-    val gratuity: Double,
+    val gratuity: String,
     val pickupName: String,
     val pickupLocation: LatLng,
     val deliveryName: String,

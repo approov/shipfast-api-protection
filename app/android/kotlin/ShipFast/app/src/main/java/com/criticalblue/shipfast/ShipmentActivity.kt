@@ -46,7 +46,7 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
 
-const val TAG = "SHIPFAST"
+const val TAG = "SHIPFAST_APP"
 
 /**
  * The Shipment activity class.
@@ -426,7 +426,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         currentShipment?.id?.let {
             startProgress()
             RestAPI.requestShipment(this@ShipmentActivity, it) { shipmentResponse: ShipmentResponse ->
-
+        
                 if (shipmentResponse.isOk()) {
 
                     if (shipmentResponse.hasNoData()) {
@@ -489,7 +489,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
 
         currentShipment?.let {
             descriptionTextView.text = it.description
-            gratuityTextView.text = "£${it.gratuity.toInt()}"
+            gratuityTextView.text = it.gratuity
             pickupTextView.text = it.pickupName
             deliveryTextView.text = it.deliveryName
             stateTextView.text = it.state.name
@@ -588,7 +588,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     }
 
     private fun showFatalError(view: View, errorMessage: String) {
-        Log.i(TAG,errorMessage)
+        Log.e(TAG,errorMessage)
         stopProgress()
         runOnUiThread{
             availabilitySwitch.isChecked = false

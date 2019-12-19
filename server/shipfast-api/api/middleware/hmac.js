@@ -1,4 +1,5 @@
 const DEMO = require('./../config/demo-stages')
+const config = require('./../config/server').config
 const express = require('express')
 const router = express.Router()
 const log = require('./../utils/logging')
@@ -9,30 +10,31 @@ if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION || DEMO.CURR
   router.use(function(req, res, next) {
 
     // Retrieve the ShipFast HMAC used to sign the API request from the request header
-    var requestShipFastHMAC = req.get('HMAC')
+    let requestShipFastHMAC = req.get('HMAC')
     if (!requestShipFastHMAC) {
       log.error('\tShipFast HMAC not specified or in the wrong format')
       res.status(400).send()
       return
     }
 
-    // Calculate our version of the HMAC and compare with one sent in the request header
-    var secret = SHIPFAST_HMAC_SECRET
-    var hmac
+    let hmac
+    let base64_decoded_hmac_secret = Buffer.from(config.SHIPFAST_API_HMAC_SECRET, 'base64')
 
     if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION) {
       // Just use the static secret during HMAC verification for this demo stage
-      hmac = crypto.createHmac('sha256', Buffer.from(secret, 'base64'))
+      hmac = crypto.createHmac('sha256', base64_decoded_secret)
 
     } else if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_DYNAMIC_SECRET_PROTECTION) {
       // Obfuscate the static secret to produce a dynamic secret to use during HMAC
       // verification for this demo stage
-      var obfuscatedSecretData = Buffer.from(secret, 'base64')
-      var shipFastAPIKeyData = new Buffer("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
-      for (var i = 0; i < Math.min(obfuscatedSecretData.length, shipFastAPIKeyData.length); i++) {
+      let obfuscatedSecretData = base64_decoded_hmac_secret
+      let shipFastAPIKeyData = new Buffer(config.SHIPFAST_API_KEY)
+
+      for (let i = 0; i < Math.min(obfuscatedSecretData.length, shipFastAPIKeyData.length); i++) {
         obfuscatedSecretData[i] ^= shipFastAPIKeyData[i]
       }
-      var obfuscatedSecret = new Buffer(obfuscatedSecretData).toString('base64')
+
+      let obfuscatedSecret = new Buffer(obfuscatedSecretData).toString('base64')
       hmac = crypto.createHmac('sha256', Buffer.from(obfuscatedSecret, 'base64'))
     }
 
@@ -41,7 +43,7 @@ if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION || DEMO.CURR
     hmac.update(req.host)
     hmac.update(req.originalUrl)
     hmac.update(req.get('Authorization'))
-    var ourShipFastHMAC = hmac.digest('hex')
+    let ourShipFastHMAC = hmac.digest('hex')
 
     // Check to see if our HMAC matches the one sent in the request header
     // and send an error response if it doesn't

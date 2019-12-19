@@ -3,7 +3,7 @@ const router = express.Router()
 const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
 const log = require('./../utils/logging')
-const auth0 = require('./../config/auth0')
+const config = require('./../config/auth0')
 
 // Create middleware for checking the user's ID token JWT
 const checkUserAuthJWT = jwt({
@@ -12,12 +12,12 @@ const checkUserAuthJWT = jwt({
     cache: true,
     rateLimit: true,
     jwksRequestsPerMinute: 50,
-    jwksUri: "https://" + auth0.domain + "/.well-known/jwks.json"
+    jwksUri: "https://" + config.AUTH0_DOMAIN + "/.well-known/jwks.json"
   }),
 
   // Validate the audience and the issuer.
-  audience: auth0.audience,
-  issuer: "https://" + auth0.domain + "/",
+  audience: config.AUTH0_CLIENT_ID,
+  issuer: "https://" + config.AUTH0_DOMAIN + "/",
   algorithms: ['RS256']
 })
 

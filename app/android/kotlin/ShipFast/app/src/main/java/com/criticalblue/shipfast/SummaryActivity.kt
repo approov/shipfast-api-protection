@@ -158,7 +158,7 @@ class DeliveredShipmentsAdapter(context: Context, resource: Int, private val shi
 
         // Update the text for the list view row views
         descriptionTextView.text = shipment.description
-        gratuityTextView.text = "£${shipment.gratuity.toInt()}"
+        gratuityTextView.text = "${shipment.gratuity}"
         pickupTextView.text = shipment.pickupName
         deliverTextView.text = shipment.deliveryName
 

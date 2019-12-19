@@ -25,7 +25,7 @@ const info = function(message) {
 }
 
 const debug = function(message) {
-    console.log(ctx.keyword('cyan')(message))
+    console.debug(message)
 }
 
 const raw = function(message) {

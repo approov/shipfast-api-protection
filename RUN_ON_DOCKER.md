@@ -5,7 +5,7 @@ The blog post about Shipfast demo can be found [here](https://blog.approov.io/ta
 
 # SETUP
 
-## Requirements
+## REQUIREMENTS
 
 Your computer needs to have installed:
 
@@ -14,20 +14,20 @@ Your computer needs to have installed:
 * Git
 
 
-## Clone Repository
+## CLONE REPOSITORY
 
 ```bash
 git clone git@github.com:approov/shipfast-api-protection.git && cd shipfast-api-protection
 ```
 
-## Approov CLI Tool
+## Approov Cli Tool
 
 To use the Shipfast demo we need to install the [Approov CLI tool](https://approov.io/docs/v2.0/approov-cli-tool-reference/) by following the [installation documentation](https://approov.io/docs/v2.0/approov-installation/).
 
 > **ALERT:** Do not forget to set the Approov development token in your environment, as per instructions on the docs.
 
 
-## Environment
+## ENVIRONMENT
 
 Let's use the `.env.example` file as starting point for our `.env` file:
 
@@ -40,66 +40,104 @@ and
 cp .env.example .env
 ```
 
-Now we need to add values for:
+### Required to Adjust
 
-* APPROOV_TOKEN_SECRET - follow the [Appoov docs](https://approov.io/docs/v2.0/approov-usage-documentation/#token-secret-extraction) to get the Appoov secret.
-* AUTH0_DOMAIN - you can get one from your [Auth0 Dashboard](https://manage.auth0.com/dashboard)
+* `APPROOV_TOKEN_SECRET` - follow the [Appoov docs](https://approov.io/docs/v2.0/approov-usage-documentation/#token-secret-extraction) to get the Appoov secret.
+* `AUTH0_DOMAIN` and `AUTH0_CLIENT_ID` - you can get one from your [Auth0 Dashboard](https://manage.auth0.com/dashboard).
+* `ANDROID_GEO_API_KEY` - Get it from your Google console.
+* `SHIPFAST_PUBLIC_DOMAIN` - The public url to the API backend for Shipfast. Needs be online, not a localhost one.
+* `SHIPFAST_API_KEY` - Generate one wiht `strings /dev/urandom | head -n 256 | openssl dgst -sha256`
 
-All other defaults in the`.env` file are fine to run the demo.
 
+### Customize the Demo
 
-## Build the Docker Stack
+When presenting the demo we may want to adapt it to the location of the customer, like center the map on its city, and use it's local currency and metric system.
 
-Build docker image:
+#### Custom location
 
-```bash
-./shipfast build shipfast-demo
+Get from Google maps the coordinates for your preferred location and set them in the following env vars:
+
+```
+DRIVER_LATITUDE=51.535472
+DRIVER_LONGITUDE=-0.104971
 ```
 
-## Run the Demo
+> **NOTE**: After you start the Android emulator you will need to go to settings and them this same coordinates as the default ones for the device.
 
-Start demo:
 
-```bash
-./shipfast start
+#### Custom Currency and Metric System
+
+Adjust the following env vars according to your needs:
+
+```
+CURRENCY_SYMBOL="£"
+DISTANCE_IN_MILES=true
+```
+
+All other defaults in the `.env` file are fine to run the demo.
+
+
+## RUN THE DEMO
+
+The demo is prepared to run in a Docker stack, including the Android Studio Editor, but feel free to not use Docker.
+
+The bash script `./shipfast` is a wrapper around `docker-compose`, and for the developer convenience it includes some short-cuts commands that will perform all heavy lifting for us;
+
+```
+$ ./shipfast help
+
+ Shipfast API:
+    ./shipfast up api
+    ./shipfast restart api
+    ./shipfast down api
+
+ Shipraider Web:
+    ./shipfast up web
+    ./shipfast restart web
+    ./shipfast down web
+
+ Android Studio:
+    ./shipfast up editor
+    ./shipfast restart editor
+    ./shipfast down editor
+
+```
+
+### Backend
+
+You need to run a backend for the Shipfast API and another to the ShipRaider Rogue Web interface.
+
+The Shipfast API backend needs to run in an online server, so that you can fully evaluate the capabilities of Approov.
+
+To start the Shipfast API backend:
+
+```
+$ ./shipfast up api
+Creating dev.shipfast-api ... done
+```
+
+To start the Shipraider web interface:
+
+```
+$ ./shipfast up web
+Creating dev.shipraider-web ... done
 ```
 
 ### Android Studio
 
-* Disable Instant Run on Android studio.
+To start Android Studio from docker:
+
+```
+./shipfast up editor
+```
+> **NOTE:** The first time its invoked it will build the docker image.
+
+The first time the Android Studio is open, its a fresh installation of it from scratch, therefore you will be prompted several times to install the required dependencies.
+
+Afterwards you need to open the Shipfast project, and:
+
+* Build the project, and be prepared for some more downloads.
 * Create a mobile device in the emulator.
-* Start the app in the emulator mobile device:
-    + In the editor terminal, use the bash script to add the Proxy certificate to the emulator.
+* Start the app in the emulator for the mobile device:
     + Enable high accuracy location in the emulator mobile device settings.
-    + Add manually the London geo location to the emulator Location settings.
-
-
-## Stack Commands
-
-The bash script `./shipfast` is a wrapper around `sudo docker-compose`, thus any
-docker compose command will work, but for the developer convenience it includes
-some short-cuts commands that will perform all heavy lifting for us.
-
-To start the Shipfast demo:
-
-```bash
-./shipfast start
-```
-
-To restart the Shipfast demo:
-
-```bash
-./shipfast restart
-```
-
-To stop the Shipfast demo:
-
-```bash
-./shipfast stop
-```
-
-To register the Android APK with the Approov Cloud Service:
-
-```bash
-./shipfast register apk
-```
+    + Add manually the driver coordinates from the env vars to the emulator Location settings.

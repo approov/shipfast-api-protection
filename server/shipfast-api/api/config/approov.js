@@ -1,8 +1,7 @@
 const dotenv = require('dotenv').config()
-const log = require('./../utils/logging')
 
 if (dotenv.error) {
-  log.warning('FAILED TO PARSE `.env` FILE | ' + dotenv.error)
+  throw dotenv.error
 }
 
 let isToAbortRequestOnInvalidToken = true

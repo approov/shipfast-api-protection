@@ -17,6 +17,11 @@ Show_Help() {
     printf "\t./shipfast up editor\n"
     printf "\t./shipfast restart editor\n"
     printf "\t./shipfast down editor\n"
+
+    printf "\n Logs:\n"
+    printf "\t./shipfast logs api\n"
+    printf "\t./shipfast logs web\n"
+    printf "\t./shipfast logs\n"
 }
 
 Start_Editor() {
@@ -96,6 +101,10 @@ Destroy_Web_Server() {
     docker-compose rm shipraider-web
 }
 
+Logs() {
+    docker-compose logs ${@}
+}
+
 Main() {
     _USER="$(id -un)"
 
@@ -112,10 +121,8 @@ Main() {
 
     ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 
-
     # Setup X11 server authentication
     # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
-
     if type xauth &> /dev/null; then
         _XAUTH="${PROJECT_HOST_DIR}"/.X11-unix.xauth
         touch "${_XAUTH}"
@@ -192,6 +199,28 @@ Main() {
 
                     * )
                         Show_Help
+                    ;;
+                esac
+
+                exit $?
+            ;;
+
+            logs )
+                case "${2:-}" in
+                    api )
+                        Logs "-f" "shipfast-api"
+                    ;;
+
+                    editor )
+                        Logs "-f" "shipfast-demo"
+                    ;;
+
+                    web )
+                        Logs "-f" "shipraider-web"
+                    ;;
+
+                    * )
+                        Logs "-f"
                     ;;
                 esac
 

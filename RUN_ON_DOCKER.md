@@ -101,6 +101,10 @@ $ ./shipfast help
     ./shipfast restart editor
     ./shipfast down editor
 
+ Logs:
+    ./shipfast logs api
+    ./shipfast logs web
+    ./shipfast logs
 ```
 
 ### Backend

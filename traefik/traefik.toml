@@ -1,0 +1,37 @@
+debug = false
+
+logLevel = "ERROR"
+defaultEntryPoints = ["https","http"]
+
+[web]
+address = ":8080"
+
+#[web.auth.basic]
+#users = ["exadra:4bc31e08b78cde72f4c837cd6fef19080d0ce625"]
+
+[entryPoints]
+  [entryPoints.http]
+  address = ":80"
+    [entryPoints.http.redirect]
+    entryPoint = "https"
+
+  [entryPoints.https]
+  address = ":443"
+  [entryPoints.https.tls]
+ 
+[retry]
+
+[docker]
+endpoint = "unix:///var/run/docker.sock"
+domain = "pdm.approov.io"
+watch = true
+exposedByDefault = false
+
+[acme]
+email = "paulos@criticalblue.com"
+storage = "acme.json"
+entryPoint = "https"
+onHostRule = true
+[acme.httpChallenge]
+entryPoint = "http"
+

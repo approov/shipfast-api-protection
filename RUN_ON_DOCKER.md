@@ -12,6 +12,7 @@ Your computer needs to have installed:
 * Docker
 * Docker Compose `>= 2.1`
 * Git
+* Traefik
 
 
 ## CLONE REPOSITORY
@@ -77,6 +78,11 @@ DISTANCE_IN_MILES=true
 All other defaults in the `.env` file are fine to run the demo.
 
 
+## TRAEFIK
+
+Just follow the instructions from [TRAEFIK.md](/TRAEFIK.md) to install it in your online server, and then get back here.
+
+
 ## RUN THE DEMO
 
 The demo is prepared to run in a Docker stack, including the Android Studio Editor, but feel free to not use Docker.
@@ -111,7 +117,7 @@ $ ./shipfast help
 
 You need to run a backend for the Shipfast API and another to the ShipRaider Rogue Web interface.
 
-The Shipfast API backend needs to run in an online server, so that you can fully evaluate the capabilities of Approov.
+The Shipfast API backend needs to run in an online server, the same where you have installed **Traefik**,  so that you can fully evaluate the capabilities of Approov.
 
 To start the Shipfast API backend:
 

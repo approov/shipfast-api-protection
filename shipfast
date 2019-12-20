@@ -39,9 +39,9 @@ Start_Editor() {
     # KVM needs to change permissions in order for Android Studio can work.
     # For some reason the permissions return to original state after we close the editor
     # TODO: find a permanent solution
-    chown $_USER:$_USER /dev/kvm
+    ${ROOT_PREFIX} chown ${_USER}:${_USER} /dev/kvm
 
-    docker-compose up -d shipfast-demo
+    ${DOCKER_COMPOSE} up -d shipfast-demo
 
     #cp -v "${CA_PEM_FILE}" /var/www/html/proxy.crt
 
@@ -50,7 +50,7 @@ Start_Editor() {
             #sleep 5
     #        printf "\n>>> ADDING PROXY CERTIFICATE <<<\n"
 
-            #sudo docker-compose exec -d -u root shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
+            #${DOCKER_COMPOSE} exec -d -u root shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
     #fi
 }
 
@@ -59,8 +59,8 @@ Restart_Editor() {
 }
 
 Destroy_Editor() {
-    docker-compose stop shipfast-demo
-    docker-compose rm shipfast-demo
+    ${DOCKER_COMPOSE} stop shipfast-demo
+    ${DOCKER_COMPOSE} rm shipfast-demo
 }
 
 Start_Api_Server() {
@@ -68,10 +68,10 @@ Start_Api_Server() {
     # From the android emulator we must use 10.0.2.2:3333 to call localhost
 
     if [ ! -d "./server/shipfast-api/node_modules" ]; then
-        docker-compose run shipfast-api sh -c 'npm install && exit || exit'
+        ${DOCKER_COMPOSE} run shipfast-api sh -c 'npm install && exit || exit'
     fi
 
-    docker-compose up -d shipfast-api
+    ${DOCKER_COMPOSE} up -d shipfast-api
 }
 
 Restart_Api_Server() {
@@ -79,17 +79,17 @@ Restart_Api_Server() {
 }
 
 Destroy_Api_Server() {
-    docker-compose stop shipfast-api
-    docker-compose rm shipfast-api
+    ${DOCKER_COMPOSE} stop shipfast-api
+    ${DOCKER_COMPOSE} rm shipfast-api
 }
 
 Start_Web_Server() {
 
     if [ ! -d "./server/shipraider-rogue-web/node_modules" ]; then
-        docker-compose run shipraider-web sh -c 'npm install && exit || exit'
+        ${DOCKER_COMPOSE} run shipraider-web sh -c 'npm install && exit || exit'
     fi
 
-    docker-compose up -d shipraider-web
+    ${DOCKER_COMPOSE} up -d shipraider-web
 }
 
 Restart_Web_Server() {
@@ -97,29 +97,39 @@ Restart_Web_Server() {
 }
 
 Destroy_Web_Server() {
-    docker-compose stop shipraider-web
-    docker-compose rm shipraider-web
+    ${DOCKER_COMPOSE} stop shipraider-web
+    ${DOCKER_COMPOSE} rm shipraider-web
 }
 
 Logs() {
-    docker-compose logs ${@}
+    ${DOCKER_COMPOSE} logs ${@}
 }
 
 Main() {
-    _USER="$(id -un)"
 
-    LINES=""
+    local ROOT_PREFIX=""
 
-    ANDROID_STUDIO_VERSION=3.5.1.0
-    ANDROID_STUDIO_MAJOR_VERSION=3.5
+    local DOCKER_COMPOSE=$(which docker-compose)
 
-    PROJECT_DIR="${PWD#*${HOME}/}"
-    PROJECT_NAME="${PROJECT_DIR//\//_}"
+    local _USER="$(id -un)"
+
+    local LINES=""
+
+    local ANDROID_STUDIO_VERSION=3.5.1.0
+    local ANDROID_STUDIO_MAJOR_VERSION=3.5
+
+    local PROJECT_DIR="${PWD#*${HOME}/}"
+    local PROJECT_NAME="${PROJECT_DIR//\//_}"
 
     #PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo/${PROJECT_NAME//\//_}"
-    PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo"
+    local PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo"
 
     ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
+
+    if type sudo &> /dev/null; then
+        ROOT_PREFIX=sudo
+        DOCKER_COMPOSE="sudo ${DOCKER_COMPOSE}"
+    fi
 
     # Setup X11 server authentication
     # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way

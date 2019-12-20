@@ -19,7 +19,7 @@ const DEMO_STAGE = {
     HMAC_DYNAMIC_SECRET_PROTECTION: 2
 }
 
-qvar shipments = {}
+var shipments = {}
 
 $("#send-bitcoin-button").click(function() {
     alert("Pay me the money!")

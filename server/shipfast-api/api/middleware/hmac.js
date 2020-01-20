@@ -3,6 +3,7 @@ const config = require('./../config/server').config
 const express = require('express')
 const router = express.Router()
 const log = require('./../utils/logging')
+const crypto = require('crypto');
 
 // Configure the request HMAC verification based on the demo stage
 if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION || DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_DYNAMIC_SECRET_PROTECTION) {
@@ -22,9 +23,11 @@ if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION || DEMO.CURR
 
     if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION) {
       // Just use the static secret during HMAC verification for this demo stage
-      hmac = crypto.createHmac('sha256', base64_decoded_secret)
+      hmac = crypto.createHmac('sha256', base64_decoded_hmac_secret)
+      log.info('---> VALIDATING STATIC HMAC <---')
 
     } else if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_DYNAMIC_SECRET_PROTECTION) {
+      log.info('---> VALIDATING DYNAMIC HMAC <---')
       // Obfuscate the static secret to produce a dynamic secret to use during HMAC
       // verification for this demo stage
       let obfuscatedSecretData = base64_decoded_hmac_secret
@@ -38,9 +41,22 @@ if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION || DEMO.CURR
       hmac = crypto.createHmac('sha256', Buffer.from(obfuscatedSecret, 'base64'))
     }
 
+    let requestProtocol
+
+    if (config.SHIPFAST_SERVER_BEHIND_PROXY) {
+      requestProtocol = req.get(config.SHIPFAST_REQUEST_PROXY_PROTOCOL_HEADER)
+    } else {
+      requestProtocol = req.protocol
+    }
+
+    log.info("protocol: " + requestProtocol)
+    log.info("host: " + req.hostname)
+    log.info("originalUrl: " + req.originalUrl)
+    log.info("Authorization: " + req.get('Authorization'))
+
     // Compute the request HMAC using the HMAC SHA-256 algorithm
-    hmac.update(req.protocol)
-    hmac.update(req.host)
+    hmac.update(requestProtocol)
+    hmac.update(req.hostname)
     hmac.update(req.originalUrl)
     hmac.update(req.get('Authorization'))
     let ourShipFastHMAC = hmac.digest('hex')
@@ -53,6 +69,8 @@ if (DEMO.CURRENT_STAGE == DEMO.STAGES.HMAC_STATIC_SECRET_PROTECTION || DEMO.CURR
       res.status(403).send()
       return
     }
+
+    log.success("\nValid HMAC.")
 
     next()
   })

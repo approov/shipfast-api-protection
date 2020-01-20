@@ -206,8 +206,9 @@ function computeHMAC(url, idToken) {
         if (hmacSecret) {
             var parser = document.createElement('a')
             parser.href = url
+            console.debug(parser)
             var msg = parser.protocol.substring(0, parser.protocol.length - 1)
-                + parser.hostname + parser.pathname + idToken
+                + parser.hostname + parser.pathname + "Bearer " + idToken
             var hmac = CryptoJS.HmacSHA256(msg, CryptoJS.enc.Base64.parse(hmacSecret)).toString(CryptoJS.enc.Hex)
             return hmac
         }

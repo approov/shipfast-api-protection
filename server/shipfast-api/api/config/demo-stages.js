@@ -1,3 +1,9 @@
+const dotenv = require('dotenv').config()
+
+if (dotenv.error) {
+  throw dotenv.error
+}
+
 // The enumeration of various stages of the demo.
 const STAGES = {
     // The demo which uses basic protection by way of API key specified in the app manifest
@@ -11,9 +17,17 @@ const STAGES = {
 }
 
 // The current demo stage
-CURRENT_STAGE= process.env.SHIPFAST_API_DEMO_STAGE || DEMO_STAGE.API_KEY_PROTECTION
-//CURRENT_STAGE = STAGES.APPROOV_APP_AUTH_PROTECTION
+let demo_stage = dotenv.parsed.SHIPFAST_DEMO_STAGE || undefined
 
+if (demo_stage === undefined) {
+    throw new Error("Missing Env Var value for: SHIPFAST_DEMO_STAGE")
+}
+
+if (STAGES[demo_stage] === undefined) {
+    throw new Error("Invalid value for env var: SHIPFAST_DEMO_STAGE")
+}
+
+let CURRENT_STAGE = STAGES[demo_stage]
 
 module.exports = {
     STAGES,

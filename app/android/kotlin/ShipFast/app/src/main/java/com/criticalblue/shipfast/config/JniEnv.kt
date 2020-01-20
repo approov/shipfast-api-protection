@@ -10,6 +10,13 @@ import java.lang.System.loadLibrary
 class JniEnv {
 
     /**
+     * Get the ShipFast demo stage.
+     *
+     * @return The Shipfast Demo Stage from the JNI env.
+     */
+    external fun getDemoStage(): String
+
+    /**
      * Get the API key from the compile time JNI env variable `SHIPFAST_API_KEY` in the native
      *  C code, as per defined in the file `main/cpp/.jni.env.h` and accessible to Kotlin code via
      *  the file `main/cpp/jni-env.cpp`.

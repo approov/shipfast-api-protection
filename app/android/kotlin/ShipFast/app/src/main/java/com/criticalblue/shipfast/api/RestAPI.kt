@@ -11,6 +11,7 @@ package com.criticalblue.shipfast.api
 
 import android.content.Context
 import android.util.Base64
+import android.util.Log
 import com.google.android.gms.maps.model.LatLng
 import okhttp3.*
 import java.io.IOException
@@ -18,6 +19,7 @@ import java.net.URL
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
 import com.criticalblue.approov.http.okhttp3.OkHttp3Client
+import com.criticalblue.shipfast.TAG
 import com.criticalblue.shipfast.config.API_BASE_URL
 import com.criticalblue.shipfast.config.DemoStage
 import com.criticalblue.shipfast.config.JniEnv
@@ -41,6 +43,7 @@ object RestAPI {
     const val SHIPMENT_STATE_HEADER = "SHIPMENT-STATE"
     /** The HMAC secret used to sign API requests */
     const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
+
     /** The HMAC request header */
     const val HMAC_HEADER = "HMAC"
 
@@ -253,8 +256,10 @@ object RestAPI {
             DemoStage.HMAC_STATIC_SECRET_PROTECTION -> {
                 // Just use the static secret to initialise the key spec for this demo stage
                 keySpec = SecretKeySpec(Base64.decode(secret, Base64.DEFAULT), "HmacSHA256")
+                Log.i(TAG, "CALCULATE STATIC HMAC")
             }
             DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION -> {
+                Log.i(TAG, "CALCULATE DYNAMIC HMAC")
                 // Obfuscate the static secret to produce a dynamic secret to initialise the key
                 // spec for this demo stage
                 val obfuscatedSecretData = Base64.decode(secret, Base64.DEFAULT)
@@ -266,6 +271,11 @@ object RestAPI {
                 keySpec = SecretKeySpec(Base64.decode(obfuscatedSecret, Base64.DEFAULT), "HmacSHA256")
             }
         }
+
+        Log.i(TAG, "protocol: ${url.protocol.toString()}")
+        Log.i(TAG, "host: ${url.host.toString()}")
+        Log.i(TAG, "path: ${url.path.toString()}")
+        Log.i(TAG, "Authentication: ${authHeaderValue.toString()}")
 
         // Compute the request HMAC using the HMAC SHA-256 algorithm
         val hmac = Mac.getInstance("HmacSHA256")

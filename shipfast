@@ -124,11 +124,26 @@ Main() {
     #PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo/${PROJECT_NAME//\//_}"
     local PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo"
 
-    ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
-
+    # Auto detect if we need to use sudo
     if type sudo &> /dev/null; then
         ROOT_PREFIX=sudo
-        DOCKER_COMPOSE="sudo ${DOCKER_COMPOSE}"
+    fi
+
+    # Sometimes we may have sudo in our system, but to run `docker-compose` it
+    #  will not find the executable with sudo, I am looking at you AWS EC2, thus
+    #  we can customize it.
+    if [ -f ./.shipfast.local.vars ]; then
+        cat ./.shipfast.local.vars
+        source ./.shipfast.local.vars
+    fi
+
+    DOCKER_COMPOSE="${ROOT_PREFIX} ${DOCKER_COMPOSE}"
+
+    ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
+
+    if [ ! -f ./.env ]; then
+        prinf "\n---> FATAL ERROR: Missing .env file <---\n"
+        exit 1
     fi
 
     # Setup X11 server authentication

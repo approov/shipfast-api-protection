@@ -13,6 +13,10 @@ Main() {
     printf "\nSTART CREATION OF: ${_jni_env_file}\n"
 
     cat <<- EOF > "${_jni_env_file}"
+#ifndef SHIPFAST_DEMO_STAGE
+#define SHIPFAST_DEMO_STAGE "${SHIPFAST_DEMO_STAGE? Missing env var: SHIPFAST_DEMO_STAGE}"
+#endif
+
 #ifndef SHIPFAST_API_KEY
 #define SHIPFAST_API_KEY "${SHIPFAST_API_KEY? Missing env var: SHIPFAST_API_KEY}"
 #endif
@@ -33,7 +37,6 @@ Main() {
 #define AUTH0_CLIENT_ID "${AUTH0_CLIENT_ID? Missing env var: AUTH0_CLIENT_ID}"
 #endif
 EOF
-
 
     printf "\nEND CREATION OF: ${_jni_env_file}\n\n"
 }

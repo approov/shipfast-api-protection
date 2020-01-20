@@ -33,11 +33,6 @@ To use the Shipfast demo we need to install the [Approov CLI tool](https://appro
 Let's use the `.env.example` file as starting point for our `.env` file:
 
 ```bash
-cp server/.env.example server/.env
-```
-and
-
-```bash
 cp .env.example .env
 ```
 

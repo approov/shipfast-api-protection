@@ -27,8 +27,7 @@ enum class DemoStage {
 val jniEnv = JniEnv()
 
 /** The current demo stage */
-val currentDemoStage = DemoStage.API_KEY_PROTECTION
-//val currentDemoStage = DemoStage.APPROOV_APP_AUTH_PROTECTION
+val currentDemoStage = DemoStage.valueOf(jniEnv.getDemoStage())
 
 // 51.535472, -0.104971   -> London
 // 37.441883, -122.143019 -> Palo Alto, California

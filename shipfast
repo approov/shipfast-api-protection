@@ -133,7 +133,6 @@ Main() {
     #  will not find the executable with sudo, I am looking at you AWS EC2, thus
     #  we can customize it.
     if [ -f ./.shipfast.local.vars ]; then
-        cat ./.shipfast.local.vars
         source ./.shipfast.local.vars
     fi
 

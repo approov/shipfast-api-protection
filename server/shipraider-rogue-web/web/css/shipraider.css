@@ -1,5 +1,11 @@
-.container {
-    background-image: url("images/fire.jpg");
+body {
+    background-image":"url('images/skull.png')"
+}
+
+.jumbotron {
+    background-image: url("./../images/fire.jpg");
+    background-size: cover;
+    color: yellow;
 }
 
 #search-shipments-button {

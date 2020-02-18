@@ -9,7 +9,7 @@
 
 // TOOD: Auto generate this file when in a docker container in order to the .env values
 
-// The enumeration of various stages of the demo.
+//The enumeration of various stages of the demo.
 const DEMO_STAGE = {
     // The demo which uses basic protection by way of API key specified in the app manifest
     API_KEY_PROTECTION: 0,
@@ -19,34 +19,7 @@ const DEMO_STAGE = {
     HMAC_DYNAMIC_SECRET_PROTECTION: 2
 }
 
-// The current demo stage
-var currentDemoStage = DEMO_STAGE.API_KEY_PROTECTION
-// The Auth0 client ID
-const AUTH0_CLIENT_ID = "NJO820S566teAPMkaV4Q8uLOkQKRVaWH"
-// The Auth0 domain
-const AUTH0_DOMAIN = "prgs.eu.auth0.com"
-
-
-const HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
-
 var shipments = {}
-
- $(document).ready(function() {
-    $("body").css({"background-image":"url('images/skull.png')"})
-    $(".jumbotron").css({"background-image":"url('images/fire.jpg')",
-        "-webkit-background-size":"cover",
-        "-moz-background-size:":"cover",
-        "-o-background-size:":"cover",
-        "background-size:":"cover",
-        "color":"yellow"})
-
-    $("#server-url-input").val("http://localhost:3333")
-    $("#shipfast-api-key-input").val("QXBwcm9vdidzIHRvdGFsbHkgYXdlc29tZSEh")
-    $("#location-latitude-input").val("51.5355")
-    $("#location-longitude-input").val("-0.104971")
-    $("#location-sweep-radius-input").val("1.0")
-    $("#location-sweep-step-input").val("0.075")
-})
 
 $("#send-bitcoin-button").click(function() {
     alert("Pay me the money!")
@@ -86,21 +59,22 @@ function searchForShipments() {
     var shipFastServerURL = $("#server-url-input").val()
     var shipFastAPIKey = $("#shipfast-api-key-input").val()
     var userAuthToken = $("#user-auth-token-input").val()
-    var latitude = $("#location-latitude-input").val()
-    var longitude = $("#location-longitude-input").val()
+    var driver_latitude = $("#location-latitude-input").val()
+    var driver_longitude = $("#location-longitude-input").val()
     var locationSweepRadius = $("#location-sweep-radius-input").val()
     var locationSweepStep = $("#location-sweep-step-input").val()
 
     var halfLBR = parseFloat(locationSweepRadius) / 2.0
     var locStep = parseFloat(locationSweepStep)
-    var latStart = parseFloat(latitude) - halfLBR
-    var latEnd = parseFloat(latitude) + halfLBR
-    var lonStart = parseFloat(longitude) - halfLBR
-    var lonEnd = parseFloat(longitude) + halfLBR
+    var latStart = parseFloat(driver_latitude) - halfLBR
+    var latEnd = parseFloat(driver_latitude) + halfLBR
+    var lonStart = parseFloat(driver_longitude) - halfLBR
+    var lonEnd = parseFloat(driver_longitude) + halfLBR
 
     var fetchNearestShipment = function(latVal, lonVal) {
         var url = shipFastServerURL + "/shipments/nearest_shipment"
         var auth = "Bearer " + userAuthToken
+
         $.ajax({
             url: url,
             headers: {
@@ -124,18 +98,19 @@ function searchForShipments() {
         })
     }
 
-    fetchNearestShipment(parseFloat(latitude), parseFloat(longitude))
+    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude))
 
     var progress = 0
     var count = 0
     var totalProgress = Math.pow(parseFloat(locationSweepRadius) / locStep, 2)
+
     for (var lat = latStart; lat <= latEnd; lat += locStep) {
         for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
-            if (count++ > 10) {
+            if (count++ > 25) {
                 totalProgress = 1
                 return
             }
-            fetchNearestShipment(lat, lon)
+            fetchNearestShipment(driver_latitude, lon)
         }
     }
 }
@@ -152,7 +127,7 @@ function addShipmentsToResults() {
         ([shipmentID, json]) => {
             var shipmentID = json["id"]
             var shipmentName = json["description"]
-            var shipmentGratuity = "£" + json["gratuity"]
+            var shipmentGratuity = json["gratuity"]
             var shipmentPickup = json["pickupName"]
             var shipmentPickupDistance = json["pickupDistance"]
             var shipmentDelivery = json["deliveryName"]
@@ -180,8 +155,8 @@ function grabShipment(shipmentID) {
     var shipFastServerURL = $("#server-url-input").val()
     var shipFastAPIKey = $("#shipfast-api-key-input").val()
     var userAuthToken = $("#user-auth-token-input").val()
-    var latitude = $("#location-latitude-input").val()
-    var longitude = $("#location-longitude-input").val()
+    var driver_latitude = $("#location-latitude-input").val()
+    var driver_longitude = $("#location-longitude-input").val()
 
     var url = shipFastServerURL + "/shipments/update_state/" + shipmentID
     var auth = "Bearer " + userAuthToken
@@ -191,8 +166,8 @@ function grabShipment(shipmentID) {
             "API-KEY" : shipFastAPIKey,
             "Authorization" : auth,
             "HMAC" : computeHMAC(url, auth),
-            "DRIVER-LATITUDE" : latitude,
-            "DRIVER-LONGITUDE" : longitude,
+            "DRIVER-LATITUDE" : driver_latitude,
+            "DRIVER-LONGITUDE" : driver_longitude,
             "SHIPMENT-STATE" : "1"
         },
         method: "POST",

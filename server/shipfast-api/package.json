@@ -2,20 +2,22 @@
   "name": "shipfast",
   "version": "1.0.0",
   "description": "The ShipFast API protection walkthrough server",
-  "main": "api-server.js",
+  "main": "api/api.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "nodemon api-server.js > /home/mobile/api.log"
+    "start": "nodemon api/api.js"
   },
   "author": "Simon Rigg",
   "license": "GPL",
   "dependencies": {
     "cors": "^2.8.4",
+    "dotenv": "^6.2.0",
     "express": "^4.15.5",
     "express-jwt": "^5.3.0",
     "faker": "^4.1.0",
     "jwks-rsa": "^1.2.0",
     "mersenne-twister": "^1.1.0",
+    "random-location": "^1.1.2",
     "selfsigned": "^1.10.1"
   },
   "devDependencies": {

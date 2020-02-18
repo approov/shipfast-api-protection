@@ -2,284 +2,305 @@
 
 set -eu
 
-_USER="$(id -un)"
+Show_Help() {
+    printf "\n Shipfast API:\n"
+    printf "\t./shipfast up api\n"
+    printf "\t./shipfast restart api\n"
+    printf "\t./shipfast down api\n"
 
-ARG1=${1:---help}
+    printf "\n Shipraider Web:\n"
+    printf "\t./shipfast up web\n"
+    printf "\t./shipfast restart web\n"
+    printf "\t./shipfast down web\n"
 
-ARG2=${2:-""}
+    printf "\n Android Studio:\n"
+    printf "\t./shipfast up editor\n"
+    printf "\t./shipfast restart editor\n"
+    printf "\t./shipfast down editor\n"
 
-ARG3=${3:-""}
-
-LINES=""
-
-PROJECT_HOST_DIR="${PWD#*${HOME}/}"
-
-PROJECT_HOST_DIR="${PROJECT_HOST_DIR//\//_}"
-
-if [ "${ARG1}" != "register" ]
-    then
-        ./docker/setup/docker-volumes-dirs.sh "${PROJECT_HOST_DIR}"
-fi
-
-function Register_Token()
-{
-    local _registration_token="${1:?--->>> Missing registration token!!!}"
-
-    echo "${_registration_token}" > ./registration-tools/approov.token
-
-    printf "\nREGISTRATION TOKEN ADDED:\n"
-    cat ./registration-tools/approov.token
-
-    # add empty line
-    echo
+    printf "\n Logs:\n"
+    printf "\t./shipfast logs api\n"
+    printf "\t./shipfast logs web\n"
+    printf "\t./shipfast logs\n"
 }
 
-function Register_APK
-{
-    local _apk_ttl=${1:-1h}
+Start_Editor() {
 
-    local _apk_file=./app/android/kotlin/ShipFast/app/build/outputs/apk/debug/app-debug.apk
-
-    local _apk_ttl_file=./registration-tools/last-apk-registed.time
-
-    local _approov_admin_token=./registration-tools/approov.token
-
-    printf "\nThe APK File:\n"
-    ls -al "${_apk_file}"
-    local _output="$(./registration-tools/registration -a ${_apk_file} -t ${_approov_admin_token} -e ${_apk_ttl})"
-
-    printf "\nRegistering the APK file:\n${_output}\n\n"
-
-    case "${_output}" in
-        *"Success:"*) printf "REGISTERED: $(date) \nTTL: ${_apk_ttl}\n" > "${_apk_ttl_file}";;
-    esac
-
-    cat "${_apk_ttl_file}"
-
-    # add empty line
-    echo
-}
-
-function Start_User_Shell
-{
-    sudo docker-compose exec shipfast-demo zsh
-}
-
-function Start_Root_Shell
-{
-    sudo docker-compose exec -u 0 shipfast-demo zsh
-}
-
-function Install_Node_Dependencies
-{
-    sudo docker-compose exec shipfast-demo bash -c "cd /home/mobile/app/shipfast-api && npm install && cd ../shipraider-rogue-web && npm install"
-}
-
-function Start_Editor
-{
     local _ca_crt_file="./docker/demo/setup/certificates/ProxyCA.crt"
     local _ca_pem_dir="/etc/ssl/certs"
     local _ca_pem_filename="ProxyCA.pem"
     local _ca_pem_file="${_ca_pem_dir}/${_ca_pem_filename}"
     local _ca_name="ProxyCA"
 
-    printf "\n>>> STARTING ANDROID STUDIO <<<\n"
+    if [ ! -f "./app/android/kotlin/ShipFast/approov/approov.aar" ]; then
+        printf "\n\n ---> Approov library is missing. Add it with:\n approov sdk -getLibrary ./app/android/kotlin/ShipFast/approov/approov.aar \n\n"
+    fi
 
     # KVM needs to change permissions in order for Android Studio can work.
     # For some reason the permissions return to original state after we close the editor
     # TODO: find a permanent solution
-    sudo chown $_USER:$_USER /dev/kvm
+    ${ROOT_PREFIX} chown ${_USER}:${_USER} /dev/kvm
 
-    sudo docker-compose up -d shipfast-demo
+    ${DOCKER_COMPOSE} up -d shipfast-demo
 
     #cp -v "${CA_PEM_FILE}" /var/www/html/proxy.crt
 
-    if [ -f "${_ca_crt_file}" ]
-        then
+    #if [ -f "${_ca_crt_file}" ]
+    #    then
             #sleep 5
-            printf "\n>>> ADDING PROXY CERTIFICATE <<<\n"
+    #        printf "\n>>> ADDING PROXY CERTIFICATE <<<\n"
 
-            sudo docker-compose exec -d -u 0 shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
-    fi
+            #${DOCKER_COMPOSE} exec -d -u root shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
+    #fi
 }
 
-function Start_Api_Server
-{
+Restart_Editor() {
+    Destroy_Editor && Start_Editor
+}
+
+Destroy_Editor() {
+    ${DOCKER_COMPOSE} stop shipfast-demo
+    ${DOCKER_COMPOSE} rm shipfast-demo
+}
+
+Start_Api_Server() {
+
     # From the android emulator we must use 10.0.2.2:3333 to call localhost
 
-    printf "\n>>> STARTING API SERVER <<<\n"
-    sudo docker-compose exec -d shipfast-demo bash -c "cd /home/mobile/app/shipfast-api && npm start"
-    sleep 5
-    Start_New_Browser "http://localhost:3333"
+    if [ ! -d "./server/shipfast-api/node_modules" ]; then
+        ${DOCKER_COMPOSE} run shipfast-api sh -c 'npm install && exit || exit'
+    fi
+
+    ${DOCKER_COMPOSE} up -d shipfast-api
 }
 
-function Start_Web_Server
-{
-    printf "\n>>> STARTING WEB SERVER <<<\n"
-    sudo docker-compose exec -d shipfast-demo bash -c "cd /home/mobile/app/shipraider-rogue-web && npm start"
-    sleep 5
-    Open_Browser_Tab "http://localhost:4333"
+Restart_Api_Server() {
+    Destroy_Api_Server && Start_Api_Server
 }
 
-function Start_Proxy_Server
-{
-    printf "\n>>> STARTING PROXY SERVER <<<\n"
-    sudo docker-compose exec -d shipfast-demo mitmweb --ignore-hosts ".*auth0.*" --ignore-hosts ".*google.*" --web-iface 0.0.0.0
-    sleep 8
-    Open_Browser_Tab "http://localhost:8081"
+Destroy_Api_Server() {
+    ${DOCKER_COMPOSE} stop shipfast-api
+    ${DOCKER_COMPOSE} rm shipfast-api
 }
 
-function Start_Nginx_Server
-{
-    printf "\n>>> STARTING NGINX SERVER <<<\n"
-    sudo docker-compose exec -d -u 0 shipfast-demo nginx -g "daemon off;"
-    sleep 5
-    Open_Browser_Tab "http://localhost"
+Start_Web_Server() {
+
+    if [ ! -d "./server/shipraider-rogue-web/node_modules" ]; then
+        ${DOCKER_COMPOSE} run shipraider-web sh -c 'npm install && exit || exit'
+    fi
+
+    ${DOCKER_COMPOSE} up -d shipraider-web
 }
 
-function Start_New_Browser
-{
-    printf "\n>>> STARTING NEW BROWSER INSTANCE FOR: ${@} <<<\n"
-    sudo docker-compose exec -d shipfast-demo firefox --new-instance "${@}"
+Restart_Web_Server() {
+    Destroy_Web_Server && Start_Web_Server
 }
 
-function Open_Browser_Tab
-{
-    printf "\n>>> OPEN TAB IN BROWSER FOR: ${@} <<<\n"
-    sudo docker-compose exec -d shipfast-demo firefox "${@}"
+Destroy_Web_Server() {
+    ${DOCKER_COMPOSE} stop shipraider-web
+    ${DOCKER_COMPOSE} rm shipraider-web
 }
 
-function Start_Demo {
-    Start_Editor
-    Start_Api_Server
-    #Start_Proxy_Server
-    Start_Web_Server
-    sleep 5
-    Open_Browser_Tab https://docs.google.com/presentation/d/1lL1HRv8B66_cl95N_C0bG790Vl6AU4e5z_ojvlCO-fQ/edit#slide=id.g238e5beb0e_0_35
+Logs() {
+    ${DOCKER_COMPOSE} logs ${@}
 }
 
-function Restart_Demo {
-    sudo docker-compose down && Start_Demo
+Main() {
+
+    local ROOT_PREFIX=""
+
+    local DOCKER_COMPOSE=$(which docker-compose)
+
+    local _USER="$(id -un)"
+
+    local LINES=""
+
+    local ANDROID_STUDIO_VERSION=3.5.1.0
+    local ANDROID_STUDIO_MAJOR_VERSION=3.5
+
+    local PROJECT_DIR="${PWD#*${HOME}/}"
+    local PROJECT_NAME="${PROJECT_DIR//\//_}"
+
+    #PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo/${PROJECT_NAME//\//_}"
+    local PROJECT_HOST_DIR="${HOME}/.docker-shipfast-demo"
+
+    # Auto detect if we need to use sudo
+    if type sudo &> /dev/null; then
+        ROOT_PREFIX=sudo
+    fi
+
+    # Sometimes we may have sudo in our system, but to run `docker-compose` it
+    #  will not find the executable with sudo, I am looking at you AWS EC2, thus
+    #  we can customize it.
+    if [ -f ./.shipfast.local.vars ]; then
+        source ./.shipfast.local.vars
+    fi
+
+    DOCKER_COMPOSE="${ROOT_PREFIX} ${DOCKER_COMPOSE}"
+
+    ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
+
+    if [ ! -f ./.env ]; then
+        prinf "\n---> FATAL ERROR: Missing .env file <---\n"
+        exit 1
+    fi
+
+    # Setup X11 server authentication
+    # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
+    if type xauth &> /dev/null; then
+        _XAUTH="${PROJECT_HOST_DIR}"/.X11-unix.xauth
+        touch "${_XAUTH}"
+        xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${_XAUTH}" nmerge -
+    fi
+
+    # Updates the env var PROJECT_NAME
+    if grep -q "PROJECT_NAME" .env && ! grep -q "${PROJECT_NAME}" .env
+        then
+            while IFS= read -r line
+            do
+                case "${line}" in
+                   "PROJECT_NAME"*) LINES="${LINES}PROJECT_NAME=${PROJECT_NAME}\n" ;;
+                   *) LINES="${LINES}${line}\n" ;;
+                esac
+            done < .env
+
+            if [ ! -z ${LINES} ]
+                then
+                    printf "${LINES}" > .env
+            fi
+    fi
+
+    # Updates the env var PROJECT_HOST_DIR
+    if grep -q "PROJECT_HOST_DIR" .env && ! grep -q "${PROJECT_HOST_DIR}" .env
+        then
+            while IFS= read -r line
+            do
+                case "${line}" in
+                   "PROJECT_HOST_DIR"*) LINES="${LINES}PROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" ;;
+                   *) LINES="${LINES}${line}\n" ;;
+                esac
+            done < .env
+
+            if [ ! -z ${LINES} ]
+                then
+                    printf "${LINES}" > .env
+            fi
+    fi
+
+    # Creates the env var PROJECT_NAME
+    if ! grep -q "${PROJECT_NAME}" .env
+        then
+            printf "\nPROJECT_NAME=${PROJECT_NAME}\n" >> .env
+    fi
+
+    # Creates the env var PROJECT_HOST_DIR
+    if ! grep -q "${PROJECT_HOST_DIR}" .env
+        then
+            printf "\nPROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" >> .env
+    fi
+
+
+    for input in  "${@}"; do
+        case "${input}" in
+            -h | --help | help )
+                Show_Help
+                exit $?
+            ;;
+
+            down )
+                case "${2:-}" in
+                    api )
+                        Destroy_Api_Server
+                    ;;
+
+                    editor )
+                        Destroy_Editor
+                    ;;
+
+                    web )
+                        Destroy_Web_Server
+                    ;;
+
+                    * )
+                        Show_Help
+                    ;;
+                esac
+
+                exit $?
+            ;;
+
+            logs )
+                case "${2:-}" in
+                    api )
+                        Logs "-f" "shipfast-api"
+                    ;;
+
+                    editor )
+                        Logs "-f" "shipfast-demo"
+                    ;;
+
+                    web )
+                        Logs "-f" "shipraider-web"
+                    ;;
+
+                    * )
+                        Logs "-f"
+                    ;;
+                esac
+
+                exit $?
+            ;;
+
+            restart )
+                case "${2:-}" in
+                    api )
+                        Restart_Api_Server
+                    ;;
+
+                    editor )
+                        Restart_Editor
+                    ;;
+
+                    web )
+                        Restart_Web_Server
+                    ;;
+
+                    * )
+                        Show_Help
+                    ;;
+                esac
+
+                exit $?
+            ;;
+
+            up )
+                case "${2:-}" in
+                    api )
+                        Start_Api_Server
+                    ;;
+
+                    editor )
+                        Start_Editor
+                    ;;
+
+                    web )
+                        Start_Web_Server
+                    ;;
+
+                    * )
+                        Show_Help
+                    ;;
+                esac
+
+                exit $?
+            ;;
+
+        esac
+    done
+
+    Show_Help
+
+    exit $?
 }
 
-# Updates the env var PROJECT_HOST_DIR
-if grep -q "PROJECT_HOST_DIR" .env && ! grep -q "${PROJECT_HOST_DIR}" .env
-    then
-        while IFS= read -r line
-        do
-            case "${line}" in
-               "PROJECT_HOST_DIR"*) LINES="${LINES}PROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" ;;
-               *) LINES="${LINES}${line}\n" ;;
-            esac
-        done < .env
-
-        if [ ! -z ${LINES} ]
-            then
-                printf "${LINES}" > .env
-        fi
-fi
-
-# Creates the env var PROJECT_HOST_DIR
-if ! grep -q "${PROJECT_HOST_DIR}" .env
-    then
-        printf "\nPROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" >> .env
-fi
-
-if [ "${ARG1}" == "register" ] && [ "${ARG2}" == "access-token" ]
-    then
-        Register_Token "${ARG3}"
-        exit 0
-fi
-
-if [ "${ARG1}" == "register" ] && [ "${ARG2}" == "apk" ]
-    then
-        Register_APK "${ARG3}"
-        exit 0
-fi
-
-if [ "${ARG1}" == "run" ] && [ "${ARG2}" == "shell" ]
-    then
-        Start_User_Shell
-        exit 0
-fi
-
-if [ "${ARG1}" == "run" ] && [ "${ARG2}" == "root-shell" ]
-    then
-        Start_Root_Shell
-        exit 0
-fi
-
-if [ "${ARG1}" == "run" ] && [ "${ARG2}" == "install" ]
-    then
-        Install_Node_Dependencies
-        exit 0
-fi
-
-if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "demo" ]
-    then
-        Start_Demo
-        exit 0
-fi
-
-if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "editor" ]
-    then
-        Start_Editor
-        exit 0
-fi
-
-if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "api" ]
-    then
-        Start_Api_Server
-        exit 0
-fi
-
-if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "web" ]
-    then
-        Start_Web_Server
-        exit 0
-fi
-
-if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "browser" ]
-    then
-        shift 2
-        Open_Browser_Tab "${@}"
-        exit 0
-fi
-
-if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "proxy" ]
-    then
-        Start_Proxy_Server
-        exit 0
-fi
-
-if [ "${ARG1}" == "up" ] && [ "${ARG2}" == "nginx" ]
-    then
-        Start_Nginx_Server
-        exit 0
-fi
-
-if [ "${ARG1}" == "start" ]
-    then
-        Start_Demo
-        exit 0
-fi
-
-if [ "${ARG1}" == "restart" ]
-    then
-        Restart_Demo
-        exit 0
-fi
-
-if [ "${ARG1}" == "stop" ]
-    then
-        sudo docker-compose down
-        exit 0
-fi
-
-if [ "${ARG1}" == "status" ]
-    then
-        sudo docker-compose ps
-        exit 0
-fi
-
-sudo docker-compose "${@}"
+Main ${@}

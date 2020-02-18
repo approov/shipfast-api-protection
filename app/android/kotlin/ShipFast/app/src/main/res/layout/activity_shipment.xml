@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<android.support.constraint.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
@@ -22,7 +22,6 @@
         app:layout_constraintTop_toTopOf="parent">
 
         <TextView
-            android:id="@+id/shipmentHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingRight="20dp"
@@ -42,7 +41,6 @@
             tools:layout_editor_absoluteY="0dp" />
 
         <TextView
-            android:id="@+id/gratuityHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_column="0"
@@ -56,12 +54,11 @@
             android:id="@+id/shipmentGratuity"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="£0"
+            android:text="(unavailable)"
             android:textAppearance="@style/TextAppearance.AppCompat.Body1"
             android:textColor="@android:color/holo_orange_dark" />
 
         <TextView
-            android:id="@+id/pickupHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingRight="20dp"
@@ -78,7 +75,6 @@
             android:textColor="@android:color/holo_orange_dark" />
 
         <TextView
-            android:id="@+id/deliveryHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingRight="20dp"
@@ -96,7 +92,6 @@
             android:textColor="@android:color/holo_orange_dark" />
 
         <TextView
-            android:id="@+id/statusHeading"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:paddingRight="20dp"
@@ -154,7 +149,6 @@
         app:layout_constraintTop_toBottomOf="@+id/mapView" />
 
     <Space
-        android:id="@+id/space"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         tools:layout_editor_absoluteX="171dp"
@@ -173,4 +167,4 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
-</android.support.constraint.ConstraintLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>

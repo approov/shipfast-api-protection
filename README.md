@@ -1,9 +1,14 @@
 # ShipFast API Protection Walkthrough
 
-Welcome! This demo will walk you through the process of defending against various
+Welcome!  This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts.
+
+This demo will walk you through the process of defending against various
 exploits in a mobile application to gain access to data on a remote server allowing
 real users of the system to gain an unfair business advantage at the expense of the
 company.
+
+You can run this demo with the help of Docker, by following [this instructions](/RUN_ON_DOCKER.md).
+
 
 ## The Service
 

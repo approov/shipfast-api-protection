@@ -1,32 +1,89 @@
-version: "2.1"
+version: "2.3"
 
 services:
 
   shipfast-demo:
-    image: ${IMAGE_NAME:-approov/shipfast-demo}
+    image: ${IMAGE_NAME:-approov/shipfast-android-studio}:${ANDROID_STUDIO_VERSION:-3.5}
     build:
-      context: docker/build
+      context: ./docker/build
+      dockerfile: editor.Dockerfile
+    container_name: "shipfast-demo"
+    hostname: "shipfast-demo"
     env_file:
       - .env
+    environment:
+      XAUTHORITY: /home/developer/.X11-unix.xauth
+      DISPLAY: "${DISPLAY:-0:}"
     devices:
-      - /dev/dri:/dev/dri
+      #- /dev/dri:/dev/dri
       - /dev/kvm:/dev/kvm
     volumes:
-      - /dev/shm:/dev/shm
+      #- /dev/shm:/dev/shm
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.AndroidStudio3.2:/home/mobile/.AndroidStudio3.2
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/Android:/home/mobile/Android
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.android:/home/mobile/.android
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.gradle:/home/mobile/.gradle
-      - ~/.docker-android-studio/${PROJECT_HOST_DIR}/.java:/home/mobile/.java
-      - ${ANDROID_APP_DIR:-./}:/home/mobile/AndroidStudioProjects
-      - ${DEMO_SETUP_DIR:-./docker/build/setup}:/demo/ssl
-      - ${NODE_DIR:-./server}:/home/mobile/app
-      - ~/.docker-mobile-demo/${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
-      #- ./docker/build/.mozilla:/home/mobile/.mozilla
+      - ${PROJECT_HOST_DIR}/.X11-unix.xauth:/home/developer/.X11-unix.xauth
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}:/home/developer/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:-3.5}
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/Android:/home/developer/Android
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.android:/home/developer/.android
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.gradle:/home/developer/.gradle
+      - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:-3.5}/${PROJECT_NAME}/.java:/home/developer/.java
+      - ${ANDROID_APP_DIR:-./}:/home/developer/workspace
+      #- ${PROJECT_HOST_DIR}/mitmproxy:/home/mitmproxy/.mitmproxy
+      #- ./docker/build/.mozilla:/home/developer/.mozilla
     networks:
-      - mobile_demo_network
+      - shipfast
+
+  shipfast-api:
+    image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
+    build:
+      context: ./docker/build
+      dockerfile: nodejs.Dockerfile
+    container_name: "${ENVIRONMENT:-dev}.shipfast-api"
+    hostname: "${ENVIRONMENT:-dev}.shipfast-api"
+    working_dir: /home/node/workspace/server/shipfast-api
+    env_file:
+      - ./.env
+    volumes:
+      - ./:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipfast-api"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPFAST_HTTP_PORT}"
+      - "traefik.frontend.rule=Host:${SHIPFAST_PUBLIC_DOMAIN:-localhost}"
+
+  shipraider-web:
+    image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
+    build:
+      context: ./docker/build
+      dockerfile: nodejs.Dockerfile
+    container_name: "${ENVIRONMENT:-dev}.shipraider-web"
+    hostname: "${ENVIRONMENT:-dev}.shipraider-web"
+    working_dir: /home/node/workspace/server/shipraider-rogue-web
+    env_file:
+      - .env
+    volumes:
+      - ./:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPRAIDER_HTTP_PORT}"
+      - "traefik.frontend.rule=Host:${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
 
 networks:
-  mobile_demo_network:
+  shipfast:
     driver: "bridge"
+  traefik:
+    external: true

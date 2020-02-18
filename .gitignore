@@ -10,8 +10,13 @@ node_modules
 .idea/
 .local/
 .Trash-1000/
-/docker/demo/.mozilla/firefox/*
 !.gitkeep
 *.token
 *.tok
 .env
+**/cert9.db
+**/key4.db
+sftp-config.json
+CB_INTERNAL_ONLY
+apis.json
+.shipfast.local.vars

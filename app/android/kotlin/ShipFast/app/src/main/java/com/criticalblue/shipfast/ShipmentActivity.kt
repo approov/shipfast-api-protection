@@ -9,17 +9,29 @@
 
 package com.criticalblue.shipfast
 
+
 import android.content.pm.PackageManager
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.support.v4.app.ActivityCompat
+import androidx.core.app.ActivityCompat
 import android.Manifest
+import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.location.Location
+import android.location.LocationManager
 import android.util.Log
 import android.view.View
 import android.widget.*
+import com.criticalblue.approov.ApproovFramework
+import com.criticalblue.approov.ApproovSdkConfiguration
+import com.criticalblue.approov.ApproovSdkConfigurationInterface
+import com.criticalblue.shipfast.api.*
+import com.criticalblue.shipfast.config.*
+import com.criticalblue.shipfast.dto.Shipment
+import com.criticalblue.shipfast.dto.ShipmentResponse
+import com.criticalblue.shipfast.dto.ShipmentState
+import com.criticalblue.shipfast.utils.ViewShow
 import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.location.LocationServices
 import com.google.android.gms.maps.CameraUpdateFactory
@@ -34,9 +46,7 @@ import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
 
-
-/** The maximum number of attempts to fetch the next shipment before reporting a failure */
-const val FETCH_NEXT_SHIPMENT_ATTEMPTS = 3
+const val TAG = "SHIPFAST_APP"
 
 /**
  * The Shipment activity class.
@@ -85,8 +95,13 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     /** The availability switch */
     private lateinit var availabilitySwitch: Switch
 
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        val approovSdkConfiguration: ApproovSdkConfigurationInterface = ApproovSdkConfiguration(applicationContext)
+        ApproovFramework.initialize(applicationContext, approovSdkConfiguration, "Authorization")
+
         setContentView(R.layout.activity_shipment)
         title = "Current Shipment"
 
@@ -99,7 +114,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         mapView = findViewById(R.id.mapView)
         mapView.onCreate(savedInstanceState)
         nextStateButton = findViewById(R.id.nextStateButton)
-        nextStateButton.setOnClickListener { _ -> performAdvanceToNextState() }
+        nextStateButton.setOnClickListener { _ -> performAdvanceToNextState(API_REQUEST_ATTEMPTS) }
         availabilitySwitch = findViewById(R.id.availabilitySwitch)
         availabilitySwitch.setOnCheckedChangeListener { _, isChecked -> performToggleAvailability(isChecked) }
 
@@ -117,7 +132,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         // 37.441883, -122.143019 -> Palo Alto, California
         // 55.944879, -3.181546   -> Edinburgh
         mapView.getMapAsync { googleMap ->
-            zoomMapIntoLocation(googleMap, LatLng(ANDROID_EMULATOR_LATITUDE, ANDROID_EMULATOR_LONGITUDE))
+            zoomMapIntoLocation(googleMap, LatLng(DRIVER_LATITUDE, DRIVER_LONGITUDE))
         }
     }
 
@@ -174,39 +189,92 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     }
 
     override fun onConnectionSuspended(cause: Int) {
-        Log.i("ShipFast", "Location update suspended: $cause")
+        Log.i(TAG, "---> Location update suspended: $cause")
     }
 
     override fun onConnectionFailed(result: ConnectionResult) {
-        Log.e("ShipFast", "Location update failed: $result")
+        Log.e(TAG, "---> Location update failed: $result")
+    }
+
+    private fun handleRemainingRetries(remainingRetries: Int, message: String): Boolean {
+
+        if (remainingRetries <= 0) {
+
+            stopProgress()
+
+            runOnUiThread {
+                availabilitySwitch.isChecked = false
+                ViewShow.warning(findViewById(R.id.shipmentState), message)
+            }
+
+            return true
+        } else {
+            Thread.sleep(API_REQUEST_RETRY_SLEEP_MILLESECONDS.toLong())
+            return false
+        }
     }
 
     /**
      * Perform advancing the current shipment to the next logical state.
      */
-    private fun performAdvanceToNextState() {
+    private fun performAdvanceToNextState(remainingRetries: Int) {
 
         currentShipment?.let {
+
             startProgress()
-            requestShipmentStateUpdate(this@ShipmentActivity, LatLng(ANDROID_EMULATOR_LATITUDE, ANDROID_EMULATOR_LONGITUDE),
-                    it.id, it.nextState, { _, isSuccessful ->
+
+            if (handleRemainingRetries(remainingRetries, "Unable to update the shipment state!")) {
+                return
+            }
+
+            RestAPI.requestShipmentStateUpdate(this@ShipmentActivity, LatLng(DRIVER_LATITUDE, DRIVER_LONGITUDE),
+                    it.id, it.nextState) { shipmentResponse: ShipmentResponse ->
 
                 stopProgress()
+
+                if (shipmentResponse.hasApproovTransientError()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread {
+                        ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                    }
+                    performAdvanceToNextState(remainingRetries - 1)
+                    return@requestShipmentStateUpdate
+                }
+
+                if (shipmentResponse.hasApproovFatalError()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread {
+                        ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                    }
+                    return@requestShipmentStateUpdate
+                }
+
+                if (shipmentResponse.isNotOk()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread{
+                        ViewShow.warning(findViewById(R.id.shipmentState), "Retrying to update shipment state.")
+                    }
+                    performAdvanceToNextState(remainingRetries - 1)
+                    return@requestShipmentStateUpdate
+                }
+
+                fetchShipmentUpdate(API_REQUEST_ATTEMPTS)
+
                 when (it.nextState) {
                     ShipmentState.DELIVERED -> {
+                        // Hack to wait for the previous message to be displayed.
+                        Thread.sleep(SNACKBAR_THREAD_SLEAP_MILLESECONDS.toLong())
                         runOnUiThread {
-                            Toast.makeText(this@ShipmentActivity, "Congratulations! You've delivered ${it.description}",
-                                    Toast.LENGTH_LONG)
+                            ViewShow.success(findViewById(R.id.shipmentState), "You've delivered to: ${it.description}")
                         }
+
+                        // Hack to run only the intent after the user had a chance to see the success message.
+                        Thread.sleep(SNACKBAR_THREAD_SLEAP_MILLESECONDS.toLong())
+                        val intent = Intent(this@ShipmentActivity, SummaryActivity::class.java)
+                        startActivity(intent)
                     }
                 }
-                updateShipment()
-
-                if (it.nextState == ShipmentState.DELIVERED) {
-                    val intent = Intent(this@ShipmentActivity, SummaryActivity::class.java)
-                    startActivity(intent)
-                }
-            })
+            }
         }
     }
 
@@ -218,7 +286,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     private fun performToggleAvailability(isChecked: Boolean) {
 
         if (isChecked) {
-            fetchNextShipment(FETCH_NEXT_SHIPMENT_ATTEMPTS)
+            fetchShipment(API_REQUEST_ATTEMPTS)
         }
     }
 
@@ -227,87 +295,201 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
      *
      * @param remainingRetries the number of remaining retries
      */
-    private fun fetchNextShipment(remainingRetries: Int) {
+    private fun fetchShipment(remainingRetries: Int) {
 
-        if (!availabilitySwitch.isChecked)
-            return
-
-        if (remainingRetries <= 0) {
-            runOnUiThread {
-                availabilitySwitch.isChecked = false
-                updateState()
-                Toast.makeText(this@ShipmentActivity, "No shipment available!", Toast.LENGTH_LONG).show()
-            }
+        if (!availabilitySwitch.isChecked) {
             return
         }
-        else {
-            runOnUiThread {
-                Toast.makeText(this@ShipmentActivity, "Waiting for shipment...", Toast.LENGTH_SHORT).show()
-            }
+
+        if (handleRemainingRetries(remainingRetries, "Unable to fetch a Shipment!")) {
+            return
         }
 
         startProgress()
 
-        requestActiveShipment(this@ShipmentActivity, { _, shipment ->
-            if (shipment == null) {
-                if (lastLocation == null) {
-                    stopProgress()
-                    Thread.sleep(1000)
-                    fetchNextShipment(remainingRetries - 1)
-                }
-                else {
-                    lastLocation?.let {
-                        startProgress()
-                        requestNearestShipment(this@ShipmentActivity, it.toLatLng(), { _, shipment ->
-                            stopProgress()
-                            this@ShipmentActivity.currentShipment = shipment
-                            runOnUiThread {
-                                updateState()
-                            }
-                            Thread.sleep(1000)
-                            if (shipment == null && activityActive) {
-                                fetchNextShipment(remainingRetries - 1)
-                            }
-                        })
+        RestAPI.requestActiveShipment(this@ShipmentActivity) { shipmentResponse: ShipmentResponse ->
+
+            if (shipmentResponse.isOk()) {
+
+                if (shipmentResponse.hasNoData()) {
+                    runOnUiThread{
+                        ViewShow.info(findViewById(R.id.shipmentState), "No Active Shipment. Fetching nearest Shipment.")
                     }
+                    this.fetchNearestShipment(API_REQUEST_ATTEMPTS)
+                    return@requestActiveShipment
                 }
-            }
-            else {
+
                 stopProgress()
-                this@ShipmentActivity.currentShipment = shipment
+
                 runOnUiThread {
-                    updateState()
+                    updateState(shipmentResponse.get())
+                }
+
+                return@requestActiveShipment
+            }
+
+            if (shipmentResponse.hasApproovTransientError()) {
+                Log.i(TAG, shipmentResponse.errorMessage())
+                runOnUiThread{
+                    ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                }
+                fetchShipment(remainingRetries - 1)
+                return@requestActiveShipment
+            }
+
+            if (shipmentResponse.hasApproovFatalError()) {
+                showFatalError(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                return@requestActiveShipment
+            }
+
+            if (shipmentResponse.isNotOk()) {
+                Log.i(TAG, shipmentResponse.errorMessage())
+                runOnUiThread {
+                    ViewShow.info(findViewById(R.id.shipmentState), "Retrying to fetch the active shipment.")
+                }
+                fetchShipment(remainingRetries - 1)
+                return@requestActiveShipment
+            }
+        }
+    }
+
+    fun fetchNearestShipment(remainingRetries: Int) {
+
+        if (!availabilitySwitch.isChecked) {
+            return
+        }
+
+        if (handleRemainingRetries(remainingRetries, "Unable to fetch the nearest Shipment!")) {
+            return
+        }
+
+        lastLocation?.let {
+
+            RestAPI.requestNearestShipment(this@ShipmentActivity, it.toLatLng()) { shipmentResponse: ShipmentResponse ->
+
+                if (shipmentResponse.isOk()) {
+
+                    if (shipmentResponse.hasNoData()) {
+                        runOnUiThread {
+                            ViewShow.error(findViewById(R.id.shipmentState), "No nearest Shipment available.")
+                        }
+                        return@requestNearestShipment
+                    }
+
+                    stopProgress()
+
+                    runOnUiThread {
+                        updateState(shipmentResponse.get())
+                    }
+
+                    return@requestNearestShipment
+                }
+
+                if (shipmentResponse.hasApproovTransientError()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread{
+                        ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                    }
+                    fetchNearestShipment(remainingRetries - 1)
+                    return@requestNearestShipment
+                }
+
+                if (shipmentResponse.hasApproovFatalError()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread{
+                        ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                    }
+                    return@requestNearestShipment
+                }
+
+                if (shipmentResponse.isNotOk()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread{
+                        ViewShow.info(findViewById(R.id.shipmentState), "Retrying to fetch the nearest shipment.")
+                    }
+                    fetchNearestShipment(remainingRetries - 1)
+                    return@requestNearestShipment
                 }
             }
-        })
+        }
     }
 
     /**
      * Update the current shipment by requesting data from the server.
      */
-    private fun updateShipment() {
+    private fun fetchShipmentUpdate(remainingRetries: Int) {
+
+        if (handleRemainingRetries(remainingRetries, "Unable to fetch updated Shipment!")) {
+            return
+        }
 
         currentShipment?.id?.let {
             startProgress()
-            requestShipment(this@ShipmentActivity, it, { _, shipment ->
-                stopProgress()
-                this@ShipmentActivity.currentShipment = shipment
-                runOnUiThread { updateState() }
-            })
+            RestAPI.requestShipment(this@ShipmentActivity, it) { shipmentResponse: ShipmentResponse ->
+        
+                if (shipmentResponse.isOk()) {
+
+                    if (shipmentResponse.hasNoData()) {
+                        runOnUiThread{
+                            ViewShow.error(findViewById(R.id.shipmentState), "No updated Shipment to fetch!")
+                        }
+                        return@requestShipment
+                    }
+
+                    stopProgress()
+
+                    val shipment: Shipment? = shipmentResponse.get()
+
+                    runOnUiThread {
+                        ViewShow.success(findViewById(R.id.shipmentState), "Shipment state update to: ${shipment?.state}")
+                        updateState(shipment)
+                    }
+
+                    return@requestShipment
+                }
+
+                if (shipmentResponse.hasApproovTransientError()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread{
+                        ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                    }
+                    fetchShipmentUpdate(remainingRetries - 1)
+                    return@requestShipment
+                }
+
+                if (shipmentResponse.hasApproovFatalError()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread{
+                        ViewShow.error(findViewById(R.id.shipmentState), shipmentResponse.errorMessage())
+                    }
+                    return@requestShipment
+                }
+
+                if (shipmentResponse.isNotOk()) {
+                    Log.i(TAG, shipmentResponse.errorMessage())
+                    runOnUiThread {
+                        ViewShow.error(findViewById(R.id.shipmentState), "Retrying to fetch shipment update.")
+                    }
+                    fetchShipmentUpdate(remainingRetries - 1)
+                    return@requestShipment
+                }
+            }
         }
     }
 
     /**
      * Update the state of the activity to reflect the current shipment.
      */
-    private fun updateState() {
+    private fun updateState(currentShipment: Shipment?) {
+
+        this@ShipmentActivity.currentShipment = currentShipment
 
         nextStateButton.isEnabled = false
         nextStateButton.visibility = View.INVISIBLE
 
         currentShipment?.let {
             descriptionTextView.text = it.description
-            gratuityTextView.text = "£${it.gratuity.toInt()}"
+            gratuityTextView.text = it.gratuity
             pickupTextView.text = it.pickupName
             deliveryTextView.text = it.deliveryName
             stateTextView.text = it.state.name
@@ -381,6 +563,36 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     private fun stopProgress() {
         runOnUiThread {
             updateShipmentProgressBar.visibility = View.INVISIBLE
+        }
+    }
+
+    /**
+     * Allows Location objects to be converted to LatLng objects.
+     *
+     * @return the LatLng value
+     */
+    fun Location.toLatLng(): LatLng {
+        return LatLng(this.latitude, this.longitude)
+    }
+
+    /**
+     * Allows LatLng objects to be converted to Location objects.
+     *
+     * @return the Location value
+     */
+    fun LatLng.toLocation(): Location {
+        val location = Location(LocationManager.GPS_PROVIDER)
+        location.latitude = this.latitude
+        location.longitude = this.longitude
+        return location
+    }
+
+    private fun showFatalError(view: View, errorMessage: String) {
+        Log.e(TAG,errorMessage)
+        stopProgress()
+        runOnUiThread{
+            availabilitySwitch.isChecked = false
+            ViewShow.error(view, errorMessage)
         }
     }
 }

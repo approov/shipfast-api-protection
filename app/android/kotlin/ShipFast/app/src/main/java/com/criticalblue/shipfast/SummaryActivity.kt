@@ -10,8 +10,9 @@
 package com.criticalblue.shipfast
 
 import android.content.Context
-import android.support.v7.app.AppCompatActivity
+import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -19,6 +20,12 @@ import android.widget.ArrayAdapter
 import android.widget.ListView
 import android.widget.ProgressBar
 import android.widget.TextView
+import com.criticalblue.shipfast.api.RestAPI
+import com.criticalblue.shipfast.config.API_REQUEST_ATTEMPTS
+import com.criticalblue.shipfast.config.API_REQUEST_RETRY_SLEEP_MILLESECONDS
+import com.criticalblue.shipfast.dto.Shipment
+import com.criticalblue.shipfast.utils.ViewShow
+
 
 /**
  * The Summary activity class.
@@ -32,28 +39,83 @@ class SummaryActivity : AppCompatActivity() {
     private lateinit var deliveredShipmentsListView: ListView
 
     override fun onCreate(savedInstanceState: Bundle?) {
+
         super.onCreate(savedInstanceState)
+
         setContentView(R.layout.activity_summary)
         title = "Delivered Shipments"
 
         updateSummaryProgressBar = findViewById(R.id.updateSummaryProgressBar)
         deliveredShipmentsListView = findViewById(R.id.deliveredShipmentsListView)
-        updateDeliveredShipments()
+        updateDeliveredShipments(API_REQUEST_ATTEMPTS)
     }
 
     /**
      * Update the current delivered shipments list view by requesting data from the server.
      */
-    private fun updateDeliveredShipments() {
+    private fun updateDeliveredShipments(remainingRetries: Int) {
+
+        if (remainingRetries <= 0) {
+
+            stopProgress()
+
+            runOnUiThread {
+                ViewShow.warning(findViewById(R.id.shipmentState), "Unable to fetch the delivered shipments.")
+            }
+
+            return
+        } else {
+            Thread.sleep(API_REQUEST_RETRY_SLEEP_MILLESECONDS.toLong())
+        }
 
         startProgress()
-        requestDeliveredShipments(this@SummaryActivity, { _, shipments ->
+
+        RestAPI.requestDeliveredShipments(this@SummaryActivity) { shipmentsResponse ->
+
             stopProgress()
-            runOnUiThread {
-                deliveredShipmentsListView.adapter = DeliveredShipmentsAdapter(this@SummaryActivity,
-                        R.layout.listview_shipment, shipments ?: arrayListOf())
+
+            if (shipmentsResponse.isOk()) {
+
+                if (shipmentsResponse.hasNoData()) {
+                    runOnUiThread {
+                        ViewShow.warning(findViewById(R.id.shipmentState), "No Delivered Shipments Available!")
+                    }
+                }
+
+                runOnUiThread {
+                    deliveredShipmentsListView.adapter = DeliveredShipmentsAdapter(this@SummaryActivity,
+                            R.layout.listview_shipment, shipmentsResponse.get())
+                }
+
+                return@requestDeliveredShipments
             }
-        })
+
+            if (shipmentsResponse.hasApproovTransientError()) {
+                Log.i(TAG, shipmentsResponse.errorMessage())
+                runOnUiThread {
+                    ViewShow.error(findViewById(R.id.shipmentState), shipmentsResponse.errorMessage())
+                }
+                updateDeliveredShipments(remainingRetries - 1)
+                return@requestDeliveredShipments
+            }
+
+            if (shipmentsResponse.hasApproovFatalError()) {
+                Log.i(TAG, shipmentsResponse.errorMessage())
+                runOnUiThread {
+                    ViewShow.error(findViewById(R.id.shipmentState), shipmentsResponse.errorMessage())
+                }
+                return@requestDeliveredShipments
+            }
+
+            if (shipmentsResponse.isNotOk()) {
+                Log.i(TAG, shipmentsResponse.errorMessage())
+                runOnUiThread {
+                    ViewShow.info(findViewById(R.id.shipmentState), "Retrying to fetch the delivered shipments.")
+                }
+                updateDeliveredShipments(remainingRetries - 1)
+                return@requestDeliveredShipments
+            }
+        }
     }
 
     /**
@@ -81,7 +143,7 @@ class SummaryActivity : AppCompatActivity() {
 class DeliveredShipmentsAdapter(context: Context, resource: Int, private val shipments: List<Shipment>)
     : ArrayAdapter<Shipment>(context, resource, shipments)  {
 
-    override fun getView(position: Int, convertView: View?, parent: ViewGroup?): View {
+    override fun getView(position: Int, convertView: android.view.View?, parent: ViewGroup): android.view.View {
 
         // Get the shipment for the list view row index
         val shipment = shipments[position]
@@ -96,7 +158,7 @@ class DeliveredShipmentsAdapter(context: Context, resource: Int, private val shi
 
         // Update the text for the list view row views
         descriptionTextView.text = shipment.description
-        gratuityTextView.text = "£${shipment.gratuity.toInt()}"
+        gratuityTextView.text = "${shipment.gratuity}"
         pickupTextView.text = shipment.pickupName
         deliverTextView.text = shipment.deliveryName
 

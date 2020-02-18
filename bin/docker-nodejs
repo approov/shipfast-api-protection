@@ -1,0 +1,21 @@
+#!/bin/sh
+
+set -eu
+
+Main() {
+
+    local APPROOV_TOKENS_PATH="${1? Missing Approov tokens path.}"
+    local APPROOV_CLI_TOOL=$(which approov)
+
+    sudo docker run \
+        --rm \
+        -it \
+        --user node \
+        --workdir /home/node/app \
+        --volume ${PWD}:/home/node/app \
+        --volume ${APPROOV_TOKENS_PATH}:/home/node/tokens \
+        --volume ${APPROOV_CLI_TOOL}:/usr/local/bin/approov \
+        node bash
+}
+
+Main ${@}

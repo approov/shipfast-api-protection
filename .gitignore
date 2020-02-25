@@ -20,3 +20,4 @@ sftp-config.json
 CB_INTERNAL_ONLY
 apis.json
 .shipfast.local.vars
+avd/

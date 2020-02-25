@@ -138,10 +138,25 @@ Main() {
 
     DOCKER_COMPOSE="${ROOT_PREFIX} ${DOCKER_COMPOSE}"
 
+    local APPROOV_INITIAL_CONFIG=./app/android/kotlin/ShipFast/app/src/main/assets/approov-initial.config
+    local APPROOV_SDK=./app/android/kotlin/ShipFast/approov/approov.aar
+
     ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 
     if [ ! -f ./.env ]; then
-        prinf "\n---> FATAL ERROR: Missing .env file <---\n"
+        printf "\n---> FATAL ERROR: Missing .env file <---\n"
+        exit 1
+    fi
+
+    if [ ! -f "${APPROOV_INITIAL_CONFIG}" ]; then
+        printf "\n---> FATAL ERROR: Missing file ${APPROOV_INITIAL_CONFIG} <---\n"
+        printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getConfig ${APPROOV_INITIAL_CONFIG} <---\n\n"
+        exit 1
+    fi
+
+    if [ ! -f "${APPROOV_SDK}" ]; then
+        printf "\n---> FATAL ERROR: Missing file ${APPROOV_SDK} <---\n"
+        printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK} <---\n\n"
         exit 1
     fi
 

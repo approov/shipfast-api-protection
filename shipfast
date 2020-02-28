@@ -148,18 +148,6 @@ Main() {
         exit 1
     fi
 
-    if [ ! -f "${APPROOV_INITIAL_CONFIG}" ]; then
-        printf "\n---> FATAL ERROR: Missing file ${APPROOV_INITIAL_CONFIG} <---\n"
-        printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getConfig ${APPROOV_INITIAL_CONFIG} <---\n\n"
-        exit 1
-    fi
-
-    if [ ! -f "${APPROOV_SDK}" ]; then
-        printf "\n---> FATAL ERROR: Missing file ${APPROOV_SDK} <---\n"
-        printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK} <---\n\n"
-        exit 1
-    fi
-
     # Setup X11 server authentication
     # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
     if type xauth &> /dev/null; then

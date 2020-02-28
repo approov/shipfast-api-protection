@@ -7,11 +7,11 @@
  * The class which represents a shipment.
  *****************************************************************************/
 
+@file:Suppress("NULLABILITY_MISMATCH_BASED_ON_JAVA_ANNOTATIONS")
+
 package com.criticalblue.shipfast.dto
 
 import android.util.Log
-import com.criticalblue.approov.exceptions.ApproovIOFatalException
-import com.criticalblue.approov.exceptions.ApproovIOTransientException
 import com.criticalblue.shipfast.TAG
 import com.criticalblue.shipfast.utils.JsonParser
 import com.google.android.gms.maps.model.LatLng
@@ -98,10 +98,7 @@ class ShipmentsResponse (
         } catch (e: SSLPeerUnverifiedException) {
             this.errorMessage = "Transient Error: Certificate pinning mismatch!"
             this.hasTransientError = true
-        } catch (e: ApproovIOTransientException) {
-            this.errorMessage = exception.message ?: this.errorMessage
-            this.hasTransientError = true
-        } catch (e: ApproovIOFatalException) {
+        } catch (e: Throwable) {
             this.errorMessage = exception.message ?: this.errorMessage
             this.hasFatalError = true
         }
@@ -244,10 +241,7 @@ class ShipmentResponse (
         } catch (e: SSLPeerUnverifiedException) {
             this.errorMessage = "Transient Error: Certificate pinning mismatch!"
             this.hasTransientError = true
-        } catch (e: ApproovIOTransientException) {
-            this.errorMessage = exception.message ?: this.errorMessage
-            this.hasTransientError = true
-        } catch (e: ApproovIOFatalException) {
+        } catch (e: Throwable) {
             this.errorMessage = exception.message ?: this.errorMessage
             this.hasFatalError = true
         }

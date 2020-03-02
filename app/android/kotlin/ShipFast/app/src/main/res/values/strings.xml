@@ -1,3 +1,4 @@
 <resources>
     <string name="app_name">ShipFast</string>
+    <string name="approov_config">APPROOV_INITIAL_CONFIG_HERE</string>
 </resources>

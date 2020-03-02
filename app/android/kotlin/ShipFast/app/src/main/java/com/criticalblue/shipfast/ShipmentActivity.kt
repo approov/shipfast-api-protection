@@ -15,7 +15,6 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import android.Manifest
-import android.content.Context
 import android.content.Intent
 import android.graphics.Color
 import android.location.Location
@@ -23,9 +22,6 @@ import android.location.LocationManager
 import android.util.Log
 import android.view.View
 import android.widget.*
-import com.criticalblue.approov.ApproovFramework
-import com.criticalblue.approov.ApproovSdkConfiguration
-import com.criticalblue.approov.ApproovSdkConfigurationInterface
 import com.criticalblue.shipfast.api.*
 import com.criticalblue.shipfast.config.*
 import com.criticalblue.shipfast.dto.Shipment
@@ -45,6 +41,7 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
+import io.approov.framework.okhttp.ApproovService
 
 const val TAG = "SHIPFAST_APP"
 
@@ -95,12 +92,15 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     /** The availability switch */
     private lateinit var availabilitySwitch: Switch
 
+    companion object {
+        var approovService: ApproovService? = null
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
 
-        val approovSdkConfiguration: ApproovSdkConfigurationInterface = ApproovSdkConfiguration(applicationContext)
-        ApproovFramework.initialize(applicationContext, approovSdkConfiguration, "Authorization")
+        approovService = ApproovService(applicationContext, resources.getString(R.string.approov_config))
+        approovService!!.setBindingHeader("Authorization")
 
         setContentView(R.layout.activity_shipment)
         title = "Current Shipment"
@@ -170,7 +170,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         mapView.onLowMemory()
     }
 
-    override fun onSaveInstanceState(outState: Bundle?) {
+    override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         mapView.onSaveInstanceState(outState)
     }

@@ -18,7 +18,7 @@ import java.io.IOException
 import java.net.URL
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import com.criticalblue.approov.http.okhttp3.OkHttp3Client
+import com.criticalblue.shipfast.ShipmentActivity.Companion.approovService
 import com.criticalblue.shipfast.TAG
 import com.criticalblue.shipfast.config.API_BASE_URL
 import com.criticalblue.shipfast.config.DemoStage
@@ -63,7 +63,7 @@ object RestAPI {
                 .addHeader(LONGITUDE_HEADER, originLocation.longitude.toString())
         val request = requestBuilder.build()
 
-        buildDefaultHTTPClient(context).newCall(request).enqueue(object : Callback {
+        buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call?, response: Response?) {
                 callback(ShipmentResponse(response, null))
             }
@@ -87,7 +87,7 @@ object RestAPI {
 
         val requestBuilder = createDefaultRequestBuilder(context, url)
         val request = requestBuilder.build()
-        buildDefaultHTTPClient(context).newCall(request).enqueue(object : Callback {
+        buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call?, response: Response?) {
                 callback(ShipmentsResponse(response, null))
             }
@@ -109,7 +109,7 @@ object RestAPI {
         val url = URL("$API_BASE_URL/shipments/active")
         val requestBuilder = createDefaultRequestBuilder(context, url)
         val request = requestBuilder.build()
-        buildDefaultHTTPClient(context).newCall(request).enqueue(object : Callback {
+        buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call?, response: Response?) {
                 callback(ShipmentResponse(response, null))
             }
@@ -132,7 +132,7 @@ object RestAPI {
         val url = URL("$API_BASE_URL/shipments/$shipmentID")
         val requestBuilder = createDefaultRequestBuilder(context, url)
         val request = requestBuilder.build()
-        buildDefaultHTTPClient(context).newCall(request).enqueue(object : Callback {
+        buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call?, response: Response?) {
                 callback(ShipmentResponse(response, null))
             }
@@ -163,7 +163,7 @@ object RestAPI {
                 .addHeader(SHIPMENT_STATE_HEADER, newState.ordinal.toString())
                 .build()
 
-        buildDefaultHTTPClient(context).newCall(request).enqueue(object : Callback {
+        buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
             override fun onResponse(call: Call?, response: Response?) {
                 callback(ShipmentResponse(response, null))
             }
@@ -204,7 +204,7 @@ object RestAPI {
         // Depending on the demo stage, calculate and specify the request HMAC
         if (currentDemoStage === DemoStage.HMAC_STATIC_SECRET_PROTECTION
                 || currentDemoStage === DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION) {
-            requestBuilder.addHeader(HMAC_HEADER, calculateAPIRequestHMAC(context, url, auth))
+            requestBuilder.addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
         }
 
         return requestBuilder
@@ -216,13 +216,13 @@ object RestAPI {
      * @param context the application context
      * @return the HTTP client
      */
-    private fun buildDefaultHTTPClient(context: Context): OkHttpClient {
+    private fun buildDefaultHTTPClient(): OkHttpClient {
 
         when (currentDemoStage) {
             DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
 
                 // now we can construct the OkHttpClient with the correct pins preset
-                return OkHttp3Client.getOkHttpClient()
+                return approovService!!.getOkHttpClient();
             }
             else -> {
                 // Use a simple client for non-Approov demo stages
@@ -243,7 +243,7 @@ object RestAPI {
      * @param authHeaderValue the value of the authorization request header
      * @return the request HMAC
      */
-    private fun calculateAPIRequestHMAC(context: Context, url: URL, authHeaderValue: String): String {
+    private fun calculateAPIRequestHMAC(url: URL, authHeaderValue: String): String {
 
         val secret = HMAC_SECRET
         var keySpec: SecretKeySpec
@@ -312,8 +312,6 @@ object RestAPI {
      * @return the ShipFast API key.
      */
     private fun loadShipFastAPIKey(): String {
-        //return context.packageManager.getApplicationInfo(context.packageName, PackageManager.GET_META_DATA)
-          //      .metaData.getString("com.criticalblue.shipfast.API_KEY").toString()
         return JniEnv().getApiKey()
     }
 

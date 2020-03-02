@@ -21,3 +21,5 @@ CB_INTERNAL_ONLY
 apis.json
 .shipfast.local.vars
 avd/
+.cxx/
+.transforms/

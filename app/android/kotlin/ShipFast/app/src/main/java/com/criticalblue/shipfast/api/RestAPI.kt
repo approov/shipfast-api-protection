@@ -26,6 +26,7 @@ import com.criticalblue.shipfast.config.JniEnv
 import com.criticalblue.shipfast.config.currentDemoStage
 import com.criticalblue.shipfast.dto.*
 import com.criticalblue.shipfast.user.loadUserCredentials
+import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
 
@@ -64,12 +65,12 @@ object RestAPI {
         val request = requestBuilder.build()
 
         buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call?, response: Response?) {
+            override fun onResponse(call: Call, response: Response) {
                 callback(ShipmentResponse(response, null))
             }
 
-            override fun onFailure(call: Call?, exception: IOException?) {
-                callback(ShipmentResponse(null, exception))
+            override fun onFailure(call: Call, e: IOException) {
+                callback(ShipmentResponse(null, e))
             }
         })
     }
@@ -88,12 +89,12 @@ object RestAPI {
         val requestBuilder = createDefaultRequestBuilder(context, url)
         val request = requestBuilder.build()
         buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call?, response: Response?) {
+            override fun onResponse(call: Call, response: Response) {
                 callback(ShipmentsResponse(response, null))
             }
 
-            override fun onFailure(call: Call?, exception: IOException?) {
-                callback(ShipmentsResponse(null, exception))
+            override fun onFailure(call: Call, e: IOException) {
+                callback(ShipmentsResponse(null, e))
             }
         })
     }
@@ -110,12 +111,12 @@ object RestAPI {
         val requestBuilder = createDefaultRequestBuilder(context, url)
         val request = requestBuilder.build()
         buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call?, response: Response?) {
+            override fun onResponse(call: Call, response: Response) {
                 callback(ShipmentResponse(response, null))
             }
 
-            override fun onFailure(call: Call?, exception: IOException?) {
-                callback(ShipmentResponse(null, exception))
+            override fun onFailure(call: Call, e: IOException) {
+                callback(ShipmentResponse(null, e))
             }
         })
     }
@@ -133,12 +134,12 @@ object RestAPI {
         val requestBuilder = createDefaultRequestBuilder(context, url)
         val request = requestBuilder.build()
         buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call?, response: Response?) {
+            override fun onResponse(call: Call, response: Response) {
                 callback(ShipmentResponse(response, null))
             }
 
-            override fun onFailure(call: Call?, exception: IOException?) {
-                callback(ShipmentResponse(null, exception))
+            override fun onFailure(call: Call, e: IOException) {
+                callback(ShipmentResponse(null, e))
             }
         })
     }
@@ -157,19 +158,19 @@ object RestAPI {
 
         val url = URL("$API_BASE_URL/shipments/update_state/$shipmentID")
         val request = createDefaultRequestBuilder(context, url)
-                .method("POST", RequestBody.create(null, ByteArray(0)))
+                .method("POST", ByteArray(0).toRequestBody(null, 0, 0))
                 .addHeader(LATITUDE_HEADER, currentLocation.latitude.toString())
                 .addHeader(LONGITUDE_HEADER, currentLocation.longitude.toString())
                 .addHeader(SHIPMENT_STATE_HEADER, newState.ordinal.toString())
                 .build()
 
         buildDefaultHTTPClient().newCall(request).enqueue(object : Callback {
-            override fun onResponse(call: Call?, response: Response?) {
+            override fun onResponse(call: Call, response: Response) {
                 callback(ShipmentResponse(response, null))
             }
 
-            override fun onFailure(call: Call?, exception: IOException?) {
-                callback(ShipmentResponse(null, exception))
+            override fun onFailure(call: Call, e: IOException) {
+                callback(ShipmentResponse(null, e))
             }
         })
     }
@@ -222,7 +223,7 @@ object RestAPI {
             DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
 
                 // now we can construct the OkHttpClient with the correct pins preset
-                return approovService!!.getOkHttpClient();
+                return approovService!!.getOkHttpClient()
             }
             else -> {
                 // Use a simple client for non-Approov demo stages
@@ -272,10 +273,10 @@ object RestAPI {
             }
         }
 
-        Log.i(TAG, "protocol: ${url.protocol.toString()}")
-        Log.i(TAG, "host: ${url.host.toString()}")
-        Log.i(TAG, "path: ${url.path.toString()}")
-        Log.i(TAG, "Authentication: ${authHeaderValue.toString()}")
+        Log.i(TAG, "protocol: ${url.protocol}")
+        Log.i(TAG, "host: ${url.host}")
+        Log.i(TAG, "path: ${url.path}")
+        Log.i(TAG, "Authentication: $authHeaderValue")
 
         // Compute the request HMAC using the HMAC SHA-256 algorithm
         val hmac = Mac.getInstance("HmacSHA256")

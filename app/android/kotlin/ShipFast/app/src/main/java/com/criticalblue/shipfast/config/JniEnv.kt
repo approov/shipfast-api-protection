@@ -83,7 +83,7 @@ class JniEnv {
     companion object {
         init {
             // Used to load the `main/cpp/jni-env.cpp` library on application startup.
-            loadLibrary("jni-env");
+            loadLibrary("jni-env")
         }
     }
 }

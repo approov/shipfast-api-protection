@@ -210,10 +210,10 @@ class ApproovService
 internal class PrefetchCallbackHandler : Approov.TokenFetchCallback {
 
     override fun approovCallback(pResult: Approov.TokenFetchResult) {
-        if (pResult.getStatus() === Approov.TokenFetchStatus.UNKNOWN_URL)
+        if (pResult.status === Approov.TokenFetchStatus.UNKNOWN_URL)
             Log.i(TAG, "Approov prefetch success")
         else
-            Log.i(TAG, "Approov prefetch failure: " + pResult.getStatus().toString())
+            Log.i(TAG, "Approov prefetch failure: " + pResult.status.toString())
     }
 
     companion object {
@@ -239,40 +239,40 @@ internal class ApproovTokenInterceptor
         // update the data hash based on any token binding header
         var request = chain.request()
         if (bindingHeader != null) {
-            if (!request.headers().names().contains(bindingHeader))
+            if (!request.headers.names().contains(bindingHeader))
                 throw IOException("Approov missing token binding header: $bindingHeader")
             Approov.setDataHashInToken(request.header(bindingHeader))
         }
 
         // request an Approov token for the domain
-        val host = request.url().host()
+        val host = request.url.host
         val approovResults = Approov.fetchApproovTokenAndWait(host)
 
         // provide information about the obtained token or error (note "approov token -check" can
         // be used to check the validity of the token and if you use token annotations they
         // will appear here to determine why a request is being rejected)
-        Log.i(TAG, "Test " + request.url())
-        Log.i(TAG, "Approov Token for " + host + ": " + approovResults.getLoggableToken())
+        Log.i(TAG, "Test " + request.url)
+        Log.i(TAG, "Approov Token for " + host + ": " + approovResults.loggableToken)
 
         // update any dynamic configuration
-        if (approovResults.isConfigChanged())
+        if (approovResults.isConfigChanged)
             approovService.updateDynamicConfig()
 
         // warn if we need to update the pins (this will be cleared by using getOkHttpClient
         // but will persist if the app fails to rebuild the OkHttpClient regularly)
-        if (approovResults.isForceApplyPins())
+        if (approovResults.isForceApplyPins)
             Log.e(TAG, "Approov Pins need to be updated")
 
         // check the status of Approov token fetch
-        if (approovResults.getStatus() === Approov.TokenFetchStatus.SUCCESS) {
+        if (approovResults.status === Approov.TokenFetchStatus.SUCCESS) {
             // we successfully obtained a token so add it to the header for the request
-            request = request.newBuilder().header(APPROOV_HEADER, APPROOV_TOKEN_PREFIX + approovResults.getToken()).build()
-        } else if (approovResults.getStatus() !== Approov.TokenFetchStatus.NO_APPROOV_SERVICE &&
-                approovResults.getStatus() !== Approov.TokenFetchStatus.UNKNOWN_URL &&
-                approovResults.getStatus() !== Approov.TokenFetchStatus.UNPROTECTED_URL) {
+            request = request.newBuilder().header(APPROOV_HEADER, APPROOV_TOKEN_PREFIX + approovResults.token).build()
+        } else if (approovResults.status !== Approov.TokenFetchStatus.NO_APPROOV_SERVICE &&
+                approovResults.status !== Approov.TokenFetchStatus.UNKNOWN_URL &&
+                approovResults.status !== Approov.TokenFetchStatus.UNPROTECTED_URL) {
             // we have failed to get an Approov token in such a way that there is no point in proceeding
             // with the request - generally a retry is needed, unless the error is permanent
-            throw IOException("Approov token fetch failed: " + approovResults.getStatus().toString())
+            throw IOException("Approov token fetch failed: " + approovResults.status.toString())
         }
 
         // proceed with the rest of the chain

@@ -36,8 +36,8 @@ class ShipmentsResponse (
         private val exception: IOException?
 ) {
 
-    private var hasTransientError: Boolean = false;
-    private var hasFatalError: Boolean = false;
+    private var hasTransientError: Boolean = false
+    private var hasFatalError: Boolean = false
 
     /**
      * Tells where the response is a successful one or not.
@@ -67,14 +67,14 @@ class ShipmentsResponse (
             this.response?.let {
                 if (it.isSuccessful) {
                     this.isOk = true
-                    it.body()?.let {
+                    it.body?.let {
                         buildShipmentsResponse(it.string())
                     }
                 } else {
                     this.isOk = false
 
-                    if (! response.message().isNullOrEmpty()) {
-                        this.errorMessage = response.message()
+                    if (! response.message.isNullOrEmpty()) {
+                        this.errorMessage = response.message
                     } else {
                         this.errorMessage = "Unsuccessful Response."
                     }
@@ -179,8 +179,8 @@ class ShipmentResponse (
     private val exception: IOException?
 ) {
 
-    private var hasTransientError: Boolean = false;
-    private var hasFatalError: Boolean = false;
+    private var hasTransientError: Boolean = false
+    private var hasFatalError: Boolean = false
 
     /**
      * Tells where the response is a successful one or not.
@@ -210,14 +210,14 @@ class ShipmentResponse (
             this.response?.let {
                 if (it.isSuccessful) {
                     this.isOk = true
-                    it.body()?.let {
+                    it.body?.let {
                         buildShipmentResponse(it.string())
                     }
                 } else {
                     this.isOk = false
 
-                    if (! response.message().isNullOrEmpty()) {
-                        this.errorMessage = response.message()
+                    if (! response.message.isNullOrEmpty()) {
+                        this.errorMessage = response.message
                     } else {
                         this.errorMessage = "Unsuccessful Response."
                     }

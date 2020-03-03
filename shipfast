@@ -32,8 +32,13 @@ Start_Editor() {
     local _ca_pem_file="${_ca_pem_dir}/${_ca_pem_filename}"
     local _ca_name="ProxyCA"
 
-    if [ ! -f "./app/android/kotlin/ShipFast/approov/approov.aar" ]; then
-        printf "\n\n ---> Approov library is missing. Add it with:\n approov sdk -getLibrary ./app/android/kotlin/ShipFast/approov/approov.aar \n\n"
+    if [ "${SHIPFAST_DEMO_STAGE}" = "APPROOV_APP_AUTH_PROTECTION" ]; then
+
+        if [ ! -f "${APPROOV_SDK}" ]; then
+            printf "\n---> FATAL ERROR: Missing file ${APPROOV_SDK} <---\n"
+            printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK} <---\n\n"
+            exit 1
+        fi
     fi
 
     # KVM needs to change permissions in order for Android Studio can work.
@@ -42,16 +47,6 @@ Start_Editor() {
     ${ROOT_PREFIX} chown ${_USER}:${_USER} /dev/kvm
 
     ${DOCKER_COMPOSE} up -d shipfast-demo
-
-    #cp -v "${CA_PEM_FILE}" /var/www/html/proxy.crt
-
-    #if [ -f "${_ca_crt_file}" ]
-    #    then
-            #sleep 5
-    #        printf "\n>>> ADDING PROXY CERTIFICATE <<<\n"
-
-            #${DOCKER_COMPOSE} exec -d -u root shipfast-demo bash -c "/demo/ssl/add-certificates.sh ${_ca_pem_dir} ${_ca_pem_filename} ${_ca_name} && cp ${_ca_pem_file} /var/www/html/proxy.crt"
-    #fi
 }
 
 Restart_Editor() {
@@ -115,6 +110,7 @@ Main() {
 
     local LINES=""
 
+    local ANDROID_STUDIO_BUILD="191.5900203"
     local ANDROID_STUDIO_VERSION=3.5.1.0
     local ANDROID_STUDIO_MAJOR_VERSION=3.5
 
@@ -138,15 +134,17 @@ Main() {
 
     DOCKER_COMPOSE="${ROOT_PREFIX} ${DOCKER_COMPOSE}"
 
-    local APPROOV_INITIAL_CONFIG=./app/android/kotlin/ShipFast/app/src/main/assets/approov-initial.config
-    local APPROOV_SDK=./app/android/kotlin/ShipFast/approov/approov.aar
-
     ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 
     if [ ! -f ./.env ]; then
         printf "\n---> FATAL ERROR: Missing .env file <---\n"
         exit 1
     fi
+
+    # We need the value for SHIPFAST_DEMO_STAGE
+    . ./.env
+
+    local APPROOV_SDK=./app/android/kotlin/ShipFast/approov/approov.aar
 
     # Setup X11 server authentication
     # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way

@@ -1,4 +1,0 @@
-www.google.com:HSTS	0	17879	1576327970279,1,0,2
-docs.google.com:HSTS	0	17879	1576327953294,1,1,2
-fonts.googleapis.com:HSTS	0	17879	1576327953739,1,0,2
-accounts.google.com:HSTS	0	17879	1576327959856,1,1,2

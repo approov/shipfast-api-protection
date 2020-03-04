@@ -153,7 +153,7 @@ Main() {
     # Setup X11 server authentication
     # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
     if type xauth &> /dev/null; then
-        _XAUTH="${PROJECT_HOST_DIR}"/.X11-unix.xauth
+        local _XAUTH="${PROJECT_HOST_DIR}"/.docker.X11-unix
         touch "${_XAUTH}"
         xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${_XAUTH}" nmerge -
     fi

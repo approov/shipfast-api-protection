@@ -24,6 +24,18 @@ Show_Help() {
     printf "\t./shipfast logs\n"
 }
 
+Build_Api_Server() {
+    ${DOCKER_COMPOSE} build shipfast-api
+}
+
+Build_Editor() {
+    ${DOCKER_COMPOSE} build shipfast-demo
+}
+
+Build_Web_Server() {
+    ${DOCKER_COMPOSE} build shipraider-web
+}
+
 Start_Editor() {
 
     local _ca_crt_file="./docker/demo/setup/certificates/ProxyCA.crt"
@@ -31,6 +43,8 @@ Start_Editor() {
     local _ca_pem_filename="ProxyCA.pem"
     local _ca_pem_file="${_ca_pem_dir}/${_ca_pem_filename}"
     local _ca_name="ProxyCA"
+
+    ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 
     if [ "${SHIPFAST_DEMO_STAGE}" = "APPROOV_APP_AUTH_PROTECTION" ]; then
 
@@ -138,8 +152,6 @@ Main() {
 
     DOCKER_COMPOSE="${ROOT_PREFIX} ${DOCKER_COMPOSE}"
 
-    ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
-
     if [ ! -f ./.env ]; then
         printf "\n---> FATAL ERROR: Missing .env file <---\n"
         exit 1
@@ -209,6 +221,33 @@ Main() {
         case "${input}" in
             -h | --help | help )
                 Show_Help
+                exit $?
+            ;;
+
+            build )
+                case "${2:-}" in
+                    api )
+                        Build_Api_Server
+                    ;;
+
+                    editor )
+                        Build_Editor
+                    ;;
+
+                    servers )
+                        Build_Api_Server
+                        Build_Web_Server
+                    ;;
+
+                    web )
+                        Build_Web_Server
+                    ;;
+
+                    * )
+                        Show_Help
+                    ;;
+                esac
+
                 exit $?
             ;;
 

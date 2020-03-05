@@ -11,10 +11,12 @@ services:
       - traefik
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-      - /opt/traefik/traefik.toml:/traefik.toml
-      - /opt/traefik/acme.json:/acme.json
+      - ./traefik.toml:/traefik.toml
+      - ./acme.json:/acme.json
     container_name: traefik
-
+    labels:
+      - "traefik.acme.email=${TRAEFIK_ACME_EMAIL:? Missing TRAEFIK_ACME_EMAIL env var.}"
+      - "traefik.docker.domain=${TRAEFIK_DOCKER_DOMAIN:? Missing TRAEFIK_DOCKER_DOMAIN env var.}"
 networks:
   traefik:
     external: true

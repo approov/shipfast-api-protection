@@ -35,8 +35,12 @@ Start_Editor() {
     if [ "${SHIPFAST_DEMO_STAGE}" = "APPROOV_APP_AUTH_PROTECTION" ]; then
 
         if [ ! -f "${APPROOV_SDK}" ]; then
+            printf "\n---> SHIPFAST_DEMO_STAGE: ${SHIPFAST_DEMO_STAGE} \n"
             printf "\n---> FATAL ERROR: Missing file ${APPROOV_SDK} <---\n"
-            printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK} <---\n\n"
+            printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK} <---\n"
+            printf "\n---> APPROOV CONFIG: approov sdk ./path/to/dev.token -getConfig .approov-initial.config <---\n"
+            printf "\n---> Add the Approov initial config to the strings resource file. <---\n\n"
+
             exit 1
         fi
     fi
@@ -110,9 +114,9 @@ Main() {
 
     local LINES=""
 
-    local ANDROID_STUDIO_BUILD="191.5900203"
-    local ANDROID_STUDIO_VERSION=3.5.1.0
-    local ANDROID_STUDIO_MAJOR_VERSION=3.5
+    local ANDROID_STUDIO_BUILD="192.6241897"
+    local ANDROID_STUDIO_VERSION=3.6.1.0
+    local ANDROID_STUDIO_MAJOR_VERSION=3.6
 
     local PROJECT_DIR="${PWD#*${HOME}/}"
     local PROJECT_NAME="${PROJECT_DIR//\//_}"
@@ -149,7 +153,7 @@ Main() {
     # Setup X11 server authentication
     # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way
     if type xauth &> /dev/null; then
-        _XAUTH="${PROJECT_HOST_DIR}"/.X11-unix.xauth
+        local _XAUTH="${PROJECT_HOST_DIR}"/.docker.X11-unix
         touch "${_XAUTH}"
         xauth nlist "${DISPLAY}" | sed -e 's/^..../ffff/' | xauth -f "${_XAUTH}" nmerge -
     fi

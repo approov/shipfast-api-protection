@@ -15,13 +15,13 @@ services:
     env_file:
       - .env
     environment:
-      XAUTHORITY: /home/developer/.X11-unix.xauth
+      XAUTHORITY: /tmp/.docker.X11-unix
       DISPLAY: "${DISPLAY:-0:}"
     devices:
       - /dev/kvm:/dev/kvm
     volumes:
       - /tmp/.X11-unix:/tmp/.X11-unix
-      - ${PROJECT_HOST_DIR}/.X11-unix.xauth:/home/developer/.X11-unix.xauth
+      - ${PROJECT_HOST_DIR}/.docker.X11-unix:/tmp/.docker.X11-unix
       - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}/${PROJECT_NAME}/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}:/home/developer/.AndroidStudio${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}
       - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}/${PROJECT_NAME}/Android:/home/developer/Android
       - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}/${PROJECT_NAME}/.android:/home/developer/.android

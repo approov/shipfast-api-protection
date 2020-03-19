@@ -2,7 +2,7 @@ version: "2.3"
 
 services:
 
-  shipfast-demo:
+  editor:
     image: ${IMAGE_NAME:-approov/shipfast-android-studio}:${ANDROID_STUDIO_VERSION:? Missing ANDROID_STUDIO_VERSION}
     build:
       context: ./docker/build

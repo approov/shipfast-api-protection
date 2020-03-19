@@ -3,25 +3,35 @@
 set -eu
 
 Show_Help() {
+    printf "\nSHIPFAST API PROTECTION DEMO\n"
+
+    printf "\n Servers:\n"
+    printf "\t./shipfast up servers\n"
+    printf "\t./shipfast logs servers\n"
+    printf "\t./shipfast restart servers\n"
+    printf "\t./shipfast down servers\n"
+
     printf "\n Shipfast API:\n"
     printf "\t./shipfast up api\n"
+    printf "\t./shipfast logs api\n"
     printf "\t./shipfast restart api\n"
     printf "\t./shipfast down api\n"
 
     printf "\n Shipraider Web:\n"
     printf "\t./shipfast up web\n"
+    printf "\t./shipfast logs web\n"
     printf "\t./shipfast restart web\n"
     printf "\t./shipfast down web\n"
 
     printf "\n Android Studio:\n"
     printf "\t./shipfast up editor\n"
+    printf "\t./shipfast logs editor\n"
     printf "\t./shipfast restart editor\n"
     printf "\t./shipfast down editor\n"
 
     printf "\n Logs:\n"
-    printf "\t./shipfast logs api\n"
-    printf "\t./shipfast logs web\n"
     printf "\t./shipfast logs\n"
+    echo
 }
 
 Build_Api_Server() {
@@ -29,7 +39,7 @@ Build_Api_Server() {
 }
 
 Build_Editor() {
-    ${DOCKER_COMPOSE} build shipfast-demo
+    ${DOCKER_COMPOSE} build editor
 }
 
 Build_Web_Server() {
@@ -64,7 +74,7 @@ Start_Editor() {
     # TODO: find a permanent solution
     ${ROOT_PREFIX} chown ${_USER}:${_USER} /dev/kvm
 
-    ${DOCKER_COMPOSE} up -d shipfast-demo
+    ${DOCKER_COMPOSE} up -d editor
 }
 
 Restart_Editor() {
@@ -72,8 +82,8 @@ Restart_Editor() {
 }
 
 Destroy_Editor() {
-    ${DOCKER_COMPOSE} stop shipfast-demo
-    ${DOCKER_COMPOSE} rm shipfast-demo
+    ${DOCKER_COMPOSE} stop editor
+    ${DOCKER_COMPOSE} rm editor
 }
 
 Start_Api_Server() {
@@ -261,6 +271,11 @@ Main() {
                         Destroy_Editor
                     ;;
 
+                    servers )
+                        Destroy_Api_Server
+                        Destroy_Web_Server
+                    ;;
+
                     web )
                         Destroy_Web_Server
                     ;;
@@ -280,7 +295,11 @@ Main() {
                     ;;
 
                     editor )
-                        Logs "-f" "shipfast-demo"
+                        Logs "-f" "editor"
+                    ;;
+
+                    servers )
+                        Logs "-f" "shipfast-api" "shipraider-web"
                     ;;
 
                     web )
@@ -305,6 +324,11 @@ Main() {
                         Restart_Editor
                     ;;
 
+                    servers )
+                        Restart_Api_Server
+                        Restart_Web_Server
+                    ;;
+
                     web )
                         Restart_Web_Server
                     ;;
@@ -325,6 +349,11 @@ Main() {
 
                     editor )
                         Start_Editor
+                    ;;
+
+                    servers )
+                        Start_Api_Server
+                        Start_Web_Server
                     ;;
 
                     web )

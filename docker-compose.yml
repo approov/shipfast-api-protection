@@ -3,15 +3,15 @@ version: "2.3"
 services:
 
   editor:
-    image: ${IMAGE_NAME:-approov/shipfast-android-studio}:${ANDROID_STUDIO_VERSION:? Missing ANDROID_STUDIO_VERSION}
+    image: ${IMAGE_NAME:-approov/shipfast-android-studio}:${ENVIRONMENT:-dev}_${ANDROID_STUDIO_VERSION:? Missing ANDROID_STUDIO_VERSION}
     build:
       context: ./docker/build
       dockerfile: editor.Dockerfile
       args:
         ANDROID_STUDIO_BUILD: "${ANDROID_STUDIO_BUILD:? Missing ANDROID_STUDIO_BUILD}"
         ANDROID_STUDIO_VERSION: "${ANDROID_STUDIO_VERSION:? Missing ANDROID_STUDIO_VERSION}"
-    container_name: "shipfast-demo"
-    hostname: "shipfast-demo"
+    container_name: "${ENVIRONMENT:-dev}.editor"
+    hostname: "${ENVIRONMENT:-dev}.editor"
     env_file:
       - .env
     environment:
@@ -27,17 +27,18 @@ services:
       - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}/${PROJECT_NAME}/.android:/home/developer/.android
       - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}/${PROJECT_NAME}/.gradle:/home/developer/.gradle
       - ${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION:? Missing ANDROID_STUDIO_VERSION}/${PROJECT_NAME}/.java:/home/developer/.java
+      - ${PROJECT_HOST_DIR}/.mitmproxy:/home/developer/.mitmproxy
       - ${ANDROID_APP_DIR:-./}:/home/developer/workspace
     networks:
       - shipfast
 
-  shipfast-api:
+  api:
     image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
-    container_name: "${ENVIRONMENT:-dev}.shipfast-api"
-    hostname: "${ENVIRONMENT:-dev}.shipfast-api"
+    container_name: "${ENVIRONMENT:-dev}.api"
+    hostname: "${ENVIRONMENT:-dev}.api"
     working_dir: /home/node/workspace/server/shipfast-api
     env_file:
       - ./.env
@@ -56,13 +57,13 @@ services:
       - "traefik.port=${SHIPFAST_HTTP_PORT}"
       - "traefik.frontend.rule=Host:${SHIPFAST_PUBLIC_DOMAIN:-localhost}"
 
-  shipraider-web:
+  web:
     image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
-    container_name: "${ENVIRONMENT:-dev}.shipraider-web"
-    hostname: "${ENVIRONMENT:-dev}.shipraider-web"
+    container_name: "${ENVIRONMENT:-dev}.web"
+    hostname: "${ENVIRONMENT:-dev}.web"
     working_dir: /home/node/workspace/server/shipraider-rogue-web
     env_file:
       - .env

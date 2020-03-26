@@ -51,6 +51,15 @@ Java_com_criticalblue_shipfast_config_JniEnv_getApiKey(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
+Java_com_criticalblue_shipfast_config_JniEnv_getHmacSecret(
+        JNIEnv *env,
+        jobject /* this */) {
+    std::string HMAC_SECRET = SHIPFAST_API_HMAC_SECRET;
+
+    return env->NewStringUTF(HMAC_SECRET.c_str());
+}
+
+extern "C" JNIEXPORT jstring JNICALL
 Java_com_criticalblue_shipfast_config_JniEnv_getApiBaseUrl(
         JNIEnv *env,
         jobject /* this */) {

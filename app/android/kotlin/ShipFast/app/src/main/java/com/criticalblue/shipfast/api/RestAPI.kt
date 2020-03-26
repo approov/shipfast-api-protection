@@ -30,7 +30,6 @@ import java.io.IOException
 import java.net.URL
 import javax.crypto.Mac
 import javax.crypto.spec.SecretKeySpec
-import com.criticalblue.shipfast.ShipmentActivity.Companion.approovService
 import com.criticalblue.shipfast.TAG
 import com.criticalblue.shipfast.config.API_BASE_URL
 import com.criticalblue.shipfast.config.DemoStage
@@ -39,8 +38,8 @@ import com.criticalblue.shipfast.config.currentDemoStage
 import com.criticalblue.shipfast.dto.*
 import com.criticalblue.shipfast.user.loadUserCredentials
 import okhttp3.RequestBody.Companion.toRequestBody
-import java.util.concurrent.TimeUnit
 
+import com.criticalblue.shipfast.ShipFastApp
 
 object RestAPI {
 
@@ -54,9 +53,6 @@ object RestAPI {
     const val LONGITUDE_HEADER = "DRIVER-LONGITUDE"
     /** The shipment state request header */
     const val SHIPMENT_STATE_HEADER = "SHIPMENT-STATE"
-    /** The HMAC secret used to sign API requests */
-    const val HMAC_SECRET = "4ymoofRe0l87QbGoR0YH+/tqBN933nKAGxzvh5z2aXr5XlsYzlwQ6pVArGweqb7cN56khD/FvY0b6rWc4PFOPw=="
-
     /** The HMAC request header */
     const val HMAC_HEADER = "HMAC"
 
@@ -230,22 +226,7 @@ object RestAPI {
      * @return the HTTP client
      */
     private fun buildDefaultHTTPClient(): OkHttpClient {
-
-        when (currentDemoStage) {
-            DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
-
-                // now we can construct the OkHttpClient with the correct pins preset
-                return approovService!!.getOkHttpClient()
-            }
-            else -> {
-                // Use a simple client for non-Approov demo stages
-                return OkHttpClient.Builder()
-                        .connectTimeout(2, TimeUnit.SECONDS)
-                        .readTimeout(2, TimeUnit.SECONDS)
-                        .writeTimeout(2, TimeUnit.SECONDS)
-                        .build()
-            }
-        }
+        return ShipFastApp.getOkHttpClient()
     }
 
     /**
@@ -258,7 +239,7 @@ object RestAPI {
      */
     private fun calculateAPIRequestHMAC(url: URL, authHeaderValue: String): String {
 
-        val secret = HMAC_SECRET
+        val secret = JniEnv().getHmacSecret()
         var keySpec: SecretKeySpec
 
         // Configure the request HMAC based on the demo stage
@@ -327,6 +308,5 @@ object RestAPI {
     private fun loadShipFastAPIKey(): String {
         return JniEnv().getApiKey()
     }
-
 }
 

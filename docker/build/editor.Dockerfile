@@ -32,6 +32,8 @@ ARG DOMAIN_CA_NAME="localhost"
 ARG ROOT_CA_DIR=/.certificates
 ARG ROOT_CA_NAME="Self_Signed_Root_CA"
 
+ARG MITM_PROXY_VERSION=5.0.1
+
 ENV CONTAINER_HOME=/home/"${CONTAINER_USER_NAME}"
 
 ENV \
@@ -135,8 +137,9 @@ RUN dpkg --add-architecture i386 && \
     "${WORKSPACE_PATH}" \
     "${CONTAINER_USER_NAME}" && \
 
-  echo PATH=/opt/android-studio/bin:$PATH >> ${CONTAINER_HOME}/.bashrc && \
-  echo PATH=/opt/android-studio/bin:$PATH >> ${CONTAINER_HOME}/.zshrc && \
+  curl https://snapshots.mitmproxy.org/"${MITM_PROXY_VERSION}"/mitmproxy-"${MITM_PROXY_VERSION}"-linux.tar.gz -o mitmproxy.tar.gz && \
+    tar -zxvf mitmproxy.tar.gz -C /usr/local/bin && \
+    rm -rfv mitmproxy.tar.gz  && \
 
   adduser ${CONTAINER_USER_NAME} libvirt && \
   adduser ${CONTAINER_USER_NAME} kvm && \
@@ -145,6 +148,12 @@ RUN dpkg --add-architecture i386 && \
   apt -y autoremove && \
   apt-get clean && \
   apt-get purge
+
+ENV ANDROID_SDK_ROOT=${CONTAINER_HOME}/Android/Sdk
+ENV PATH=${ANDROID_SDK_ROOT}/emulator:${PATH}
+ENV PATH=${ANDROID_SDK_ROOT}/tools/bin:${PATH}
+ENV PATH=${ANDROID_SDK_ROOT}/platform-tools:${PATH}
+ENV PATH=/opt/android-studio/bin:${PATH}
 
 ENV ANDROID_EMULATOR_USE_SYSTEM_LIBS=1
 

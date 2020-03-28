@@ -12,3 +12,5 @@ mkdir -v -p \
     "${PROJECT_HOST_DIR}"/android-studio/${VERSION}/"${PROJECT_NAME}"/.android \
     "${PROJECT_HOST_DIR}"/android-studio/${VERSION}/"${PROJECT_NAME}"/.gradle \
     "${PROJECT_HOST_DIR}"/android-studio/${VERSION}/"${PROJECT_NAME}"/.java \
+    "${PROJECT_HOST_DIR}"/.mitmproxy
+

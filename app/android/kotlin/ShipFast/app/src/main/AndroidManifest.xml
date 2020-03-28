@@ -6,15 +6,18 @@
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-<!--        android:networkSecurityConfig="@xml/network_security_config"-->
 
+    <!-- MITMPROXY: ALLOW SELF SIGNED CERTIFICATE -->
+    <!-- Uncomment and move the next line to right after <application -->
+    <!-- android:networkSecurityConfig="@xml/network_security_config"-->
     <application
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        android:name="com.criticalblue.shipfast.ShipFastApp">
 
         <uses-library android:name="com.google.android.maps" />
         <uses-library

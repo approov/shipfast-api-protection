@@ -53,7 +53,6 @@ import com.google.android.gms.maps.model.PolylineOptions
 import com.google.android.gms.common.api.GoogleApiClient
 import com.google.android.gms.location.LocationListener
 import com.google.android.gms.location.LocationRequest
-import io.approov.framework.okhttp.ApproovService
 
 const val TAG = "SHIPFAST_APP"
 
@@ -104,15 +103,8 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     /** The availability switch */
     private lateinit var availabilitySwitch: Switch
 
-    companion object {
-        var approovService: ApproovService? = null
-    }
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        approovService = ApproovService(applicationContext, resources.getString(R.string.approov_config))
-        approovService!!.setBindingHeader("Authorization")
 
         setContentView(R.layout.activity_shipment)
         title = "Current Shipment"

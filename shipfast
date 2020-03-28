@@ -29,21 +29,31 @@ Show_Help() {
     printf "\t./shipfast restart editor\n"
     printf "\t./shipfast down editor\n"
 
+    printf "\n Proxy:\n"
+    printf "\t./shipfast proxy -p 8000\n"
+
     printf "\n Logs:\n"
     printf "\t./shipfast logs\n"
     echo
 }
 
+Docker_Container_Is_Running() {
+  sudo docker container ls -a | grep -q "${1? Missing container name.}" -
+
+  return $?
+}
+
 Build_Api_Server() {
-    ${DOCKER_COMPOSE} build shipfast-api
+    ${DOCKER_COMPOSE} build api
 }
 
 Build_Editor() {
     ${DOCKER_COMPOSE} build editor
+    ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 }
 
 Build_Web_Server() {
-    ${DOCKER_COMPOSE} build shipraider-web
+    ${DOCKER_COMPOSE} build web
 }
 
 Start_Editor() {
@@ -83,7 +93,7 @@ Restart_Editor() {
 
 Destroy_Editor() {
     ${DOCKER_COMPOSE} stop editor
-    ${DOCKER_COMPOSE} rm editor
+    ${DOCKER_COMPOSE} rm -f editor
 }
 
 Start_Api_Server() {
@@ -91,10 +101,10 @@ Start_Api_Server() {
     # From the android emulator we must use 10.0.2.2:3333 to call localhost
 
     if [ ! -d "./server/shipfast-api/node_modules" ]; then
-        ${DOCKER_COMPOSE} run shipfast-api sh -c 'npm install && exit || exit'
+        ${DOCKER_COMPOSE} run api sh -c 'npm install && exit || exit'
     fi
 
-    ${DOCKER_COMPOSE} up -d shipfast-api
+    ${DOCKER_COMPOSE} up -d api
 }
 
 Restart_Api_Server() {
@@ -102,17 +112,17 @@ Restart_Api_Server() {
 }
 
 Destroy_Api_Server() {
-    ${DOCKER_COMPOSE} stop shipfast-api
-    ${DOCKER_COMPOSE} rm shipfast-api
+    ${DOCKER_COMPOSE} stop api
+    ${DOCKER_COMPOSE} rm -f api
 }
 
 Start_Web_Server() {
 
     if [ ! -d "./server/shipraider-rogue-web/node_modules" ]; then
-        ${DOCKER_COMPOSE} run shipraider-web sh -c 'npm install && exit || exit'
+        ${DOCKER_COMPOSE} run web sh -c 'npm install && exit || exit'
     fi
 
-    ${DOCKER_COMPOSE} up -d shipraider-web
+    ${DOCKER_COMPOSE} up -d web
 }
 
 Restart_Web_Server() {
@@ -120,12 +130,31 @@ Restart_Web_Server() {
 }
 
 Destroy_Web_Server() {
-    ${DOCKER_COMPOSE} stop shipraider-web
-    ${DOCKER_COMPOSE} rm shipraider-web
+    ${DOCKER_COMPOSE} stop web
+    ${DOCKER_COMPOSE} rm -f web
 }
 
 Logs() {
     ${DOCKER_COMPOSE} logs ${@}
+}
+
+Run_Shell() {
+    local docker_compose_service="${1? Missing docker composer service name.}"
+    local shell="${2? Missing shell to use, e.g: zsh}"
+    shift 2
+
+    local container_name="dev.${docker_compose_service}"
+
+    if Docker_Container_Is_Running "${container_name}"; then
+        ${DOCKER_COMPOSE} exec "${docker_compose_service}" "${shell}" ${@}
+        return
+    fi
+
+    ${DOCKER_COMPOSE} run --rm "${docker_compose_service}" "${shell}" ${@}
+}
+
+Start_Proxy() {
+    ${DOCKER_COMPOSE} exec editor mitmproxy ${@}
 }
 
 Main() {
@@ -226,6 +255,7 @@ Main() {
             printf "\nPROJECT_HOST_DIR=${PROJECT_HOST_DIR}\n" >> .env
     fi
 
+    local ANDROID_SDK_DIR="${PROJECT_HOST_DIR}/android-studio/${ANDROID_STUDIO_MAJOR_VERSION}/${PROJECT_NAME}/Android/Sdk"
 
     for input in  "${@}"; do
         case "${input}" in
@@ -291,7 +321,7 @@ Main() {
             logs )
                 case "${2:-}" in
                     api )
-                        Logs "-f" "shipfast-api"
+                        Logs "-f" "api"
                     ;;
 
                     editor )
@@ -299,11 +329,11 @@ Main() {
                     ;;
 
                     servers )
-                        Logs "-f" "shipfast-api" "shipraider-web"
+                        Logs "-f" "api" "web"
                     ;;
 
                     web )
-                        Logs "-f" "shipraider-web"
+                        Logs "-f" "web"
                     ;;
 
                     * )
@@ -311,6 +341,12 @@ Main() {
                     ;;
                 esac
 
+                exit $?
+            ;;
+
+            proxy )
+                shift 1
+                Start_Proxy "${@}"
                 exit $?
             ;;
 
@@ -338,6 +374,12 @@ Main() {
                     ;;
                 esac
 
+                exit $?
+            ;;
+
+            shell )
+                shift 1
+                Run_Shell ${@}
                 exit $?
             ;;
 

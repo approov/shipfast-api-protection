@@ -2,20 +2,27 @@
 
 set -eu
 
-CERTIFICATE_NAME="${1:?Missing certificate name}"
-CERTIFICATE_FILE="${2:?Missing certificate file path to add to the certificate bundle file.}"
+Main() {
 
-# Docker Container: /home/mobile/Android/Sdk/emulator/lib/ca-bundle.pem
-CERTIFICATE_BUNDLE_FILE="${3:-/home/developer/Android/Sdk/emulator/lib/ca-bundle.pem}"
+    local CERTIFICATE_NAME="${1:?Missing certificate name, e.g: MyCertName}"
+    local CERTIFICATE_FILE="${2:?Missing path to the certificate.}"
 
-printf "\n>>> Adding Certificate to Android Emulator Bundle\n<<<"
+    # Docker Container: /home/mobile/Android/Sdk/emulator/lib/ca-bundle.pem
+    local CERTIFICATE_BUNDLE_FILE="${3:-/home/developer/Android/Sdk/emulator/lib/ca-bundle.pem}"
 
-printf "\n${CERTIFICATE_NAME}" >> "${CERTIFICATE_BUNDLE_FILE}"
+    local COUNT_LINES=$(cat ${CERTIFICATE_FILE} | wc -l)
 
-printf "\n=========================\n" >> "${CERTIFICATE_BUNDLE_FILE}"
+    printf "\n>>> Adding Certificate to Android Emulator Bundle <<<\n"
 
-cat "${CERTIFICATE_FILE}" >> "${CERTIFICATE_BUNDLE_FILE}"
+    printf "\n${CERTIFICATE_NAME}" >> "${CERTIFICATE_BUNDLE_FILE}"
 
-printf "\n<<< Certifcate Added <<<\n"
+    printf "\n=========================\n" >> "${CERTIFICATE_BUNDLE_FILE}"
 
+    cat "${CERTIFICATE_FILE}" >> "${CERTIFICATE_BUNDLE_FILE}"
 
+    printf "\n\nAdded Certifcate:\n\n"
+
+    cat "${CERTIFICATE_BUNDLE_FILE}" | grep -i -A ${COUNT_LINES} "${CERTIFICATE_NAME}"
+}
+
+Main ${@}

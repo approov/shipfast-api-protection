@@ -47,6 +47,15 @@ class JniEnv {
     external fun getApiKey(): String
 
     /**
+     * Get the Hmac secret from the compile time JNI env variable `SHIPFAST_API_HMAC_SECRET` in the native
+     *  C code, as per defined in the file `main/cpp/.jni.env.h` and accessible to Kotlin code via
+     *  the file `main/cpp/jni-env.cpp`.
+     *
+     * @return The Hmac secret from the JNI env.
+     */
+    external fun getHmacSecret(): String
+
+    /**
      * Get the API base url from the compile time JNI env variable `SHIPFAST_API_BASE_URL` in the
      *  native C code, as per defined in the file `main/cpp/.jni.env.h` and accessible to Kotlin
      *  code via the file `main/cpp/jni-env.cpp`.

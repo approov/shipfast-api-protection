@@ -34,6 +34,12 @@ Show_Help() {
 
     printf "\n Logs:\n"
     printf "\t./shipfast logs\n"
+    printf "\t./shipfast logs -f \n"
+    printf "\t./shipfast logs --follow \n"
+    printf "\t./shipfast logs -t 100 \n"
+    printf "\t./shipfast logs --tail 100 \n"
+    printf "\t./shipfast logs -f -t 100 \n"
+    printf "\t./shipfast logs -f -t 100 api \n"
     echo
 }
 
@@ -319,28 +325,8 @@ Main() {
             ;;
 
             logs )
-                case "${2:-}" in
-                    api )
-                        Logs "-f" "api"
-                    ;;
-
-                    editor )
-                        Logs "-f" "editor"
-                    ;;
-
-                    servers )
-                        Logs "-f" "api" "web"
-                    ;;
-
-                    web )
-                        Logs "-f" "web"
-                    ;;
-
-                    * )
-                        Logs "-f"
-                    ;;
-                esac
-
+                shift 1
+                Logs ${@}
                 exit $?
             ;;
 

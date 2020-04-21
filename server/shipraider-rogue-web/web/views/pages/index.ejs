@@ -23,11 +23,28 @@
                     <div class="panel-body">
                         <div class="input-group">
                             <span class="input-group-addon" id="server-url">ShipFast Server URL</span>
-                            <input type="text" class="form-control" id="server-url-input" aria-describedby="server-url-input" value="<%= SERVER_URL %>">
+                            <input type="text" class="form-control" id="shipfast-api-url" aria-describedby="shipfast-api-url" value="<%= SHIPFAST_API_BASE_URL %>" readonly>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><strong>ShipFast API Version</strong></span>
+                            <select id="shipfast-api-version">
+                              <option value="v1" <% if (SHIPFAST_API_VERSION == "v1") { %> selected <% } %> >v1</option>
+                              <option value="v2" <% if (SHIPFAST_API_VERSION == "v2") { %> selected <% } %> >v2</option>
+                              <option value="v3" <% if (SHIPFAST_API_VERSION == "v3") { %> selected <% } %> >v3</option>
+                              <option value="v4" <% if (SHIPFAST_API_VERSION == "v4") { %> selected <% } %> >v4</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon"><strong>Demo Stage</strong></span>
+                            <select id="shipfast-demo-stage">
+                              <option value="0" <% if (SHIPFAST_CURRENT_DEMO_STAGE == 0) { %> selected <% } %> >API_KEY</option>
+                              <option value="1" <% if (SHIPFAST_CURRENT_DEMO_STAGE == 1) { %> selected <% } %> >HMAC</option>
+                              <option value="2" <% if (SHIPFAST_CURRENT_DEMO_STAGE == 2) { %> selected <% } %> >COMPUTED_HMAC</option>
+                            </select>
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon" id="shipfast-api-key">ShipFast API Key</span>
-                            <input type="text" class="form-control" id="shipfast-api-key-input"  aria-describedby="shipfast-api-key" value="<%= API_KEY %>">
+                            <input type="text" class="form-control" id="shipfast-api-key-input"  aria-describedby="shipfast-api-key" value="<%= API_KEY %>" readonly>
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon" id="user-auth-token">User Auth Token</span>
@@ -91,11 +108,12 @@
     </body>
     <footer>
         <script type="text/javascript">
-            const currentDemoStage = <%= DEMO_STAGE_API_KEY_PROTECTION %>;
             const AUTH0_CLIENT_ID = "<%= AUTH0_CLIENT_ID %>";
             const AUTH0_DOMAIN = "<%= AUTH0_DOMAIN %>";
             const HMAC_SECRET = "<%= HMAC_SECRET %>";
-            const SHIPFAST_API_BASE_URL = "<%= SERVER_URL %>";
+            const SHIPFAST_API_VERSION = "<%= SHIPFAST_API_VERSION %>";
+            const SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_STATIC_SECRET_PROTECTION %>";
+            const SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_DYNAMIC_SECRET_PROTECTION %>";
         </script>
         <script src="https://cdn.auth0.com/js/auth0/8.10.1/auth0.min.js"></script>
         <script src="https://cdn.auth0.com/js/lock/10.21.1/lock.min.js"></script>

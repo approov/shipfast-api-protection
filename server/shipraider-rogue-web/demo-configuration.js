@@ -21,6 +21,7 @@ const config = {
     SHIPRAIDER_HTTPS_PORT: dotenv.parsed.SHIPRAIDER_HTTPS_PORT || '4443',
     SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL || undefined,
     SHIPFAST_PUBLIC_DOMAIN: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN || undefined,
+    SHIPFAST_API_VERSION: dotenv.parsed.SHIPFAST_API_VERSION || undefined,
     SHIPFAST_API_KEY: dotenv.parsed.SHIPFAST_API_KEY || undefined,
     SHIPFAST_API_HMAC_SECRET: dotenv.parsed.SHIPFAST_API_HMAC_SECRET || undefined,
     AUTH0_DOMAIN: dotenv.parsed.AUTH0_DOMAIN || undefined,
@@ -64,7 +65,8 @@ if (STAGES[demo_stage] === undefined) {
     throw new Error("Invalid value for env var: SHIPFAST_DEMO_STAGE")
 }
 
-config["SHIPFAST_DEMO_STAGE"] = STAGES[demo_stage]
+config["SHIPFAST_CURRENT_DEMO_STAGE"] = STAGES[demo_stage]
+config["SHIPFAST_DEMO_STAGES"] = STAGES
 
 module.exports = {
     config

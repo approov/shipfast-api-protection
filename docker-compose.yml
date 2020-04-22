@@ -50,6 +50,8 @@ services:
     networks:
       - shipfast
       - traefik
+    ports:
+      - 127.0.0.1:${SHIPFAST_HTTP_PORT}:${SHIPFAST_HTTP_PORT}
     labels:
       - "traefik.enable=true"
       - "traefik.backend=${ENVIRONMENT:-dev}.shipfast-api"

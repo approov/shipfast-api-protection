@@ -7,25 +7,13 @@
  * The rogue ShipFast 'ShipRaider' web server's JQuery logic script.
  *****************************************************************************/
 
-// TOOD: Auto generate this file when in a docker container in order to the .env values
-
-//The enumeration of various stages of the demo.
-const DEMO_STAGE = {
-    // The demo which uses basic protection by way of API key specified in the app manifest
-    API_KEY_PROTECTION: 0,
-    // The demo which introduces API request signing by HMAC using a static secret in code
-    HMAC_STATIC_SECRET_PROTECTION: 1,
-    // The demo which introduces API request signing by HMAC using a dynamic secret in code
-    HMAC_DYNAMIC_SECRET_PROTECTION: 2
-}
-
-var shipments = {}
+let shipments = {}
 
 $("#send-bitcoin-button").click(function() {
     alert("Pay me the money!")
 })
 
-var lock = new Auth0Lock(AUTH0_CLIENT_ID, AUTH0_DOMAIN, {
+let lock = new Auth0Lock(AUTH0_CLIENT_ID, AUTH0_DOMAIN, {
     auth: {
         redirectUrl: window.url,
         responseType: "id_token",
@@ -49,36 +37,88 @@ $("#login-button").click(function() {
 $("#search-shipments-button").click(function(event) {
     event.preventDefault()
     searchForShipments()
-    updateProgressBar(100)
 })
 
-function searchForShipments() {
+const getShipfastApiUrl = function(endpoint) {
+    return $("#shipfast-api-url").val() + "/" + getShipfastApiVersion() + endpoint
+}
+
+const getShipfastApiVersion = function() {
+    return $("#shipfast-api-version").val()
+}
+
+const getShipfastDemoStage = function() {
+    return $("#shipfast-demo-stage").val()
+}
+
+const getShipFastAPIKey = function() {
+    return $("#shipfast-api-key-input").val()
+}
+
+const getUserAuthToken = function() {
+    const auth = $("#user-auth-token-input").val()
+
+    if (!auth) {
+        alert("Man, you need to login first!!!")
+        return undefined
+    }
+
+    return "Bearer " + auth
+}
+
+const getDriverLatitude = function() {
+    return $("#location-latitude-input").val()
+}
+
+const getDriverLongitude = function() {
+    return $("#location-longitude-input").val()
+}
+
+const showAlertOnError = function() {
+    if (getShipfastApiVersion() == "v4") {
+        alert("Man it doesn't work... this API is now protected by Approov!!!")
+    } else {
+        alert("Man, it didn't work this time!")
+    }
+}
+
+const searchForShipments = function() {
     updateProgressBar(0)
     shipments = {}
 
-    var shipFastServerURL = $("#server-url-input").val()
-    var shipFastAPIKey = $("#shipfast-api-key-input").val()
-    var userAuthToken = $("#user-auth-token-input").val()
-    var driver_latitude = $("#location-latitude-input").val()
-    var driver_longitude = $("#location-longitude-input").val()
-    var locationSweepRadius = $("#location-sweep-radius-input").val()
-    var locationSweepStep = $("#location-sweep-step-input").val()
+    let count = 0
+    let progress = 0
 
-    var halfLBR = parseFloat(locationSweepRadius) / 2.0
-    var locStep = parseFloat(locationSweepStep)
-    var latStart = parseFloat(driver_latitude) - halfLBR
-    var latEnd = parseFloat(driver_latitude) + halfLBR
-    var lonStart = parseFloat(driver_longitude) - halfLBR
-    var lonEnd = parseFloat(driver_longitude) + halfLBR
+    let driver_latitude = getDriverLatitude()
+    let driver_longitude = getDriverLongitude()
+    let locationSweepRadius = $("#location-sweep-radius-input").val()
+    let locationSweepStep = $("#location-sweep-step-input").val()
 
-    var fetchNearestShipment = function(latVal, lonVal) {
-        var url = shipFastServerURL + "/shipments/nearest_shipment"
-        var auth = "Bearer " + userAuthToken
+    let halfLBR = parseFloat(locationSweepRadius) / 2.0
+    let locStep = parseFloat(locationSweepStep)
+    let latStart = parseFloat(driver_latitude) - halfLBR
+    let latEnd = parseFloat(driver_latitude) + halfLBR
+    let lonStart = parseFloat(driver_longitude) - halfLBR
+    let lonEnd = parseFloat(driver_longitude) + halfLBR
+
+    let totalProgress = Math.pow(parseFloat(locationSweepRadius) / locStep, 2)
+
+    $("#results-table-body").empty()
+
+    let auth = getUserAuthToken()
+
+    if (auth == undefined) {
+        return
+    }
+
+    let url = getShipfastApiUrl("/shipments/nearest_shipment")
+
+    const fetchNearestShipment = function(latVal, lonVal, url, auth) {
 
         $.ajax({
             url: url,
             headers: {
-                "API-KEY" : shipFastAPIKey,
+                "API-KEY" : getShipFastAPIKey(),
                 "Authorization" : auth,
                 "HMAC" : computeHMAC(url, auth),
                 "DRIVER-LATITUDE" : latVal.toString(),
@@ -86,10 +126,11 @@ function searchForShipments() {
             },
             method: "GET",
             timeout: 5000,
+            async:false,
             success: function(json) {
-                var shipmentID = json["id"]
-                var shipmentPickupLatitude = json["pickupLatitude"]
-                var shipmentPickupLongitude = json["pickupLongitude"]
+                let shipmentID = json["id"]
+                let shipmentPickupLatitude = json["pickupLatitude"]
+                let shipmentPickupLongitude = json["pickupLongitude"]
                 shipments[shipmentID] = json
                 addShipmentsToResults()
                 updateProgressBar(Math.min(Math.round((progress / totalProgress) * 100), 100))
@@ -98,40 +139,44 @@ function searchForShipments() {
         })
     }
 
-    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude))
+    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth)
 
-    var progress = 0
-    var count = 0
-    var totalProgress = Math.pow(parseFloat(locationSweepRadius) / locStep, 2)
-
-    for (var lat = latStart; lat <= latEnd; lat += locStep) {
-        for (var lon = lonStart; lon <= lonEnd; lon += locStep) {
+    for (let lat = latStart; lat <= latEnd; lat += locStep) {
+        for (let lon = lonStart; lon <= lonEnd; lon += locStep) {
             if (count++ > 25) {
                 totalProgress = 1
+                let isEmptyTableBody = $("#results-table-body").is(':empty')
+
+                if (isEmptyTableBody) {
+                    setTimeout(showAlertOnError, 1000)
+                }
+
+                updateProgressBar(100)
+
                 return
             }
-            fetchNearestShipment(driver_latitude, lon)
+            fetchNearestShipment(driver_latitude, lon, url, auth)
         }
     }
 }
 
-function updateProgressBar(progress) {
+const updateProgressBar = function(progress) {
     $(".progress-bar").attr("aria-valuenow", progress).attr("style", "width: " + progress + "%")
     $("#progress-bar-text").text(progress + "% Complete")
 }
 
-function addShipmentsToResults() {
-    var resultsTableBody = $("#results-table-body")
+const addShipmentsToResults = function() {
+    let resultsTableBody = $("#results-table-body")
     resultsTableBody.empty()
     Object.entries(shipments).forEach(
         ([shipmentID, json]) => {
-            var shipmentID = json["id"]
-            var shipmentName = json["description"]
-            var shipmentGratuity = json["gratuity"]
-            var shipmentPickup = json["pickupName"]
-            var shipmentPickupDistance = json["pickupDistance"]
-            var shipmentDelivery = json["deliveryName"]
-            var grabShipmentButton = "<button type='button' class='btn btn-default' id='shipment-" + shipmentID + "'>Grab It!</button>"
+            shipmentID = json["id"]
+            let shipmentName = json["description"]
+            let shipmentGratuity = json["gratuity"]
+            let shipmentPickup = json["pickupName"]
+            let shipmentPickupDistance = json["pickupDistance"]
+            let shipmentDelivery = json["deliveryName"]
+            let grabShipmentButton = "<button type='button' class='btn btn-default' id='shipment-" + shipmentID + "'>Grab It!</button>"
             resultsTableBody.append(
                   "<tr>"
                 + "<th scope='row'>" + shipmentID + "</th>"
@@ -151,52 +196,52 @@ function addShipmentsToResults() {
     )
 }
 
-function grabShipment(shipmentID) {
-    var shipFastServerURL = $("#server-url-input").val()
-    var shipFastAPIKey = $("#shipfast-api-key-input").val()
-    var userAuthToken = $("#user-auth-token-input").val()
-    var driver_latitude = $("#location-latitude-input").val()
-    var driver_longitude = $("#location-longitude-input").val()
-
-    var url = shipFastServerURL + "/shipments/update_state/" + shipmentID
-    var auth = "Bearer " + userAuthToken
+const grabShipment = function(shipmentID) {
+    let url = getShipfastApiUrl("/shipments/update_state/" + shipmentID)
+    let auth = getUserAuthToken()
     $.ajax({
         url: url,
         headers: {
-            "API-KEY" : shipFastAPIKey,
+            "API-KEY" : getShipFastAPIKey(),
             "Authorization" : auth,
             "HMAC" : computeHMAC(url, auth),
-            "DRIVER-LATITUDE" : driver_latitude,
-            "DRIVER-LONGITUDE" : driver_longitude,
+            "DRIVER-LATITUDE" : getDriverLatitude(),
+            "DRIVER-LONGITUDE" : getDriverLongitude(),
             "SHIPMENT-STATE" : "1"
         },
         method: "POST",
         timeout: 5000,
+        async: false,
         success: function(json) {
-            alert("You got shipment ID" + shipmentID + " - check the app and enjoy the extra cash!\n\n@crackmaapi - don't forget da bitcoin pls")
             searchForShipments()
+            updateProgressBar(100)
+            alert("You got shipment ID" + shipmentID + " - check the app and enjoy the extra cash!\n\n@crackmaapi - don't forget da bitcoin pls")
         },
         error: function(xhr) {
-            alert("Man, it didn't work this time!")
+            showAlertOnError()
+            updateProgressBar(0)
         }
     })
+
 }
 
-function computeHMAC(url, idToken) {
-    if (currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION
-            || currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION)  {
-        var hmacSecret
-        if (currentDemoStage == DEMO_STAGE.HMAC_STATIC_SECRET_PROTECTION) {
+const computeHMAC = function(url, idToken) {
+    currentDemoStage = getShipfastDemoStage()
+
+    if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION
+            || currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION)  {
+        let hmacSecret
+        if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
             // Just use the static secret in the HMAC for this demo stage
             hmacSecret = HMAC_SECRET
         }
-        else if (currentDemoStage == DEMO_STAGE.HMAC_DYNAMIC_SECRET_PROTECTION) {
+        else if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
             // Obfuscate the static secret to produce a dynamic secret to
             // use in the HMAC for this demo stage
-            var staticSecret = HMAC_SECRET
-            var dynamicSecret = CryptoJS.enc.Base64.parse(staticSecret)
-            var shipFastAPIKey = CryptoJS.enc.Utf8.parse($("#shipfast-api-key-input").val())
-            for (var i = 0; i < Math.min(dynamicSecret.words.length, shipFastAPIKey.words.length); i++) {
+            let staticSecret = HMAC_SECRET
+            let dynamicSecret = CryptoJS.enc.Base64.parse(staticSecret)
+            let shipFastAPIKey = CryptoJS.enc.Utf8.parse($("#shipfast-api-key-input").val())
+            for (let i = 0; i < Math.min(dynamicSecret.words.length, shipFastAPIKey.words.length); i++) {
                 dynamicSecret.words[i] ^= shipFastAPIKey.words[i]
             }
             dynamicSecret = CryptoJS.enc.Base64.stringify(dynamicSecret)
@@ -204,11 +249,11 @@ function computeHMAC(url, idToken) {
         }
 
         if (hmacSecret) {
-            var parser = document.createElement('a')
+            let parser = document.createElement('a')
             parser.href = url
-            var msg = parser.protocol.substring(0, parser.protocol.length - 1)
+            let msg = parser.protocol.substring(0, parser.protocol.length - 1)
                 + parser.hostname + parser.pathname + idToken
-            var hmac = CryptoJS.HmacSHA256(msg, CryptoJS.enc.Base64.parse(hmacSecret)).toString(CryptoJS.enc.Hex)
+            let hmac = CryptoJS.HmacSHA256(msg, CryptoJS.enc.Base64.parse(hmacSecret)).toString(CryptoJS.enc.Hex)
             return hmac
         }
     }

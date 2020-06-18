@@ -17,6 +17,7 @@
     "faker": "^4.1.0",
     "jwks-rsa": "^1.2.0",
     "mersenne-twister": "^1.1.0",
+    "node-cache": "^5.1.1",
     "random-location": "^1.1.2",
     "selfsigned": "^1.10.1"
   },

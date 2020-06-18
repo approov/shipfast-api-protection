@@ -7,6 +7,16 @@ const FAKER = require('faker');
 const config = require('./config/server').config
 const randomLocation = require('random-location')
 
+// @link https://github.com/node-cache/node-cache
+const NodeCache = require( "node-cache" );
+const cache = new NodeCache(
+    {
+        stdTTL: 7200, // 2 hours
+        checkperiod: 120, // 2 minutes
+        useClones: false // we get back a reference to the value in memory
+    }
+);
+
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
 const MAX_GRATUITY = 30
@@ -25,17 +35,13 @@ const DRIVER_COORDINATES = {
 //   already removed from `shipments`, therefore any subsequent calls to that shipmentID will fail.
 const MAX_SHIPMENT_DISTANCE_IN_METRES = 20000
 const TOTAL_SHIPMENTS_TO_CREATE = 100 // 10 * 5 = 50 shipments to create in each batch.
-const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 2 // 50 * 5 = 250 shipments max in memory at any given time.
+const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 5 // 50 * 5 = 250 shipments max in memory at any given time.
 const MAX_DELIVERED_SHIPMENTS = 10 // Max of last delivered shipments to return to the mobile app.
 
 let TOTAL_SHIPMENT_COUNT = 0 // keeps track of total shipments created since server was started/re-started.
 let NEXT_SHIPMENT_TO_DELETE = 0 // keeps track of the oldest shipment ID in the `shipments` object.
 
-// The shipments object
-let shipments = {}
-
 function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
-
     return FAKER.random.number({
         'min': min,
         'max': max
@@ -48,7 +54,14 @@ function calculateShipmentGratuity(shipmentID) {
 }
 
 // A function to populate this model with a collection of sample shipment data base on a given location
-function populateShipments(originLatitude, originLongitude) {
+function populateShipments(originLatitude, originLongitude, user_uid) {
+    log.info("USER UID HASH: " + user_uid)
+
+    let shipments = {}
+
+    if (cache.has(user_uid)) {
+        shipments = cache.get(user_uid)
+    }
 
     log.info("--------------------------- START ------------------------")
     log.info("MAX_TOTAL_SHIPMENT_COUNT: " + MAX_TOTAL_SHIPMENT_COUNT)
@@ -80,52 +93,62 @@ function populateShipments(originLatitude, originLongitude) {
             deliver.longitude,
         )
 
+
         TOTAL_SHIPMENT_COUNT++
 
-        if (Object.keys(shipments).length > MAX_TOTAL_SHIPMENT_COUNT) {
+        if (Object.keys(shipments).length >= MAX_TOTAL_SHIPMENT_COUNT) {
 
-            log.warning("SHIPMENT_TO_DELETE: " + NEXT_SHIPMENT_TO_DELETE)
-
-            // remove first element
-            delete shipments[NEXT_SHIPMENT_TO_DELETE]
-            NEXT_SHIPMENT_TO_DELETE++
+            log.info("Populated the shipments with a total of: " + MAX_TOTAL_SHIPMENT_COUNT)
+            break
         }
     }
+
+    cached = cache.set(user_uid, shipments)
+    console.debug(cached, "CACHED")
 
     log.info("TOTAL_SHIPMENT_COUNT_AFTER: " + TOTAL_SHIPMENT_COUNT)
     log.info("--------------------------- END ------------------------")
 }
 
-const reCalculateNearestShipment = function(originLatitude, originLongitude) {
+const reCalculateNearestShipment = function(originLatitude, originLongitude, user_uid) {
 
-    populateShipments(originLatitude, originLongitude)
+    populateShipments(originLatitude, originLongitude, user_uid)
 
-    return findNearestShipment(originLatitude, originLongitude)
+    return findNearestShipment(originLatitude, originLongitude, user_uid)
 }
 
 // A function to calculate and return the nearest shipment to a given location
-const calculateNearestShipment = function(originLatitude, originLongitude) {
+const calculateNearestShipment = function(originLatitude, originLongitude, user_uid) {
 
     // Ensure we've populated the model with some sample data for this session
-    if (Object.keys(shipments).length == 0) {
-        populateShipments(originLatitude, originLongitude)
+    if (!cache.has(user_uid)) {
+        populateShipments(originLatitude, originLongitude, user_uid)
+    } else {
+
+        let shipments = cache.get(user_uid)
+
+        if (!shipments || Object.keys(shipments).length < MAX_TOTAL_SHIPMENT_COUNT) {
+            populateShipments(originLatitude, originLongitude, user_uid)
+        }
     }
 
-    nearestShipment = findNearestShipment(originLatitude, originLongitude)
+    nearestShipment = findNearestShipment(originLatitude, originLongitude, user_uid)
 
     if (!nearestShipment) {
-        return reCalculateNearestShipment(originLatitude, originLongitude)
+        return reCalculateNearestShipment(originLatitude, originLongitude, user_uid)
     }
 
     return nearestShipment
 }
 
-function findNearestShipment(originLatitude, originLongitude) {
+function findNearestShipment(originLatitude, originLongitude, user_uid) {
 
     let pickup = {
         latitude: originLatitude,
         longitude: originLongitude
     }
+
+    let shipments = cache.get(user_uid)
 
     // Iterate through the shipments and find the one closest to our given location
     for (let shipmentID in shipments) {
@@ -168,10 +191,10 @@ const formatShipmentDistance = function(distance) {
     return formatted_distance + " " + distance_unit
 }
 
-const updateShipmentState = function(shipmentID, newState) {
+const updateShipmentState = function(shipmentID, newState, user_uid) {
 
     // Find the shipment with the given ID
-    let shipment = getShipment(shipmentID)
+    let shipment = getShipment(shipmentID, user_uid)
 
     if (!shipment) {
       log.error("\nNo shipment found for ID " + shipmentID + "\n")
@@ -192,10 +215,12 @@ const updateShipmentState = function(shipmentID, newState) {
 }
 
 // A function to calculate and return an array of shipments in a 'DELIVERED' state
-const getDeliveredShipments = function() {
+const getDeliveredShipments = function(user_uid) {
 
     let countDelivered = 0
     let deliveredShipments = []
+
+    let shipments = cache.get(user_uid)
 
     Object.entries(shipments).reverse().filter(
         ([shipmentID, shipment]) => {
@@ -217,7 +242,9 @@ const getDeliveredShipments = function() {
 }
 
 // A function to retrieve the active shipment, if available (i.e. in an 'ACCEPTED' or 'COLLECTED' state)
-const getActiveShipment = function() {
+const getActiveShipment = function(user_uid) {
+
+    let shipments = cache.get(user_uid)
 
     for (let shipmentID in shipments) {
         let shipment = shipments[shipmentID]
@@ -231,7 +258,8 @@ const getActiveShipment = function() {
 }
 
 // A function to return the shipment with the given ID (or 'undefined' if not found)
-const getShipment = function(shipmentID) {
+const getShipment = function(shipmentID, user_uid) {
+    let shipments = cache.get(user_uid)
     return shipments[shipmentID]
 }
 

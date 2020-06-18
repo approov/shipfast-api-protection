@@ -24,8 +24,7 @@ const checkUserAuthJWT = jwt({
 router.use(checkUserAuthJWT)
 
 router.use(function(req, res, next) {
-
-  log.success("\nAUTH0: Valid Authorization token \n")
+  log.success("\nAUTH0: Valid Authorization token")
   next()
 })
 

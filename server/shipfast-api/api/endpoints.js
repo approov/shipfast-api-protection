@@ -2,11 +2,16 @@ const model = require('./model')
 const log = require('./utils/logging')
 const express = require('express')
 const router = express.Router()
+const crypto = require('crypto')
+
+const hash = function(text) {
+  return crypto.createHash('sha256').update(text, 'utf-8').digest('hex')
+}
 
 // The '/shipments/nearest_shipment' GET request route
 router.get('/shipments/nearest_shipment', function(req, res) {
 
-  log.info("\n\nENDPOINT: /shipments/nearest_shipment\n")
+  log.info("\nENDPOINT: /shipments/nearest_shipment")
 
   // Retrieve the location data from the request headers
   var latitude = parseFloat(req.get('DRIVER-LATITUDE'))
@@ -21,10 +26,9 @@ router.get('/shipments/nearest_shipment', function(req, res) {
   log.debug("\nLatitude: " + latitude + "\nLongitude: " + longitude + "\n")
 
   // Calculate the nearest shipment to the given location
-  let nearestShipment = model.calculateNearestShipment(latitude, longitude)
+  let nearestShipment = model.calculateNearestShipment(latitude, longitude, hash(req.user.sub))
 
-  log.debug("\nNearest Shipment:")
-  log.raw(nearestShipment)
+  log.info("Nearest Shipment: " + nearestShipment.description)
 
   res.status(200).json(nearestShipment)
 })
@@ -32,10 +36,10 @@ router.get('/shipments/nearest_shipment', function(req, res) {
 // The '/shipments/delivered' GET request route
 router.get('/shipments/delivered', function(req, res) {
 
-  log.info("\n\nENDPOINT: /shipments/delivered\n")
+  log.info("\nENDPOINT: /shipments/delivered")
 
   // Calculate the array of delivered shipments
-  let deliveredShipments = model.getDeliveredShipments()
+  let deliveredShipments = model.getDeliveredShipments(hash(req.user.sub))
 
   res.status(200).json(deliveredShipments)
 })
@@ -43,10 +47,10 @@ router.get('/shipments/delivered', function(req, res) {
 // The '/shipments/active' GET request route
 router.get('/shipments/active', function(req, res) {
 
-    log.info("\n\nENDPOINT: /shipments/active\n")
+    log.info("\nENDPOINT: /shipments/active\n")
 
     // Calculate the array of active shipments
-    let activeShipment = model.getActiveShipment()
+    let activeShipment = model.getActiveShipment(hash(req.user.sub))
     if (!activeShipment) {
       log.warning("\nNo active shipment found\n")
       res.status(200).json({})
@@ -60,7 +64,7 @@ router.get('/shipments/active', function(req, res) {
 // The '/shipments/:shipmentID' GET request route
 router.get('/shipments/:shipmentID', function(req, res) {
 
-  log.info("\n\nENDPOINT: /shipments/:shipmentID\n")
+  log.info("\nENDPOINT: /shipments/:shipmentID\n")
 
   // Retrieve the shipment ID from the request header
   let shipmentID = parseInt(req.params.shipmentID)
@@ -71,7 +75,7 @@ router.get('/shipments/:shipmentID', function(req, res) {
   }
 
   // Find the shipment with the given ID
-  let shipment = model.getShipment(shipmentID)
+  let shipment = model.getShipment(shipmentID, hash(req.user.sub))
   if (!shipment) {
     log.error("\nNo shipment found for ID: " + shipmentID)
     res.status(404).send()
@@ -88,7 +92,7 @@ router.get('/shipments/:shipmentID', function(req, res) {
 // The '/shipments/update_state/:shipmentID' POST request route
 router.post('/shipments/update_state/:shipmentID', function(req, res) {
 
-  log.info("\n\nENDPOINT: /shipments/update_state/:shipmentID\n")
+  log.info("\nENDPOINT: /shipments/update_state/:shipmentID\n")
 
   // Retrieve the shipment ID from the request header
   let shipmentID = parseInt(req.params.shipmentID)
@@ -117,7 +121,7 @@ router.post('/shipments/update_state/:shipmentID', function(req, res) {
     return
   }
 
-  isUpdated = model.updateShipmentState(shipmentID, newState)
+  isUpdated = model.updateShipmentState(shipmentID, newState, hash(req.user.sub))
 
   if (isUpdated) {
       log.warning("\nState of shipment " + shipmentID + " updated to " + newState + "\n")

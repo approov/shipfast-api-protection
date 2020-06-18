@@ -77,6 +77,8 @@ services:
     networks:
       - shipfast
       - traefik
+    ports:
+      - 127.0.0.1:${SHIPRAIDER_HTTP_PORT}:${SHIPRAIDER_HTTP_PORT}
     labels:
       - "traefik.enable=true"
       - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web"

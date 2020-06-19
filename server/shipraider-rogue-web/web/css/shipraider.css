@@ -23,3 +23,20 @@ body {
     background-color: red;
     color: white;
 }
+
+.no-gratuity {
+    opacity: 0.5
+}
+
+.with-gratuity {
+    font-weight: bold;
+}
+
+.good-gratuity {
+    font-weight: bold;
+    color: #449544;
+}
+
+.active-shipment {
+    background: #81df81;
+}

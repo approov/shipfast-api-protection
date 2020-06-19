@@ -39,6 +39,11 @@ $("#search-shipments-button").click(function(event) {
     searchForShipments()
 })
 
+$("#refresh-shipments-button").click(function(event) {
+    event.preventDefault()
+    searchForShipments()
+})
+
 const getShipfastApiUrl = function(endpoint) {
     return $("#shipfast-api-url").val() + "/" + getShipfastApiVersion() + endpoint
 }
@@ -176,12 +181,26 @@ const addShipmentsToResults = function() {
             let shipmentPickup = json["pickupName"]
             let shipmentPickupDistance = json["pickupDistance"]
             let shipmentDelivery = json["deliveryName"]
-            let grabShipmentButton = "<button type='button' class='btn btn-default' id='shipment-" + shipmentID + "'>Grab It!</button>"
+            let gratuityRowClass = "no-gratuity"
+            let gratuityValueClass = "no-gratuity"
+            let buttonClass = "btn-default"
+
+            if (shipmentGratuity.substr(1) > 0) {
+                gratuityRowClass = "gratuity-row"
+                gratuityValueClass = "with-gratuity"
+                buttonClass = "btn-success"
+            }
+
+            if (shipmentGratuity.substr(1) > 5) {
+                gratuityValueClass = "good-gratuity"
+            }
+
+            let grabShipmentButton = "<button type='button' class='btn " + buttonClass + "' id='shipment-" + shipmentID + "'>Grab It!</button>"
             resultsTableBody.append(
-                  "<tr>"
-                + "<th scope='row'>" + shipmentID + "</th>"
+                  "<tr id=shipment-row-" + shipmentID + " class=" + gratuityRowClass + ">"
+                + "<td>" + shipmentID + "</td>"
                 + "<td>" + shipmentName + "</td>"
-                + "<td>" + shipmentGratuity + "</td>"
+                + "<td class=" + gratuityValueClass + ">" + shipmentGratuity + "</td>"
                 + "<td>" + shipmentPickup + "</td>"
                 + "<td>" + shipmentPickupDistance + "</td>"
                 + "<td>" + shipmentDelivery + "</td>"
@@ -213,8 +232,9 @@ const grabShipment = function(shipmentID) {
         timeout: 5000,
         async: false,
         success: function(json) {
-            searchForShipments()
             updateProgressBar(100)
+            $("#shipment-row-" + shipmentID).addClass("active-shipment")
+            $("#shipment-" + shipmentID).prop('disabled', true);
             alert("You got shipment ID" + shipmentID + " - check the app and enjoy the extra cash!\n\n@crackmaapi - don't forget da bitcoin pls")
         },
         error: function(xhr) {

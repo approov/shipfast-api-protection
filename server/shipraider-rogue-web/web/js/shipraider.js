@@ -143,7 +143,7 @@ const searchForShipments = function() {
 
     for (let lat = latStart; lat <= latEnd; lat += locStep) {
         for (let lon = lonStart; lon <= lonEnd; lon += locStep) {
-            if (count++ > 25) {
+            if (count++ > 100) {
                 totalProgress = 1
                 let isEmptyTableBody = $("#results-table-body").is(':empty')
 
@@ -155,7 +155,7 @@ const searchForShipments = function() {
 
                 return
             }
-            fetchNearestShipment(driver_latitude, lon, url, auth)
+            fetchNearestShipment(lat, lon, url, auth)
         }
     }
 }

@@ -7,6 +7,7 @@ const FAKER = require('faker');
 const config = require('./config/server').config
 const randomLocation = require('random-location')
 
+// We will cache generated shipments by user id.
 // @link https://github.com/node-cache/node-cache
 const NodeCache = require( "node-cache" );
 const cache = new NodeCache(
@@ -25,21 +26,23 @@ const DRIVER_COORDINATES = {
   longitude: config.DRIVER_LONGITUDE
 }
 
-// DANGER: tweaking any of the following constant values can lead to unexpected behavior when Shipraider queries the API.
+// ATTENTION:
 //
-// The reason is that when we try to find the nearest shipment we try to find one stored in `shipments`, and if none is
-//  within the MAX_SHIPMENT_DISTANCE_IN_METRES, we generate a new one, and when the MAX_TOTAL_SHIPMENT_COUNT is reached
-//  we start to remove the oldest entry from `shipments` in order to protect against memory leaks.
-// So if the MAX_SHIPMENT_DISTANCE_IN_METRES is to short it will be hard to find a shipment, and new ones will be
-//  constantly generated, meaning that when a Shipraider asks for a batch it can have the first entries on that batch
-//   already removed from `shipments`, therefore any subsequent calls to that shipmentID will fail.
-const MAX_SHIPMENT_DISTANCE_IN_METRES = 20000
+// Tweaking any of the following constant values will change how shipments are
+// created and stored in the cache, thus affecting how many can be returned has
+// being within the sweep radius used by default for when Shipraider queries the
+// API.
+//
+// The following constant values guarantee that we always match around 10 to
+// 20 shipments for each time we click in search shipments on Shipraider.
+const MAX_SHIPMENT_DISTANCE_IN_METRES = 30000
 const TOTAL_SHIPMENTS_TO_CREATE = 100 // 10 * 5 = 50 shipments to create in each batch.
-const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 5 // 50 * 5 = 250 shipments max in memory at any given time.
-const MAX_DELIVERED_SHIPMENTS = 10 // Max of last delivered shipments to return to the mobile app.
+const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 4 // 50 * 5 = 250 shipments max in memory at any given time.
 
 let TOTAL_SHIPMENT_COUNT = 0 // keeps track of total shipments created since server was started/re-started.
 let NEXT_SHIPMENT_TO_DELETE = 0 // keeps track of the oldest shipment ID in the `shipments` object.
+
+const MAX_DELIVERED_SHIPMENTS = 10 // Max of last delivered shipments to return to the mobile app.
 
 function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
     return FAKER.random.number({
@@ -79,7 +82,7 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
         const pickup = randomLocation.randomCirclePoint(DRIVER_COORDINATES, MAX_SHIPMENT_DISTANCE_IN_METRES)
 
         // Get deliver coordinates at the exactly `MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3` from the pickup coordinates..
-        const deliver = randomLocation.randomCircumferencePoint(pickup, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3)
+        const deliver = randomLocation.randomCirclePoint(DRIVER_COORDINATES, MAX_SHIPMENT_DISTANCE_IN_METRES)
 
         shipments[shipmentID] = new Shipment(
             shipmentID,
@@ -93,11 +96,9 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
             deliver.longitude,
         )
 
-
         TOTAL_SHIPMENT_COUNT++
 
         if (Object.keys(shipments).length >= MAX_TOTAL_SHIPMENT_COUNT) {
-
             log.info("Populated the shipments with a total of: " + MAX_TOTAL_SHIPMENT_COUNT)
             break
         }
@@ -127,7 +128,7 @@ const calculateNearestShipment = function(originLatitude, originLongitude, user_
 
         let shipments = cache.get(user_uid)
 
-        if (!shipments || Object.keys(shipments).length < MAX_TOTAL_SHIPMENT_COUNT) {
+        if (Object.keys(shipments).length < MAX_TOTAL_SHIPMENT_COUNT) {
             populateShipments(originLatitude, originLongitude, user_uid)
         }
     }

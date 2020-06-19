@@ -60,6 +60,11 @@ function calculateShipmentGratuity(shipmentID) {
 function populateShipments(originLatitude, originLongitude, user_uid) {
     log.info("USER UID HASH: " + user_uid)
 
+    const driver_coordinates = {
+        latitude: originLatitude,
+        longitude: originLongitude
+    }
+
     let shipments = {}
 
     if (cache.has(user_uid)) {
@@ -79,10 +84,10 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
         let gratuity = calculateShipmentGratuity(shipmentID)
 
         // Get pickup random coordinates from within `MAX_SHIPMENT_DISTANCE_IN_METRES` of the `DRIVER_COORDINATES`.`
-        const pickup = randomLocation.randomCirclePoint(DRIVER_COORDINATES, MAX_SHIPMENT_DISTANCE_IN_METRES)
+        const pickup = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES)
 
         // Get deliver coordinates at the exactly `MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3` from the pickup coordinates..
-        const deliver = randomLocation.randomCirclePoint(DRIVER_COORDINATES, MAX_SHIPMENT_DISTANCE_IN_METRES)
+        const deliver = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES)
 
         shipments[shipmentID] = new Shipment(
             shipmentID,

@@ -40,3 +40,11 @@ body {
 .active-shipment {
     background: #81df81;
 }
+
+#configuration-footer {
+    margin: 1rem auto;
+}
+
+#configuration-footer button {
+    margin-right: 2rem;
+}

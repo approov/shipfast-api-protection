@@ -6,8 +6,8 @@
         <title>ShipRaider by @crackmyapi</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="css/shipraider.css"/>
-        <script src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-        <script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     </head>
     <body >
         <div class="container">
@@ -50,27 +50,33 @@
                             <span class="input-group-addon" id="user-auth-token">User Auth Token</span>
                             <input type="text" class="form-control" id="user-auth-token-input" placeholder="stick ur auth token ere" aria-describedby="user-auth-token">
                             <span class="input-group-btn">
-                                <button class="btn btn-secondary" id="login-button" type="button">Login</button>
+                                <button class="btn btn-primary" id="login-button" type="button">Login</button>
                             </span>
                         </div>
-                        <div class="input-group">
-                            <span class="input-group-addon" id="location-latitude">Location Latitude</span>
-                            <input type="text" class="form-control" id="location-latitude-input" aria-describedby="location-latitude" value="<%= DRIVER_LATITUDE %>">
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-addon" id="location-longitude">Location Longitude</span>
-                            <input type="text" class="form-control" id="location-longitude-input" aria-describedby="location-longitude" value="<%= DRIVER_LONGITUDE %>">
-                        </div>
+
                         <div class="input-group">
                             <span class="input-group-addon" id="location-sweep-radius">Location Sweep Radius</span>
-                            <input type="text" class="form-control" id="location-sweep-radius-input" placeholder="radius u wanna search 4 shipments" aria-describedby="location-sweep-radius" value="1.0">
+                            <input type="text" class="form-control" id="location-sweep-radius-input" placeholder="radius u wanna search 4 shipments" aria-describedby="location-sweep-radius" value="0.5">
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon" id="location-sweep-step">Location Sweep Step</span>
                             <input type="text" class="form-control" id="location-sweep-step-input" aria-describedby="location-sweep-step" value="0.075">
                         </div>
-                        <br/>
-                        <button id="search-shipments-button" type="submit" class="btn btn-default">Search for Shipments!&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="location-latitude"><strong>Location Latitude</strong></span>
+                            <input type="text" class="form-control" id="location-latitude-input" aria-describedby="location-latitude" value="<%= DRIVER_LATITUDE %>">
+                        </div>
+                        <div class="input-group">
+                            <span class="input-group-addon" id="location-longitude"><strong>Location Longitude</strong></span>
+                            <input type="text" class="form-control" id="location-longitude-input" aria-describedby="location-longitude" value="<%= DRIVER_LONGITUDE %>">
+                        </div>
+
+                        <div id="configuration-footer">
+                            <button id="find-me" class="btn btn-primary">Find my location&nbsp;<svg class="bi bi-geo-alt" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg></button>
+
+                            <button id="search-shipments-button" type="submit" class="btn btn-default">Search for Shipments!&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                        </div>
+
                     </div>
                 </div>
             </form>
@@ -115,9 +121,10 @@
             const SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_STATIC_SECRET_PROTECTION %>";
             const SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_DYNAMIC_SECRET_PROTECTION %>";
         </script>
-        <script src="https://cdn.auth0.com/js/auth0/8.10.1/auth0.min.js"></script>
-        <script src="https://cdn.auth0.com/js/lock/10.21.1/lock.min.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
-        <script src="js/shipraider.js"></script>
+        <script type="text/javascript" src="https://cdn.auth0.com/js/auth0/8.10.1/auth0.min.js"></script>
+        <script type="text/javascript" src="https://cdn.auth0.com/js/lock/10.21.1/lock.min.js"></script>
+        <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>
+        <script type="text/javascript" src="js/geolocation.js"></script>
+        <script type="text/javascript" src="js/shipraider.js"></script>
     </footer>
 </html>

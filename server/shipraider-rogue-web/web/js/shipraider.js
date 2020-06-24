@@ -93,6 +93,7 @@ const searchForShipments = function() {
 
     let count = 0
     let progress = 0
+    let hasJsonError = false
 
     let driver_latitude = getDriverLatitude()
     let driver_longitude = getDriverLongitude()
@@ -120,6 +121,11 @@ const searchForShipments = function() {
 
     const fetchNearestShipment = function(latVal, lonVal, url, auth) {
 
+        progress++
+        let progress_made = progress / totalProgress
+        let current_progress = Math.min(Math.round((progress_made) * 100), 100)
+        updateProgressBar(current_progress)
+
         $.ajax({
             url: url,
             headers: {
@@ -131,20 +137,37 @@ const searchForShipments = function() {
             },
             method: "GET",
             timeout: 5000,
+            dataType: "json",
             async:false,
             success: function(json) {
+                hasJsonError = false
+
                 let shipmentID = json["id"]
                 let shipmentPickupLatitude = json["pickupLatitude"]
                 let shipmentPickupLongitude = json["pickupLongitude"]
                 shipments[shipmentID] = json
+
                 addShipmentsToResults()
-                updateProgressBar(Math.min(Math.round((progress / totalProgress) * 100), 100))
-                progress++
+            },
+            error: function(xhr) {
+                const json = xhr.responseJSON
+
+                if (json && json.error) {
+                    alert(json.error)
+                    updateProgressBar(0)
+                    hasJsonError = true
+                } else {
+                    hasJsonError = false
+                }
             }
         })
     }
 
     fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth)
+
+    if (hasJsonError) {
+        return
+    }
 
     for (let lat = latStart; lat <= latEnd; lat += locStep) {
         for (let lon = lonStart; lon <= lonEnd; lon += locStep) {

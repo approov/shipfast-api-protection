@@ -35,7 +35,7 @@ const DRIVER_COORDINATES = {
 //
 // The following constant values guarantee that we always match around 10 to
 // 20 shipments for each time we click in search shipments on Shipraider.
-const MAX_SHIPMENT_DISTANCE_IN_METRES = 30000
+const MAX_SHIPMENT_DISTANCE_IN_METRES = 20000
 const TOTAL_SHIPMENTS_TO_CREATE = 100 // 10 * 5 = 50 shipments to create in each batch.
 const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 4 // 50 * 5 = 250 shipments max in memory at any given time.
 
@@ -84,10 +84,10 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
         let gratuity = calculateShipmentGratuity(shipmentID)
 
         // Get pickup random coordinates from within `MAX_SHIPMENT_DISTANCE_IN_METRES` of the `DRIVER_COORDINATES`.`
-        const pickup = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES)
+        const pickup = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.5)
 
         // Get deliver coordinates at the exactly `MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3` from the pickup coordinates..
-        const deliver = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES)
+        const deliver = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.5)
 
         shipments[shipmentID] = new Shipment(
             shipmentID,
@@ -124,24 +124,45 @@ const reCalculateNearestShipment = function(originLatitude, originLongitude, use
 }
 
 // A function to calculate and return the nearest shipment to a given location
-const calculateNearestShipment = function(originLatitude, originLongitude, user_uid) {
+const calculateNearestShipment = function(originLatitude, originLongitude, user_uid, user_agent) {
 
     // Ensure we've populated the model with some sample data for this session
-    if (!cache.has(user_uid)) {
+    if (!cache.has(user_uid) && user_agent.startsWith("okhttp")) {
+        const coordinates =
+
+        // Store the coordinates provided by the mobile app. This coordinates
+        // will be used only to generate more shipments in a future request,
+        // where we are not able to find a nearest shipment for Shipraider.
+        cache.set("coordinates", {
+            [user_uid]: {
+                latitude: originLatitude,
+                longitude: originLongitude
+            }
+        })
+
         populateShipments(originLatitude, originLongitude, user_uid)
-    } else {
-
-        let shipments = cache.get(user_uid)
-
-        if (Object.keys(shipments).length < MAX_TOTAL_SHIPMENT_COUNT) {
-            populateShipments(originLatitude, originLongitude, user_uid)
-        }
+    } else if (!cache.has(user_uid) && !user_agent.startsWith("okhttp")) {
+        return {error: "Please use first the Shipfast mobile app before you try the demo from Shipraider."}
     }
 
     nearestShipment = findNearestShipment(originLatitude, originLongitude, user_uid)
 
     if (!nearestShipment) {
-        return reCalculateNearestShipment(originLatitude, originLongitude, user_uid)
+
+        if (user_agent.startsWith("okhttp")) {
+            // For mobile app requests
+            const location = {
+                latitude: originLatitude,
+                longitude: originLongitude
+            }
+        } else {
+            // For Shipraider requests
+            const location = cache.get("coordinates")[user_uid]
+        }
+
+        log.info("RECALCULATE COORDINATES")
+        log.debug(location)
+        return reCalculateNearestShipment(location.latitude, location.ongitude, user_uid)
     }
 
     return nearestShipment

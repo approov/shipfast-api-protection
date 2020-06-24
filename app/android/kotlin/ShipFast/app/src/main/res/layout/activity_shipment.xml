@@ -110,7 +110,8 @@
 
     </GridLayout>
 
-    <com.google.android.gms.maps.MapView
+    <fragment xmlns:android="http://schemas.android.com/apk/res/android"
+        xmlns:tools="http://schemas.android.com/tools"
         android:id="@+id/mapView"
         android:layout_width="0dp"
         android:layout_height="0dp"
@@ -121,7 +122,9 @@
         app:layout_constraintBottom_toTopOf="@+id/nextStateButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/gridLayout" />
+        app:layout_constraintTop_toBottomOf="@+id/gridLayout"
+        android:name="com.google.android.gms.maps.SupportMapFragment"
+        tools:context="com.example.currentplacedetailsonmap.MapsActivityCurrentPlace" />
 
     <Button
         android:id="@+id/nextStateButton"

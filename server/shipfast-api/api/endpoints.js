@@ -11,6 +11,11 @@ const hash = function(text) {
 // The '/shipments/nearest_shipment' GET request route
 router.get('/shipments/nearest_shipment', function(req, res) {
 
+  user_agent = req.headers["user-agent"]
+  log.info("\nUSER AGENT: " + user_agent)
+
+  user_uid = hash(req.user.sub)
+
   log.info("\nENDPOINT: /shipments/nearest_shipment")
 
   // Retrieve the location data from the request headers
@@ -26,11 +31,22 @@ router.get('/shipments/nearest_shipment', function(req, res) {
   log.debug("\nLatitude: " + latitude + "\nLongitude: " + longitude + "\n")
 
   // Calculate the nearest shipment to the given location
-  let nearestShipment = model.calculateNearestShipment(latitude, longitude, hash(req.user.sub))
+  let nearestShipment = model.calculateNearestShipment(latitude, longitude, user_uid, user_agent)
 
-  log.info("Nearest Shipment: " + nearestShipment.description)
+  if (nearestShipment && nearestShipment.error) {
+    log.error("\nError:\n" + nearestShipment.error)
+    res.status(400).json(nearestShipment)
+    return
+  }
 
-  res.status(200).json(nearestShipment)
+  if (nearestShipment) {
+    log.info("Nearest Shipment: " + nearestShipment.description)
+
+    res.status(200).json(nearestShipment)
+  }
+
+  log.warning("\nUnable to find a nearest shipment...\n")
+  res.status(400).send()
 })
 
 // The '/shipments/delivered' GET request route

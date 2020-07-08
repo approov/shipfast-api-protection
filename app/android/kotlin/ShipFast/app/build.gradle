@@ -4,6 +4,11 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+Properties properties = new Properties()
+if (project.rootProject.file('local.properties').canRead()) {
+    properties.load(project.rootProject.file("local.properties").newDataInputStream())
+}
+
 // Reads the `.env` file in the root of the project and creates the file `app/android/kotlin/ShipFast/app/src/main/cpp/.jni.env.h`
 //  with the environment variables that will be injected inside native C code when it compiles the
 //  mobile app. This variables will be made available to the Kotlin code via the JNI interface.
@@ -33,10 +38,26 @@ android {
 
         resValue "string", "ANDROID_GEO_API_KEY", "$System.env.ANDROID_GEO_API_KEY"
     }
+    signingConfigs {
+        release {
+            storeFile file("${properties.getProperty('android.keystore.path')}")
+            keyAlias "${properties.getProperty('android.private.key.alias')}"
+            storePassword "${properties.getProperty('android.keystore.password')}"
+            keyPassword "${properties.getProperty('android.private.key.password')}"
+        }
+    }
     buildTypes {
         release {
+            debuggable false
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
         }
     }
     compileOptions {
@@ -47,6 +68,9 @@ android {
         cmake {
             path file('./src/main/cpp/CMakeLists.txt')
         }
+    }
+    lintOptions {
+        abortOnError false
     }
 }
 
@@ -68,5 +92,5 @@ dependencies {
     implementation 'com.google.android.material:material:1.1.0'
 
     // *** UNCOMMENT THE CODE BELOW FOR APPROOV ***
-    //implementation project(':approov')
+    // implementation project(':approov')
 }

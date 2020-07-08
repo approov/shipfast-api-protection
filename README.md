@@ -1,23 +1,13 @@
 # ShipFast API Protection Walkthrough
 
-Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts on practical API security techniques.
-
-This demo will walk you through the process of defending against various exploits in a mobile application to gain access to data on a remote server allowing real users of the system to gain an unfair business advantage at the expense of the company.
-
-## REQUIREMENTS
-
-The Shipfast demo has three components: Shipfast API, Shipraider Web and Android Studio. In order to use dynamic certificate pinning, the Shipfast API needs to run in an online server. Once we already have an online server, we will use it to also run the ShipRaider web interface. Android Studio will run from your computer, inside a Docker container.
-
-### For Your Computer and Online Server:
-
-* [Docker](https://docs.docker.com/install/).
-* [Docker Compose](https://docs.docker.com/compose/install/) `>= 2.1`.
-* [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts on practical API security techniques, that will walk you through the process of defending against various exploits in a mobile application to gain access to data on a remote server allowing real users of the system to gain an unfair business advantage at the expense of the company.
 
 
 ## SETTING UP THE DEMO
 
-Both Android Studio, Shipfast API and Shipraider Web will depend on the `.env` file, therefore the online servers for Shipfast and Shipraider **MUST** use the same `.env` file used in your computer.
+Only required when you want to play around as you follow the blog post series.
+
+Regardless of the demo stack you will choose, the following steps are required.
 
 ### Clone the Shipfast Repository
 
@@ -27,7 +17,7 @@ git clone https://github.com/approov/shipfast-api-protection.git && cd shipfast-
 
 ### The Env File
 
-We will use a `.env` file in the root of this project to drive the configuration of the demo across the mobile app, Shipfast API and Shipraider Web.
+We will use a `.env` file in the root of this project to drive the configuration of the ShipFast demo.
 
 ```
 cp .env.example .env
@@ -37,36 +27,18 @@ Through the rest of this setup we will ask you several times to edit this file a
 
 ### The Shipfast API Key
 
-We need one to add into the `.env` file, and we can generate one with:
+The value for the `SHIPFAST_API_KEY` in the `.env` file needs to be:
 
 ```
-openssl rand -hex 64 | base64 | tr -d '\n'; echo
-```
-
-or with:
-
-```
-strings /dev/urandom | head -n 256 | openssl dgst -sha256
-```
-
-Now edit the `.env` file and add it:
-
-```
-SHIPFAST_API_KEY=your-api-key-here
+SHIPFAST_API_KEY=2db3be3ce3f9a96ab32bbb997a176dd0c70ad31086a88e26b5152e522d50d331
 ```
 
 ### The HMAC Secret
 
-To generate one:
+The value for the `SHIPFAST_API_HMAC_SECRET` in the `.env` file needs to be:
 
 ```
-openssl rand -base64 64 | tr -d '\n'; echo
-```
-
-Now copy the output and and add it into the `.env` file:
-
-```
-SHIPFAST_API_HMAC_SECRET=the-hmac-secret
+SHIPFAST_API_HMAC_SECRET=3XqYZ17+dy1LMmTNkCqlcsNy2kJEtuD8gzZaRV53bHKc9Lu2Qh4h9fVAcsyXSBcXvaKOWyKuaa3v4uWjOXGYYg==
 ```
 
 ### Google Maps API Key
@@ -105,218 +77,82 @@ AUTH0_DOMAIN=your-domain-for-auth0
 AUTH0_CLIENT_ID=your-auth0-client-id
 ```
 
-### The Shipfast and Shipraider Domains
 
-The Shipfast mobile app will need to communicate with the Shipfast API and for that to happen we need to set `SHIPFAST_PUBLIC_DOMAIN` in the `.env` file.
+## THE DEMO STACK
 
-```
-SHIPFAST_PUBLIC_DOMAIN=shipfast.dev.example.com
-```
+To follow along the blog series and play around with the Shipfast mobile app we need to build the APK for the Shipfast app and have the ShipfFast API and the Shipraider Web interface running in an online server.
 
-During the demo the ShipRaider Web will be used to attack the ShipFast API, therefore we also need to set `SHIPRAIDER_PUBLIC_DOMAIN`:
+### For the Mobile App
 
-```
-SHIPRAIDER_PUBLIC_DOMAIN=shipraider.dev.example.com
-```
+#### From the Command Line
 
-### Optional Customization
+We recommend to build the APK with the bash scripts we provide, as per instructions from each blog in the series, because this makes easier and more consistent to follow the demo across the several demo stages, but you are free to not use this approach.
 
-If you want to customize the Shipfast demo to match your current location, currency and metric system, then follow [this instructions](/docs/CUSTOMIZE_THE_SHIPFAST_DEMO.md).
+#### Using the command line from a docker container
 
+The `apk` bash script in the root of the repo is a wrapper around a docker container with all the necessary dependencies to build the Android APK and install it in a real mobile device.
 
-### Building the Docker Image for Android Studio
+Using the docker container dispenses you from configuring your computer with the dependencies to run the demo, but we understand that not everyone has Docker installed, therefore alternatives are purposed below.
 
-```
-./shipfast build editor
-```
+>**IMPORTANT:** ADB server in your computer needs to be stopped when using this approach, because we cannot have two ADB servers connected to the real mobile device via USB. The bash script will stop the server for you, therefore after your are done with the demo you need to restart it again with `adb start-server`.
 
-### Running Android Studio from a Docker Container
+#### Using the command line from your computer
 
-```
-./shipfast up editor
-```
+To use the command line from your computer its necessary that all dependencies are available.
 
-The first time the Android Studio is open, its a fresh installation of it from scratch, therefore you will be prompted several times to configure the editor as usual.
+For example the Android build tools version `29.0.3` and the NDK version `21.0.6113669`. Bear in mind that is not an exhaustive list, because the dependencies to install will depend on your system, thats why we recommend to use the docker container approach.
 
-At some point of the build you may get this error:
+This approach will use the bash scripts at `app/android/kotlin/ShipFast/bin`.
 
-```
-A problem occurred configuring project ':app'.
-> com.android.builder.sdk.LicenceNotAcceptedException: Failed to install the following Android SDK packages as some licences have not been accepted.
-     ndk;21.0.6113669 NDK (Side by side) 21.0.6113669
-  To build this project, accept the SDK license agreements and install the missing components using the Android Studio SDK Manager.
-```
+#### With Android Studio from a Docker Container
 
-To fix it open `File > Settings > Appearance & Behavior > System Settings > Android Sdk`, then click in the `SDK Tools` tab, select the boxes for `LLDB, NDK (Side by side), CMake` , clik `ok` to install them, then accept the licenses in order for the installation to complete, and finally rebuild the project, but if fails again with the same error then the best is to invalidate caches and restart Android Studio, and then try to rebuild the project.
+Some companies restrict what Android Studio version a developer may be using and/or what they can install on it, thus we offer a docker image with Android Studio. Using this approach will not affect the current Android Studio installation on your computer, and when you are done with the demo you just remove the docker container and image to remove any traces of it in your system.
 
-Now you can use the AVD manager to create a mobile device, so that you can run Shipfast in the emulator.
+See how you can do it on the section: [Running Android Studio from a Docker Container](/docs/FULL_STACK.md#running-android-studio-from-a-docker-container).
 
-Afterwards you need to open the Shipfast project, and:
+#### With your Android Studio
 
-* Build the project, and be prepared for some more downloads.
-* Start the Shipfast app in the emulator:
-    + Enable high accuracy location in the emulator mobile device settings.
-    + In the emulator settings, set the location to the same driver coordinates you have on the `.env` file.
+If at work you don't have constrains in what version of Android Studio you can use, neither what can be installed on it, then you can just use this repo as any other mobile project you are used to work in to build the APK and run it in the emulator or mobile device.
 
-> **NOTE:** Before you can play with the Shipfast app on the emulator you need to setup the online server for the Shipfast API.
+### For the Backend
 
-### Setup the Online Server
+The backend is made of two NodeJS servers, one for the ShipFast API, and another for the ShipRaider web interface.
 
-Using a VPS provider or a Cloud Provider, just spin the cheapest Linux server they allow running on Debian or Ubuntu, because after you finish this demo you will throw it away, therefore it will cost you only a few cents.
+#### With our Online Servers
 
-You will also need to create a sub domain on a domain you own, that you will point to this new server, like `dev.example.com`. You can also throw it away after you are done with this demo.
+To make it easier to follow the demo we provide the ShipFast API at https://shipfast.demo.approov.io and the ShipRaider web interface at https://shipraider.demo.approov.io.
 
-#### Update the New Server
+#### With your Online Servers
 
-Assuming that you have a new brand server you should have now a shell as the `root` user, thus let's get it up to date with:
+If you prefer to be in control of the backend servers, then they need to be reachable from the Internet, therefore you need to deploy them into an online server. Deploying them on localhost will not allow for some of the best features of Approov to be seen in action, like the dynamic certificate pinning.
 
-```
-apt update && apt -y upgrade
-```
+You can deploy very easily your own online servers by following one of our guides:
 
-#### Create Unprivileged User
+* [AWS EC2 Traefik Setup](https://github.com/approov/aws-ec2-traefik-setup)
+* [Debian Setup](/docs/SETUP_ONLINE_DEBIAN_SERVER.md)
 
-We will not run the demo as `root`, because it's a best security practice to not run as `root`.
 
-Check if the server already have an unprivileged user:
+### The Full Stack
 
-```
-grep -irn :1000: /etc/passwd
-```
+If you want to be in control of the full stack, then please see the instructions [here](/docs/FULL_STACK.md).
 
-Output example for a server that already has one:
 
-```
-28:debian:x:1000:1000:Cloud-init-user,,,:/home/debian:/bin/bash
-```
+## RUNNING THE DEMO
 
-If you don't get any output, then it means it doesn't exist yet, thus you can add a new unprivileged user with:
-
-```
-adduser debian
-```
-> **NOTE**: Type you password and reply to all other questions with just hitting `enter`.
-
-Add the user to `sudo` with:
-
-```
-usermod -aG sudo debian
-```
-
-Switch to the `debian` user with:
-
-```
-su - debian
-```
-
-#### Clone the Shipfast Repository
-
-We need `git` for this:
-
-```
-sudo apt install -y git
-```
-
-Now we can clone the repo with:
-
-```bash
-git clone https://github.com/approov/shipfast-api-protection.git && cd shipfast-api-protection
-```
-
-#### Server Setup
-
-This will install Docker, Docker Compose, and Traefik running on a Docker container.
-
-This setup will use a `docker-compose.yml` file to setup a [Traefik](https://docs.traefik.io/) reverse proxy on port `80` and `443` for all docker containers running in the same host machine, therefore you cannot setup this in an existing server.
-
-> **NOTE:** Traefik is being used to automated the process of using `https` for the Shipfast API, because it will auto generate the TLS certificates, meaning zero effort from you to have `https`.
-
-##### Traefik `.env` file
-
-```
-cp ./traefik/.env.example ./traefik/.env
-```
-
-Now edit `./traefik/.env` to update the place-holder values with your own values:
-
-```
-nano ./traefik/.env
-```
-
-##### Run the Setup
-
-```
-sudo ./bin/setup-online-server.sh
-```
-
-#### Shipfast API and Shipraider Web Setup
-
-##### Copy the Env File from your Computer
-
-From your local computer run:
-
-```
-scp .env root@my-online-server-ip-or-domain:/home/debian/shipfast-api-protection
-```
-
-Confirm it exists in the online server:
-
-```
-ls -a | grep .env -
-```
-
-output should be like:
-
-```
-.env
-.env.example
-```
-
-#### Building the Docker Images
-
-```
-./shipfast build servers
-```
-
-#### Running the ShipFast API and ShipRaider Web
-
-Bring up with:
-
-```
-./shipfast up servers
-```
-
-Tail the logs with:
-
-```
-./shipfast logs servers
-```
-
-Restart with:
-
-```
-./shipfast restart servers
-```
-
-Bring down with:
-
-```
-./shipfast down servers
-```
-
-> **NOTE:** you can handle just the API server or the Web server by replacing `server` with `api` or `web`, like `./shipfast logs api`.
-
+Please follow the instructions for each stage of the demo as per instructions in [this series](https://blog.approov.io/tag/a-series-shipfast) of blog posts.
 
 ## TROUBLESHOOTING
 
 ### Environment values not reflected in the demo
 
-Every time you update the `.env` file you need to restart the editor, ShipFast API and the ShipRaider Web.
+* Every time you update the `.env` file you need to rebuild an install the ShipFast mobile app.
 
 ### Not Getting Active Shipments in the Mobile App
 
-Please ensure in the emulator settings that the default location is set to be as near as possible of the coordinates in the environment variables `DRIVER_LATITUDE` and `DRIVER_LONGITUDE`.
+Check in the `.env` file that `SHIPFAST_DEMO_STAGE` and `SHIPFAST_API_VERSION` have the correct values as per the comments on the same file.
 
-### ShipRaider Not Getting Shipments or just a couple of them
+### ShipRaider not Getting Shipments or just a couple of them
 
-Ensure that the driver coordinates in the web interface are as close as possible from the ones in the environment variables `DRIVER_LATITUDE` and `DRIVER_LONGITUDE`.
+* You need to login with same user as you have logged in the mobile app.
+* When using the mobile app in a real device you need to click in the find my location button first.
+* If you tweak the location sweep radius and/or the location sweep step you may get less or no shipments at all.

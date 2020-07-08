@@ -143,6 +143,11 @@ class ShipmentActivity : AppCompatActivity(), OnMapReadyCallback {
     }
 
     private fun getLocationPermission() {
+
+        if (locationPermissionGranted) {
+            return
+        }
+
         /*
          * Request location permission, so that we can get the location of the
          * device. The result of the permission request is handled by a callback,
@@ -169,10 +174,11 @@ class ShipmentActivity : AppCompatActivity(), OnMapReadyCallback {
                 if (grantResults.isNotEmpty() &&
                         grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                     locationPermissionGranted = true
+                    updateLocationUI()
+                    getDeviceLocation()
                 }
             }
         }
-        updateLocationUI()
     }
 
 
@@ -226,7 +232,7 @@ class ShipmentActivity : AppCompatActivity(), OnMapReadyCallback {
         this.map?.moveCamera(CameraUpdateFactory.newLatLngZoom(
                 LatLng(latitude, longitude), DEFAULT_ZOOM.toFloat()))
     }
-    
+
     /**
      * Updates the map's UI settings based on whether the user has granted location permission.
      */
@@ -242,7 +248,6 @@ class ShipmentActivity : AppCompatActivity(), OnMapReadyCallback {
                 this.map?.isMyLocationEnabled = false
                 this.map?.uiSettings?.isMyLocationButtonEnabled = false
                 this.lastKnownLocation = null
-                getLocationPermission()
             }
         } catch (e: SecurityException) {
             Log.e("Exception: %s", e.message, e)

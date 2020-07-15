@@ -1,7 +1,6 @@
 # ShipFast API Protection Walkthrough
 
-Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts on practical API security techniques, that will walk you through the process of defending against various exploits in a mobile application to gain access to data on a remote server allowing real users of the system to gain an unfair business advantage at the expense of the company.
-
+Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts on practical API security techniques. The series walks you through the process of defending a mobile API backend against various exploits which an attacker may use to gain access to the data it holds. In this demonstration scenario, the attack allows real users of the system to gain an unfair business advantage at the expense of the company.
 
 ## SETTING UP THE DEMO
 
@@ -19,7 +18,7 @@ git clone https://github.com/approov/shipfast-api-protection.git && cd shipfast-
 
 We will use a `.env` file in the root of this project to drive the configuration of the ShipFast demo.
 
-```
+```bash
 cp .env.example .env
 ```
 
@@ -29,7 +28,7 @@ Through the rest of this setup we will ask you several times to edit this file a
 
 The value for the `SHIPFAST_API_KEY` in the `.env` file needs to be:
 
-```
+```text
 SHIPFAST_API_KEY=2db3be3ce3f9a96ab32bbb997a176dd0c70ad31086a88e26b5152e522d50d331
 ```
 
@@ -37,7 +36,7 @@ SHIPFAST_API_KEY=2db3be3ce3f9a96ab32bbb997a176dd0c70ad31086a88e26b5152e522d50d33
 
 The value for the `SHIPFAST_API_HMAC_SECRET` in the `.env` file needs to be:
 
-```
+```text
 SHIPFAST_API_HMAC_SECRET=3XqYZ17+dy1LMmTNkCqlcsNy2kJEtuD8gzZaRV53bHKc9Lu2Qh4h9fVAcsyXSBcXvaKOWyKuaa3v4uWjOXGYYg==
 ```
 
@@ -45,13 +44,13 @@ SHIPFAST_API_HMAC_SECRET=3XqYZ17+dy1LMmTNkCqlcsNy2kJEtuD8gzZaRV53bHKc9Lu2Qh4h9fV
 
 A Google Maps API key, which you can get from the [Google Cloud Platform Console](https://debians.google.com/maps/documentation/android-api/signup), and that you will need to add into the `.env` file:
 
-```
+```text
 ANDROID_GEO_API_KEY=your-google-maps-api-key-here
 ```
 
 ### Free AUTH0 Account
 
-A free Auth0 account, which you can get from https://auth0.com.
+A free Auth0 account, which you can get from [auth0.com](https://auth0.com).
 
 #### Configuring Auth0 in their Dashboard
 
@@ -59,11 +58,8 @@ A free Auth0 account, which you can get from https://auth0.com.
 2. Take careful note of your Auth0 Domain and Client ID as these will be
 required to add later into the `.env` file.
 3. In the "Allowed Callback URLs" field, enter:
-    ```
-    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipfast/callback, shipraider.dev.example.com, http://127.0.0.1
-    ```
-replacing *YOUR-ACCOUNT* with your Auth0 account name
-
+    `demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipfast/callback, shipraider.dev.example.com, http://127.0.0.1`
+    replacing *YOUR-ACCOUNT* with your Auth0 account name
 4. Auth0 should already be pre-configured to include Google and GitHub social
 accounts allowing you to log in to ShipFast with those, but go ahead and add
 more if you wish.
@@ -72,11 +68,10 @@ more if you wish.
 
 Now edit the `.env` file and add replace the placehoders for:
 
-```
+```text
 AUTH0_DOMAIN=your-domain-for-auth0
 AUTH0_CLIENT_ID=your-auth0-client-id
 ```
-
 
 ## THE DEMO STACK
 
@@ -120,7 +115,7 @@ The backend is made of two NodeJS servers, one for the ShipFast API, and another
 
 #### With our Online Servers
 
-To make it easier to follow the demo we provide the ShipFast API at https://shipfast.demo.approov.io and the ShipRaider web interface at https://shipraider.demo.approov.io.
+To make it easier to follow the demo we provide the ShipFast API at `https://shipfast.demo.approov.io` and the ShipRaider web interface at [shipraider.demo.approov.io](https://shipraider.demo.approov.io).
 
 #### With your Online Servers
 
@@ -131,11 +126,9 @@ You can deploy very easily your own online servers by following one of our guide
 * [AWS EC2 Traefik Setup](https://github.com/approov/aws-ec2-traefik-setup)
 * [Debian Setup](/docs/SETUP_ONLINE_DEBIAN_SERVER.md)
 
-
 ### The Full Stack
 
 If you want to be in control of the full stack, then please see the instructions [here](/docs/FULL_STACK.md).
-
 
 ## RUNNING THE DEMO
 

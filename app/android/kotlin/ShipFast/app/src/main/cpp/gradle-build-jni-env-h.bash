@@ -68,4 +68,4 @@ EOF
     printf "\nEND CREATION OF: ${_jni_env_file}\n\n"
 }
 
-Main "${@}"
+Main

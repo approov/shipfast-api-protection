@@ -140,6 +140,24 @@ export $(grep -v '^#' .env | xargs -0)
 
 Now you need to open Android Studio from the same terminal you have exported the `.env` file.
 
+In Linux type:
+
+```
+/opt/android-studio/bin/studio.sh
+```
+
+In Windows type:
+
+```
+start "" "C:\Program Files\Android\Android Studio\bin\studio64.exe"
+```
+
+In a MAC type:
+
+```
+open -a /Applications/Android\ Studio.app
+```
+
 > **NOTE:**
 >
 > Exporting the env vars to an Android Studio running as a snap package will not work, because we don't have access to its environment.

@@ -22,6 +22,6 @@
     "selfsigned": "^1.10.1"
   },
   "devDependencies": {
-    "nodemon": "^1.18.7"
+    "nodemon": "^2.0.4"
   }
 }

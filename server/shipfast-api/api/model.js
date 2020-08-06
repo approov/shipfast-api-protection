@@ -130,7 +130,7 @@ const calculateNearestShipment = function(originLatitude, originLongitude, user_
 
         populateShipments(originLatitude, originLongitude, user_uid)
     } else if (!cache.has(user_uid) && !user_agent.startsWith("okhttp")) {
-        return {error: "Please use first the Shipfast mobile app before you try the demo from Shipraider."}
+        return {error: "Please use first the ShipFast mobile app in the same demo stage you want to try from ShipRaider."}
     }
 
     nearestShipment = findNearestShipment(originLatitude, originLongitude, user_uid)

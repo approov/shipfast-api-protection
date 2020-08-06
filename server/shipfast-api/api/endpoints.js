@@ -5,8 +5,8 @@ const router = express.Router()
 const crypto = require('crypto')
 const request = require('./utils/request')
 
-const hash_user_claim = function(req) {
-  return request.hash_header_payload_claim(req, 'authorization', 'sub')
+const hash_user_claim_by_api_version = function(req) {
+  return req.params.version + ":" + request.hash_header_payload_claim(req, 'authorization', 'sub')
 }
 
 const log_identifier = function(user_uid, req) {
@@ -16,7 +16,7 @@ const log_identifier = function(user_uid, req) {
 // The '/shipments/nearest_shipment' GET request route
 router.get('/:version/shipments/nearest_shipment', function(req, res) {
 
-  const user_uid = hash_user_claim(req)
+  const user_uid = hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/nearest_shipment", log_id)
@@ -59,7 +59,7 @@ router.get('/:version/shipments/nearest_shipment', function(req, res) {
 // The '/shipments/delivered' GET request route
 router.get('/:version/shipments/delivered', function(req, res) {
 
-  const user_uid = hash_user_claim(req)
+  const user_uid = hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/delivered", log_id)
@@ -73,7 +73,7 @@ router.get('/:version/shipments/delivered', function(req, res) {
 // The '/shipments/active' GET request route
 router.get('/:version/shipments/active', function(req, res) {
 
-  const user_uid = hash_user_claim(req)
+  const user_uid = hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/active", log_id)
@@ -93,7 +93,7 @@ router.get('/:version/shipments/active', function(req, res) {
 // The '/shipments/:shipmentID' GET request route
 router.get('/:version/shipments/:shipmentID', function(req, res) {
 
-  const user_uid = hash_user_claim(req)
+  const user_uid = hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/:shipmentID", log_id)
@@ -123,7 +123,7 @@ router.get('/:version/shipments/:shipmentID', function(req, res) {
 // The '/shipments/update_state/:shipmentID' POST request route
 router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
 
-  const user_uid = hash_user_claim(req)
+  const user_uid = hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/update_state/:shipmentID", log_id)

@@ -58,7 +58,6 @@ function calculateShipmentGratuity(shipmentID) {
 
 // A function to populate this model with a collection of sample shipment data base on a given location
 function populateShipments(originLatitude, originLongitude, user_uid) {
-    log.info("USER UID HASH: " + user_uid)
 
     const driver_coordinates = {
         latitude: originLatitude,
@@ -70,11 +69,6 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
     if (cache.has(user_uid)) {
         shipments = cache.get(user_uid)
     }
-
-    log.info("--------------------------- START ------------------------")
-    log.info("MAX_TOTAL_SHIPMENT_COUNT: " + MAX_TOTAL_SHIPMENT_COUNT)
-    log.info("TOTAL_SHIPMENTS_TO_CREATE: " + TOTAL_SHIPMENTS_TO_CREATE)
-    log.info("TOTAL_SHIPMENT_COUNT_BEFORE: " + TOTAL_SHIPMENT_COUNT)
 
     for (let i = 0; i < TOTAL_SHIPMENTS_TO_CREATE; i++) {
         let shipmentID = TOTAL_SHIPMENT_COUNT // + i + 1
@@ -104,16 +98,11 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
         TOTAL_SHIPMENT_COUNT++
 
         if (Object.keys(shipments).length >= MAX_TOTAL_SHIPMENT_COUNT) {
-            log.info("Populated the shipments with a total of: " + MAX_TOTAL_SHIPMENT_COUNT)
             break
         }
     }
 
-    cached = cache.set(user_uid, shipments)
-    console.debug(cached, "CACHED")
-
-    log.info("TOTAL_SHIPMENT_COUNT_AFTER: " + TOTAL_SHIPMENT_COUNT)
-    log.info("--------------------------- END ------------------------")
+    cache.set(user_uid, shipments)
 }
 
 const reCalculateNearestShipment = function(originLatitude, originLongitude, user_uid) {
@@ -128,7 +117,6 @@ const calculateNearestShipment = function(originLatitude, originLongitude, user_
 
     // Ensure we've populated the model with some sample data for this session
     if (!cache.has(user_uid) && user_agent.startsWith("okhttp")) {
-        const coordinates =
 
         // Store the coordinates provided by the mobile app. This coordinates
         // will be used only to generate more shipments in a future request,
@@ -149,19 +137,19 @@ const calculateNearestShipment = function(originLatitude, originLongitude, user_
 
     if (!nearestShipment) {
 
+        let location
+
         if (user_agent.startsWith("okhttp")) {
             // For mobile app requests
-            const location = {
+            location = {
                 latitude: originLatitude,
                 longitude: originLongitude
             }
         } else {
             // For Shipraider requests
-            const location = cache.get("coordinates")[user_uid]
+            location = cache.get("coordinates")[user_uid]
         }
 
-        log.info("RECALCULATE COORDINATES")
-        log.debug(location)
         return reCalculateNearestShipment(location.latitude, location.ongitude, user_uid)
     }
 
@@ -220,25 +208,20 @@ const formatShipmentDistance = function(distance) {
 
 const updateShipmentState = function(shipmentID, newState, user_uid) {
 
-    // Find the shipment with the given ID
     let shipment = getShipment(shipmentID, user_uid)
 
     if (!shipment) {
-      log.error("\nNo shipment found for ID " + shipmentID + "\n")
-      return false
+      return {error: "No shipment found for ID " + shipmentID}
     }
 
     // Perform basic validation of the new shipment state
     if (newState <= 0
         || newState != shipment.getState() + 1
         || newState >= Object.keys(SHIPMENT_STATE).length) {
-      log.error("\nShipment state invalid\n")
-      return false
+      return {error: "Shipment state invalid"}
     }
 
-    shipment.setState(newState)
-
-    return true
+    return shipment.setState(newState)
 }
 
 // A function to calculate and return an array of shipments in a 'DELIVERED' state

@@ -3,117 +3,135 @@ const log = require('./utils/logging')
 const express = require('express')
 const router = express.Router()
 const crypto = require('crypto')
+const request = require('./utils/request')
 
-const hash = function(text) {
-  return crypto.createHash('sha256').update(text, 'utf-8').digest('hex')
+const hash_user_claim = function(req) {
+  return request.hash_header_payload_claim(req, 'authorization', 'sub')
+}
+
+const log_identifier = function(user_uid, req) {
+  return request.log_simple_identifier(user_uid, req.params.version + ': endpoint.js')
 }
 
 // The '/shipments/nearest_shipment' GET request route
-router.get('/shipments/nearest_shipment', function(req, res) {
+router.get('/:version/shipments/nearest_shipment', function(req, res) {
+
+  const user_uid = hash_user_claim(req)
+  const log_id = log_identifier(user_uid, req)
+
+  log.info("/shipments/nearest_shipment", log_id)
 
   user_agent = req.headers["user-agent"]
-  log.info("\nUSER AGENT: " + user_agent)
-
-  user_uid = hash(req.user.sub)
-
-  log.info("\nENDPOINT: /shipments/nearest_shipment")
+  log.info("USER AGENT: " + user_agent, log_id)
 
   // Retrieve the location data from the request headers
   var latitude = parseFloat(req.get('DRIVER-LATITUDE'))
   let longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
 
   if (!latitude || !longitude) {
-    log.error("\nLocation data not specified or in the wrong format\n")
+    log.error("Location data not specified or in the wrong format\n", log_id)
     res.status(400).send()
     return
   }
 
-  log.debug("\nLatitude: " + latitude + "\nLongitude: " + longitude + "\n")
+  log.debug("Latitude: " + latitude, log_id)
+  log.debug("Longitude: " + longitude, log_id)
 
   // Calculate the nearest shipment to the given location
   let nearestShipment = model.calculateNearestShipment(latitude, longitude, user_uid, user_agent)
 
   if (nearestShipment && nearestShipment.error) {
-    log.error("\nError:\n" + nearestShipment.error)
+    log.error("Error:\n" + nearestShipment.error, log_id)
     res.status(400).json(nearestShipment)
     return
   }
 
   if (nearestShipment) {
-    log.info("Nearest Shipment: " + nearestShipment.description)
-
+    log.info("Nearest Shipment: " + nearestShipment.description, log_id)
     res.status(200).json(nearestShipment)
+    return
   }
 
-  log.warning("\nUnable to find a nearest shipment...\n")
+  log.warning("Unable to find a nearest shipment...\n", log_id)
   res.status(400).send()
 })
 
 // The '/shipments/delivered' GET request route
-router.get('/shipments/delivered', function(req, res) {
+router.get('/:version/shipments/delivered', function(req, res) {
 
-  log.info("\nENDPOINT: /shipments/delivered")
+  const user_uid = hash_user_claim(req)
+  const log_id = log_identifier(user_uid, req)
+
+  log.info("/shipments/delivered", log_id)
 
   // Calculate the array of delivered shipments
-  let deliveredShipments = model.getDeliveredShipments(hash(req.user.sub))
+  let deliveredShipments = model.getDeliveredShipments(user_uid)
 
   res.status(200).json(deliveredShipments)
 })
 
 // The '/shipments/active' GET request route
-router.get('/shipments/active', function(req, res) {
+router.get('/:version/shipments/active', function(req, res) {
 
-    log.info("\nENDPOINT: /shipments/active\n")
+  const user_uid = hash_user_claim(req)
+  const log_id = log_identifier(user_uid, req)
 
-    // Calculate the array of active shipments
-    let activeShipment = model.getActiveShipment(hash(req.user.sub))
-    if (!activeShipment) {
-      log.warning("\nNo active shipment found\n")
-      res.status(200).json({})
-      return
-    }
-    log.debug("\nActive Shipment:")
-    log.raw(activeShipment.description)
-    res.status(200).json(activeShipment)
-  })
+  log.info("/shipments/active", log_id)
+
+  const activeShipment = model.getActiveShipment(user_uid)
+  if (!activeShipment) {
+    log.warning("No active shipment found\n", log_id)
+    res.status(200).json({})
+    return
+  }
+
+  log.debug("Active Shipment:", log_id)
+  log.raw(activeShipment.description, log_id)
+  res.status(200).json(activeShipment)
+})
 
 // The '/shipments/:shipmentID' GET request route
-router.get('/shipments/:shipmentID', function(req, res) {
+router.get('/:version/shipments/:shipmentID', function(req, res) {
 
-  log.info("\nENDPOINT: /shipments/:shipmentID\n")
+  const user_uid = hash_user_claim(req)
+  const log_id = log_identifier(user_uid, req)
+
+  log.info("/shipments/:shipmentID", log_id)
 
   // Retrieve the shipment ID from the request header
   let shipmentID = parseInt(req.params.shipmentID)
   if (!Number.isInteger(shipmentID)) {
-    log.error("\nShipment ID not specified or in the wrong format\n")
+    log.error("Shipment ID not specified or in the wrong format\n", log_id)
     res.status(400).send()
     return
   }
 
   // Find the shipment with the given ID
-  let shipment = model.getShipment(shipmentID, hash(req.user.sub))
+  let shipment = model.getShipment(shipmentID, user_uid)
   if (!shipment) {
-    log.error("\nNo shipment found for ID: " + shipmentID)
+    log.error("No shipment found for ID: " + shipmentI, log_id)
     res.status(404).send()
     return
   }
 
-  log.debug("\nShipment ID: " + shipmentID)
-  log.debug("Shipment Description: " + shipment.description)
+  log.debug("Shipment ID: " + shipmentID, log_id)
+  log.debug("Shipment Description: " + shipment.description, log_id)
 
   res.status(200).json(shipment)
-
 })
 
 // The '/shipments/update_state/:shipmentID' POST request route
-router.post('/shipments/update_state/:shipmentID', function(req, res) {
+router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
 
-  log.info("\nENDPOINT: /shipments/update_state/:shipmentID\n")
+  const user_uid = hash_user_claim(req)
+  const log_id = log_identifier(user_uid, req)
+
+  log.info("/shipments/update_state/:shipmentID", log_id)
 
   // Retrieve the shipment ID from the request header
   let shipmentID = parseInt(req.params.shipmentID)
   if (!Number.isInteger(shipmentID)) {
-    log.error("\nShipment ID not specified or in the wrong format\n")
+    log.error("Shipment ID not specified or in the wrong format\n", log_id)
     res.status(400).send()
     return
   }
@@ -122,30 +140,31 @@ router.post('/shipments/update_state/:shipmentID', function(req, res) {
   let latitude = parseFloat(req.get('DRIVER-LATITUDE'))
   let longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
   if (!latitude || !longitude) {
-    log.error("\nLocation data not specified or in the wrong format\n")
+    log.error("Location data not specified or in the wrong format\n", log_id)
     res.status(400).send()
     return
   }
 
-  log.debug("\nLatitude: " + latitude + "\nLongitude: " + longitude + "\n")
+  log.debug("Latitude: " + latitude, log_id)
+  log.debug("Longitude: " + longitude, log_id)
 
   // Retrieve the new shipment state from the request header
   let newState = parseInt(req.get('SHIPMENT-STATE'))
   if (!Number.isInteger(newState)) {
-    log.error("\nShipment state not specified or in the wrong format\n")
+    log.error("Shipment state not specified or in the wrong format\n", log_id)
     res.status(400).send()
     return
   }
 
-  isUpdated = model.updateShipmentState(shipmentID, newState, hash(req.user.sub))
+  result = model.updateShipmentState(shipmentID, newState, user_uid)
 
-  if (isUpdated) {
-      log.warning("\nState of shipment " + shipmentID + " updated to " + newState + "\n")
-      res.status(200).send()
-      return
+  if (result && result.error) {
+    log.error(result.error, log_id)
+    res.status(400).send()
   }
 
-  res.status(400).send()
+  log.warning("State of shipment " + shipmentID + " updated to " + newState + "\n", log_id)
+  res.status(200).send()
 })
 
 module.exports = router

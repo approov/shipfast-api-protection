@@ -2,6 +2,7 @@ const jwt = require('express-jwt')
 const crypto = require('crypto')
 const config = require('./../config/approov')
 const log = require('./../utils/logging')
+const request = require('./../utils/request')
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -11,25 +12,29 @@ const log = require('./../utils/logging')
 /// Feel free to customize this callbacks to best suite the needs your needs.
 ///
 
+const log_identifier = function(req) {
+  return request.log_identifier(req, 'authorization', 'sub', 'approov-token-check.js')
+}
+
 const buildLogMessagePrefix = function(req, res) {
   return res.statusCode + ' ' + req.method + ' ' + req.originalUrl
 }
 
 // Callback to be customized with your preferred way of logging.
 const logError = function(req, res, message) {
-  log.error(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.error(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
 const logSuccess = function(req, res, message) {
-  log.success(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.success(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
 const logInfo = function(req, res, message) {
-  log.info(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.info(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
 const logWarning = function(req, res, message) {
-  log.warning(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.warning(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
 // Callback to be personalized in order to get the token binding header value being used by

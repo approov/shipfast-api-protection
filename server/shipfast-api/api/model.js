@@ -44,6 +44,18 @@ let NEXT_SHIPMENT_TO_DELETE = 0 // keeps track of the oldest shipment ID in the 
 
 const MAX_DELIVERED_SHIPMENTS = 10 // Max of last delivered shipments to return to the mobile app.
 
+const cache_delete = function(key) {
+    return cache.del(key)
+}
+
+const cache_has = function(key) {
+    return cache.has(key)
+}
+
+const cache_keys = function() {
+    return cache.keys()
+}
+
 function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
     return FAKER.random.number({
         'min': min,
@@ -269,8 +281,12 @@ const getActiveShipment = function(user_uid) {
 
 // A function to return the shipment with the given ID (or 'undefined' if not found)
 const getShipment = function(shipmentID, user_uid) {
-    let shipments = cache.get(user_uid)
-    return shipments[shipmentID]
+    if (cache.has(user_uid)) {
+        let shipments = cache.get(user_uid)
+        return shipments[shipmentID]
+    }
+
+    return undefined
 }
 
 // Add the model utility functions to the exports
@@ -281,5 +297,8 @@ module.exports = {
     getActiveShipment: getActiveShipment,
     getShipment: getShipment,
     updateShipmentState: updateShipmentState,
-    SHIPMENT_STATE: SHIPMENT_STATE
+    SHIPMENT_STATE: SHIPMENT_STATE,
+    cache_delete,
+    cache_has,
+    cache_keys
 }

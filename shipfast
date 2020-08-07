@@ -29,6 +29,9 @@ Show_Help() {
     printf "\t./shipfast restart editor\n"
     printf "\t./shipfast down editor\n"
 
+    printf "\n Cache:\n"
+    printf "\t./shipfast cache api delete v1 authorization-token-here\n"
+
     printf "\n Proxy:\n"
     printf "\t./shipfast proxy -p 8000\n"
 
@@ -296,6 +299,19 @@ Main() {
 
                 exit $?
             ;;
+
+            cache )
+                case "${2:-}" in
+                    api )
+                        shift 2
+                        ./server/shipfast-api/bin/cache.sh "${@}"
+                        exit $?
+                    ;;
+                esac
+
+                exit $?
+            ;;
+
 
             down )
                 case "${2:-}" in

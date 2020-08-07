@@ -6,12 +6,25 @@ const log_identifier = function(req, header_name, claim, script_name) {
 }
 
 const log_simple_identifier = function(user_hash, script_name) {
-  return script_name + " | " + user_hash.substring(0, 8)
+  // Cut at 15 chars in order we can see the INVALID_REQUEST string in the logs
+  // when an exception occurs at hash_header_payload_claim().
+  return script_name + " | " + user_hash.substring(0, 15)
 }
 
 const hash_header_payload_claim = function(req, header_name, claim) {
-  const user_claim = _extract_unverified_payload_claim(req, header_name, claim)
-  return _hash(user_claim)
+  try {
+    const user_claim = _extract_unverified_payload_claim(req, header_name, claim)
+    return _hash(user_claim)
+  } catch(error) {
+    // When the request doesn't contain the authorization header or the token is
+    // a malformed one we end up here.
+    console.error(error)
+    return "INVALID_REQUEST"
+  }
+}
+
+const hash_user_claim_by_api_version = function(req) {
+  return req.params.version + ":" + hash_header_payload_claim(req, 'authorization', 'sub')
 }
 
 const _extract_unverified_payload_claim = function(req, header_name, claim) {
@@ -27,6 +40,7 @@ const _hash = function(text) {
 }
 
 module.exports = {
+  hash_user_claim_by_api_version,
   hash_header_payload_claim,
   log_identifier,
   log_simple_identifier

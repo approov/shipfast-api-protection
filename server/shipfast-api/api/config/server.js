@@ -37,6 +37,7 @@ const config = {
     SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL || undefined,
     SHIPFAST_PUBLIC_DOMAIN: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN || undefined,
     SHIPFAST_API_KEY: dotenv.parsed.SHIPFAST_API_KEY || undefined,
+    SHIPFAST_CLI_API_KEY: dotenv.parsed.SHIPFAST_CLI_API_KEY || undefined,
     SHIPFAST_API_HMAC_SECRET: dotenv.parsed.SHIPFAST_API_HMAC_SECRET || undefined,
     DRIVER_LATITUDE: dotenv.parsed.DRIVER_LATITUDE || undefined,
     DRIVER_LONGITUDE: dotenv.parsed.DRIVER_LONGITUDE || undefined

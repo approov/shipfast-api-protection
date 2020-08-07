@@ -5,10 +5,6 @@ const router = express.Router()
 const crypto = require('crypto')
 const request = require('./utils/request')
 
-const hash_user_claim_by_api_version = function(req) {
-  return req.params.version + ":" + request.hash_header_payload_claim(req, 'authorization', 'sub')
-}
-
 const log_identifier = function(user_uid, req) {
   return request.log_simple_identifier(user_uid, req.params.version + ': endpoint.js')
 }
@@ -16,10 +12,11 @@ const log_identifier = function(user_uid, req) {
 // The '/shipments/nearest_shipment' GET request route
 router.get('/:version/shipments/nearest_shipment', function(req, res) {
 
-  const user_uid = hash_user_claim_by_api_version(req)
+  const user_uid = request.hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/nearest_shipment", log_id)
+  log.info("CACHE KEY: " + user_uid, log_id)
 
   user_agent = req.headers["user-agent"]
   log.info("USER AGENT: " + user_agent, log_id)
@@ -59,10 +56,11 @@ router.get('/:version/shipments/nearest_shipment', function(req, res) {
 // The '/shipments/delivered' GET request route
 router.get('/:version/shipments/delivered', function(req, res) {
 
-  const user_uid = hash_user_claim_by_api_version(req)
+  const user_uid = request.hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/delivered", log_id)
+  log.info("CACHE KEY: " + user_uid, log_id)
 
   // Calculate the array of delivered shipments
   let deliveredShipments = model.getDeliveredShipments(user_uid)
@@ -73,10 +71,11 @@ router.get('/:version/shipments/delivered', function(req, res) {
 // The '/shipments/active' GET request route
 router.get('/:version/shipments/active', function(req, res) {
 
-  const user_uid = hash_user_claim_by_api_version(req)
+  const user_uid = request.hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/active", log_id)
+  log.info("CACHE KEY: " + user_uid, log_id)
 
   const activeShipment = model.getActiveShipment(user_uid)
   if (!activeShipment) {
@@ -93,10 +92,11 @@ router.get('/:version/shipments/active', function(req, res) {
 // The '/shipments/:shipmentID' GET request route
 router.get('/:version/shipments/:shipmentID', function(req, res) {
 
-  const user_uid = hash_user_claim_by_api_version(req)
+  const user_uid = request.hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/:shipmentID", log_id)
+  log.info("CACHE KEY: " + user_uid, log_id)
 
   // Retrieve the shipment ID from the request header
   let shipmentID = parseInt(req.params.shipmentID)
@@ -123,10 +123,11 @@ router.get('/:version/shipments/:shipmentID', function(req, res) {
 // The '/shipments/update_state/:shipmentID' POST request route
 router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
 
-  const user_uid = hash_user_claim_by_api_version(req)
+  const user_uid = request.hash_user_claim_by_api_version(req)
   const log_id = log_identifier(user_uid, req)
 
   log.info("/shipments/update_state/:shipmentID", log_id)
+  log.info("CACHE KEY: " + user_uid, log_id)
 
   // Retrieve the shipment ID from the request header
   let shipmentID = parseInt(req.params.shipmentID)
@@ -161,6 +162,7 @@ router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
   if (result && result.error) {
     log.error(result.error, log_id)
     res.status(400).send()
+    return
   }
 
   log.warning("State of shipment " + shipmentID + " updated to " + newState + "\n", log_id)

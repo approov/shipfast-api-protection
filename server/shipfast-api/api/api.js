@@ -3,9 +3,11 @@ const approovMiddleware = require('./middleware/approov')
 const staticHmacMiddleware = require('./middleware/static-hmac')
 const dynamicHmacMiddleware = require('./middleware/dynamic-hmac')
 const apiKeyMiddleware = require('./middleware/api-key')
+const cliApiKeyMiddleware = require('./middleware/cli-api-key')
 const auth0Middleware = require('./middleware/auth0')
 const api = require('./server')
 const endpoints = require('./endpoints')
+const admin = require('./admin')
 const request = require('./utils/request')
 
 api.use(function(req, res, next) {
@@ -58,3 +60,13 @@ api.get('/', function(req, res) {
  */
 
 api.use(endpoints)
+
+
+/**
+ * ADMIN PROTECTED ENDPOINTS
+ */
+
+// Admin endoints to be used by the bash script ./server/shipfast-api/bin/cache.sh
+api.use('/admin', cliApiKeyMiddleware)
+api.use("/admin", auth0Middleware)
+api.use(admin)

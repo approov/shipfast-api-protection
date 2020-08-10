@@ -29,13 +29,13 @@ const debug = ctx.bold.cyan
 const success = ctx.bgHex('#008000').bold.hex('#ffffff')
 const fatalError = ctx.bgHex('#ff0000').bold.hex('#ffffff')
 
-app.use(express.static('web'))
+app.use(express.static('public'))
 
 app.use(cors())
 app.options('*', cors())
 
 app.set('view engine', 'ejs')
-app.set('views', './web/views')
+app.set('views', './views')
 
 app.get('/', function(req, res) {
   res.render('pages/index', {

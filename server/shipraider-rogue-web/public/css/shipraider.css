@@ -1,5 +1,5 @@
 body {
-    background-image":"url('images/skull.png')"
+    background-image: url("./../images/skull.png")
 }
 
 .jumbotron {

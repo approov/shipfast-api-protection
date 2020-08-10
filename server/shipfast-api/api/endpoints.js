@@ -50,7 +50,7 @@ router.get('/:version/shipments/nearest_shipment', function(req, res) {
   }
 
   log.warning("Unable to find a nearest shipment...\n", log_id)
-  res.status(400).send()
+  res.status(200).json({})
 })
 
 // The '/shipments/delivered' GET request route

@@ -54,6 +54,17 @@ const STAGES = {
     APPROOV_APP_AUTH_PROTECTION: 3
 }
 
+const BOOTSTRAP_COLOR_CLASSES = {
+    // The demo which uses basic protection by way of API key specified in the app manifest
+    API_KEY_PROTECTION: "info",
+    // The demo which introduces API request signing by HMAC using a static secret in code
+    HMAC_STATIC_SECRET_PROTECTION: "warning",
+    // The demo which introduces API request signing by HMAC using a dynamic secret in code
+    HMAC_DYNAMIC_SECRET_PROTECTION: "danger",
+    // The demo which uses CriticalBlue Approov protection by authenticating the app
+    APPROOV_APP_AUTH_PROTECTION: "success"
+}
+
 // The current demo stage
 let demo_stage = dotenv.parsed.SHIPFAST_DEMO_STAGE || undefined
 
@@ -65,7 +76,9 @@ if (STAGES[demo_stage] === undefined) {
     throw new Error("Invalid value for env var: SHIPFAST_DEMO_STAGE")
 }
 
+config["BOOTSTRAP_COLOR_CLASS"] = BOOTSTRAP_COLOR_CLASSES[demo_stage]
 config["SHIPFAST_CURRENT_DEMO_STAGE"] = STAGES[demo_stage]
+config["SHIPFAST_CURRENT_DEMO_STAGE_NAME"] = demo_stage
 config["SHIPFAST_DEMO_STAGES"] = STAGES
 
 module.exports = {

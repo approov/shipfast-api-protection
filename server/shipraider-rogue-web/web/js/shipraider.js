@@ -45,15 +45,7 @@ $("#refresh-shipments-button").click(function(event) {
 })
 
 const getShipfastApiUrl = function(endpoint) {
-    return $("#shipfast-api-url").val() + "/" + getShipfastApiVersion() + endpoint
-}
-
-const getShipfastApiVersion = function() {
-    return $("#shipfast-api-version").val()
-}
-
-const getShipfastDemoStage = function() {
-    return $("#shipfast-demo-stage").val()
+    return $("#shipfast-api-url").val() + "/" + SHIPFAST_API_VERSION + endpoint
 }
 
 const getShipFastAPIKey = function() {
@@ -79,12 +71,8 @@ const getDriverLongitude = function() {
     return $("#location-longitude-input").val()
 }
 
-const showAlertOnError = function() {
-    if (getShipfastApiVersion() == "v4") {
-        alert("Man it doesn't work... this API is now protected by Approov!!!")
-    } else {
-        alert("Man, it didn't work this time!")
-    }
+const showAlertOnError = function(error = "Unknown error!!!") {
+    alert("Man, it didn't work this time!\n\n" + error)
 }
 
 const searchForShipments = function() {
@@ -142,21 +130,24 @@ const searchForShipments = function() {
             success: function(json) {
                 hasJsonError = false
 
-                let shipmentID = json["id"]
-                let shipmentPickupLatitude = json["pickupLatitude"]
-                let shipmentPickupLongitude = json["pickupLongitude"]
-                shipments[shipmentID] = json
+                if (json.id) {
+                    let shipmentID = json.id
+                    let shipmentPickupLatitude = json.pickupLatitude
+                    let shipmentPickupLongitude = json.pickupLongitude
+                    shipments[shipmentID] = json
 
-                addShipmentsToResults()
+                    addShipmentsToResults()
+                }
             },
             error: function(xhr) {
                 const json = xhr.responseJSON
 
                 if (json && json.error) {
-                    alert(json.error)
+                    showAlertOnError(json.error)
                     updateProgressBar(0)
                     hasJsonError = true
                 } else {
+                    showAlertOnError()
                     hasJsonError = false
                 }
             }
@@ -211,7 +202,7 @@ const addShipmentsToResults = function() {
             if (shipmentGratuity.substr(1) > 0) {
                 gratuityRowClass = "gratuity-row"
                 gratuityValueClass = "with-gratuity"
-                buttonClass = "btn-success"
+                buttonClass = "btn-" + BOOTSTRAP_COLOR_CLASS
             }
 
             if (shipmentGratuity.substr(1) > 5) {
@@ -256,7 +247,7 @@ const grabShipment = function(shipmentID) {
         async: false,
         success: function(json) {
             updateProgressBar(100)
-            $("#shipment-row-" + shipmentID).addClass("active-shipment")
+            $("#shipment-row-" + shipmentID).addClass("alert alert-" + BOOTSTRAP_COLOR_CLASS)
             $("#shipment-" + shipmentID).prop('disabled', true);
             alert("You got shipment ID" + shipmentID + " - check the app and enjoy the extra cash!\n\n@crackmaapi - don't forget da bitcoin pls")
         },
@@ -269,16 +260,14 @@ const grabShipment = function(shipmentID) {
 }
 
 const computeHMAC = function(url, idToken) {
-    currentDemoStage = getShipfastDemoStage()
-
-    if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION
-            || currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION)  {
+    if (SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION
+            || SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION)  {
         let hmacSecret
-        if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
+        if (SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
             // Just use the static secret in the HMAC for this demo stage
             hmacSecret = HMAC_SECRET
         }
-        else if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
+        else if (SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
             // Obfuscate the static secret to produce a dynamic secret to
             // use in the HMAC for this demo stage
             let staticSecret = HMAC_SECRET

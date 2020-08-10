@@ -94,7 +94,7 @@ const handlesRequestWithInvalidTokenBinding = function(req, res, next, httpStatu
 const buildBadRequestResponse = function(req, res, httpStatusCode, logMessage) {
   res.status(httpStatusCode)
   logError(req, res, logMessage)
-  res.json({})
+  res.json({error: "Invalid Request!"})
 }
 
 ////////////////////////////////////////////////////////////////////////////////

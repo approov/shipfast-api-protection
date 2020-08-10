@@ -11,36 +11,18 @@
     </head>
     <body >
         <div class="container">
-
             <div class="jumbotron">
                 <h1>Welcome to ShipRaider!</h1>
                 <p>I wrked well hard to get this cool stuff to u guyz, so pls show ur appreciation and send me bitcoin by clickin da button below.<br/>Enjoy, shipmates! @crackmyapi</p>
-                <p><a id="send-bitcoin-button" class="btn btn-primary btn-lg" href="#" role="button">Send Bitcoin to 3Nxwem9Z8Fc9BywxbnFip7f9v</a></p>
+                <p><a id="send-bitcoin-button" class="btn btn-<%= BOOTSTRAP_COLOR_CLASS %> btn-lg" href="#" role="button">Send Bitcoin to 3Nxwem9Z8Fc9BywxbnFip7f9v</a></p>
             </div>
             <form>
-                <div class="panel panel-primary">
-                    <div class="panel-heading">Configuration</div>
+                <div class="panel panel-<%= BOOTSTRAP_COLOR_CLASS %>">
+                    <div class="panel-heading">CONFIGURATION FOR DEMO STAGE: <span id="demo-stage"><%= SHIPFAST_CURRENT_DEMO_STAGE_NAME %></span></div>
                     <div class="panel-body">
                         <div class="input-group">
-                            <span class="input-group-addon" id="server-url">ShipFast Server URL</span>
+                            <span class="input-group-addon" id="server-url">ShipFast API URL</span>
                             <input type="text" class="form-control" id="shipfast-api-url" aria-describedby="shipfast-api-url" value="<%= SHIPFAST_API_BASE_URL %>" readonly>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-addon"><strong>ShipFast API Version</strong></span>
-                            <select id="shipfast-api-version">
-                              <option value="v1" <% if (SHIPFAST_API_VERSION == "v1") { %> selected <% } %> >v1</option>
-                              <option value="v2" <% if (SHIPFAST_API_VERSION == "v2") { %> selected <% } %> >v2</option>
-                              <option value="v3" <% if (SHIPFAST_API_VERSION == "v3") { %> selected <% } %> >v3</option>
-                              <option value="v4" <% if (SHIPFAST_API_VERSION == "v4") { %> selected <% } %> >v4</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <span class="input-group-addon"><strong>Demo Stage</strong></span>
-                            <select id="shipfast-demo-stage">
-                              <option value="0" <% if (SHIPFAST_CURRENT_DEMO_STAGE == 0) { %> selected <% } %> >API_KEY</option>
-                              <option value="1" <% if (SHIPFAST_CURRENT_DEMO_STAGE == 1) { %> selected <% } %> >HMAC</option>
-                              <option value="2" <% if (SHIPFAST_CURRENT_DEMO_STAGE == 2) { %> selected <% } %> >COMPUTED_HMAC</option>
-                            </select>
                         </div>
                         <div class="input-group">
                             <span class="input-group-addon" id="shipfast-api-key">ShipFast API Key</span>
@@ -50,7 +32,7 @@
                             <span class="input-group-addon" id="user-auth-token">User Auth Token</span>
                             <input type="text" class="form-control" id="user-auth-token-input" placeholder="stick ur auth token ere" aria-describedby="user-auth-token">
                             <span class="input-group-btn">
-                                <button class="btn btn-primary" id="login-button" type="button">Login</button>
+                                <button class="btn btn-<%= BOOTSTRAP_COLOR_CLASS %>" id="login-button" type="button">Login</button>
                             </span>
                         </div>
 
@@ -72,9 +54,9 @@
                         </div>
 
                         <div id="configuration-footer">
-                            <button id="find-me" class="btn btn-primary">Find my location&nbsp;<svg class="bi bi-geo-alt" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg></button>
+                            <button id="find-me" class="btn btn-default">Find my location&nbsp;<svg class="bi bi-geo-alt" width="1em" height="1em" viewBox="0 0 16 16" fill="currentColor" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" d="M8 16s6-5.686 6-10A6 6 0 0 0 2 6c0 4.314 6 10 6 10zm0-7a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/></svg></button>
 
-                            <button id="search-shipments-button" type="submit" class="btn btn-default">Search for Shipments!&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
+                            <button id="search-shipments-button" type="submit" class="btn btn-<%= BOOTSTRAP_COLOR_CLASS %>">Search for Shipments!&nbsp;<span class="glyphicon glyphicon-search" aria-hidden="true"></span></button>
                         </div>
 
                     </div>
@@ -87,8 +69,8 @@
                 </div>
             </div>
 
-            <div class="panel panel-success">
-                <div class="panel-heading"><button id="refresh-shipments-button" type="submit" class="btn btn-success">Results&nbsp;<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></div>
+            <div class="panel panel-<%= BOOTSTRAP_COLOR_CLASS %>">
+                <div class="panel-heading"><button id="refresh-shipments-button" type="submit" class="btn btn-<%= BOOTSTRAP_COLOR_CLASS %>">Results&nbsp;<span class="glyphicon glyphicon-refresh" aria-hidden="true"></span></button></div>
                 <div class="panel-body">
                     <div class="table-responsive">
                         <table class="table">
@@ -117,7 +99,9 @@
             const AUTH0_CLIENT_ID = "<%= AUTH0_CLIENT_ID %>";
             const AUTH0_DOMAIN = "<%= AUTH0_DOMAIN %>";
             const HMAC_SECRET = "<%= HMAC_SECRET %>";
+            const BOOTSTRAP_COLOR_CLASS = "<%= BOOTSTRAP_COLOR_CLASS %>";
             const SHIPFAST_API_VERSION = "<%= SHIPFAST_API_VERSION %>";
+            const SHIPFAST_CURRENT_DEMO_STAGE = "<%= SHIPFAST_CURRENT_DEMO_STAGE %>";
             const SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_STATIC_SECRET_PROTECTION %>";
             const SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_DYNAMIC_SECRET_PROTECTION %>";
         </script>

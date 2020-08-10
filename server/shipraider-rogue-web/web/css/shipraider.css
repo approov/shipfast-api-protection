@@ -19,8 +19,8 @@ body {
     margin-bottom: 0.5rem
 }
 
-#search-shipments-button {
-    background-color: red;
+#find-me {
+    background-color: #aaa;
     color: white;
 }
 
@@ -47,4 +47,9 @@ body {
 
 #configuration-footer button {
     margin-right: 2rem;
+}
+
+#demo-stage {
+    color: #000000;
+    font-weight: bold;
 }

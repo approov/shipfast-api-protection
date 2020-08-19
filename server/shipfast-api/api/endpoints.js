@@ -4,6 +4,7 @@ const express = require('express')
 const router = express.Router()
 const crypto = require('crypto')
 const request = require('./utils/request')
+const response = require('./utils/response')
 
 const log_identifier = function(user_uid, req) {
   return request.log_simple_identifier(user_uid, req.params.version + ': endpoint.js')
@@ -27,7 +28,7 @@ router.get('/:version/shipments/nearest_shipment', function(req, res) {
 
   if (!latitude || !longitude) {
     log.error("Location data not specified or in the wrong format\n", log_id)
-    res.status(400).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 
@@ -38,8 +39,8 @@ router.get('/:version/shipments/nearest_shipment', function(req, res) {
   let nearestShipment = model.calculateNearestShipment(latitude, longitude, user_uid, user_agent)
 
   if (nearestShipment && nearestShipment.error) {
-    log.error("Error:\n" + nearestShipment.error, log_id)
-    res.status(400).json(nearestShipment)
+    log.error("Error: " + nearestShipment.error, log_id)
+    res.status(400).json(response.bad_request(log_id, nearestShipment.error))
     return
   }
 
@@ -98,11 +99,11 @@ router.get('/:version/shipments/:shipmentID', function(req, res) {
   log.info("/shipments/:shipmentID", log_id)
   log.info("CACHE KEY: " + user_uid, log_id)
 
-  // Retrieve the shipment ID from the request header
+  // Retrieve the shipment ID from the request parameters
   let shipmentID = parseInt(req.params.shipmentID)
   if (!Number.isInteger(shipmentID)) {
     log.error("Shipment ID not specified or in the wrong format\n", log_id)
-    res.status(400).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 
@@ -110,7 +111,7 @@ router.get('/:version/shipments/:shipmentID', function(req, res) {
   let shipment = model.getShipment(shipmentID, user_uid)
   if (!shipment) {
     log.error("No shipment found for ID: " + shipmentI, log_id)
-    res.status(404).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 
@@ -133,7 +134,7 @@ router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
   let shipmentID = parseInt(req.params.shipmentID)
   if (!Number.isInteger(shipmentID)) {
     log.error("Shipment ID not specified or in the wrong format\n", log_id)
-    res.status(400).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 
@@ -142,7 +143,7 @@ router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
   let longitude = parseFloat(req.get('DRIVER-LONGITUDE'))
   if (!latitude || !longitude) {
     log.error("Location data not specified or in the wrong format\n", log_id)
-    res.status(400).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 
@@ -153,7 +154,7 @@ router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
   let newState = parseInt(req.get('SHIPMENT-STATE'))
   if (!Number.isInteger(newState)) {
     log.error("Shipment state not specified or in the wrong format\n", log_id)
-    res.status(400).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 
@@ -161,7 +162,7 @@ router.post('/:version/shipments/update_state/:shipmentID', function(req, res) {
 
   if (result && result.error) {
     log.error(result.error, log_id)
-    res.status(400).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 

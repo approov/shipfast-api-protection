@@ -11,11 +11,11 @@ APK BASH CLI
 
 COMMANDS:
 
-build           Builds an APK release with pre validations.
+build           Builds and tests an APK release with pre validations.
                 $ ./apk-cli.sh build
                 $ ./apk-cli.sh build --app-dir app/android/kotlin/ShipFast
 
-assembleDebug   Builds an APK release with pre validations.
+assembleDebug   Assembles an APK release with pre validations.
                 $ ./apk-cli.sh assembleDebug
                 $ ./apk-cli.sh assembleDebug --app-dir app/android/kotlin/ShipFast
 
@@ -70,7 +70,10 @@ Check_Required() {
 
 Clean_Cache() {
   # The cache here can also cause problems during a build
-  rm -rf ./app/.externalNativeBuild app/build app/.cxx
+  rm -rf \
+    ~/.gradle/caches \
+    "${app_dir}"/app/.externalNativeBuild \
+    "${app_dir}"/app/build app/.cxx
 }
 
 Gradle_Run() {
@@ -107,8 +110,8 @@ Main()
         Check_Required
         Clean_Cache
         Gradle_Run ${@}
-        printf "\n\nINSTALL THE APK IN YOUR DEVICE WITH:\n"
-        printf "adb install -r app/build/outputs/apk/release/app-release.apk\n\n"
+        printf "\n\nAPKs built for all you product flavors and build types at:\n"
+        printf "app/android/kotlin/ShipFast/app/build/outputs/apk/{product_flavor}/{build_type}\n\n"
         exit $?
         ;;
 

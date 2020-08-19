@@ -53,3 +53,8 @@ body {
     color: #000000;
     font-weight: bold;
 }
+
+.btn-info {
+    border-color: #3f51b5;
+    background-color: #303f9f;
+}

@@ -75,25 +75,20 @@ Start_Editor() {
 
     ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
 
-    if [ "${SHIPFAST_DEMO_STAGE}" = "APPROOV_APP_AUTH_PROTECTION" ]; then
-
-        if [ ! -f "${APPROOV_SDK}" ]; then
-            printf "\n---> SHIPFAST_DEMO_STAGE: ${SHIPFAST_DEMO_STAGE} \n"
-            printf "\n---> FATAL ERROR: Missing file ${APPROOV_SDK} <---\n"
-            printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK} <---\n"
-            printf "\n---> APPROOV CONFIG: approov sdk ./path/to/dev.token -getConfig .approov-initial.config <---\n"
-            printf "\n---> Add the Approov initial config to the strings resource file. <---\n\n"
-
-            exit 1
-        fi
-    fi
-
     # KVM needs to change permissions in order for Android Studio can work.
     # For some reason the permissions return to original state after we close the editor
     # TODO: find a permanent solution
     ${ROOT_PREFIX} chown ${_USER}:${_USER} /dev/kvm
 
     ${DOCKER_COMPOSE} up -d editor
+
+    if [ ! -f "${APPROOV_SDK_PATH}" ]; then
+        printf "\n---> WARNING: Missing file ${APPROOV_SDK_PATH} <---\n"
+        printf "Note: This can be ignored until you need to build the 'approov' product flavour\n"
+        printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK_PATH} <---\n"
+        printf "\n---> APPROOV CONFIG: approov sdk ./path/to/dev.token -getConfig .approov-initial.config <---\n"
+        printf "\n---> Add the Approov initial config to the strings resource file. <---\n\n"
+    fi
 }
 
 Restart_Editor() {
@@ -205,10 +200,7 @@ Main() {
         exit 1
     fi
 
-    # We need the value for SHIPFAST_DEMO_STAGE
-    . ./.env
-
-    local APPROOV_SDK=./app/android/kotlin/ShipFast/approov/approov.aar
+    local APPROOV_SDK_PATH=./app/android/kotlin/ShipFast/approov/approov.aar
 
     # Setup X11 server authentication
     # @link https://wiki.ros.org/docker/Tutorials/GUI#The_isolated_way

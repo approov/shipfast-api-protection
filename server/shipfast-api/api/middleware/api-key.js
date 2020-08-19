@@ -3,6 +3,7 @@ const router = express.Router()
 const log = require('./../utils/logging')
 const config = require('./../config/server').config
 const request = require('./../utils/request')
+const response = require('./../utils/response')
 
 // The array of ShipFast API keys
 let shipFastAPIKeys = [
@@ -19,14 +20,14 @@ router.use(function(req, res, next) {
 
   if (!shipFastAPIKey) {
     log.error('ShipFast API key not specified or in the wrong format', log_id)
-    res.status(400).send()
+    res.status(400).json(response.bad_request(log_id))
     return
   }
 
   // Verify the ShipFast API key
   if (!shipFastAPIKeys.includes(shipFastAPIKey)) {
     log.error('ShipFast API key invalid', log_id)
-    res.status(403).send()
+    res.status(401).json(response.invalid_request(log_id))
     return
   }
 

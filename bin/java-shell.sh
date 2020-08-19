@@ -21,11 +21,12 @@ docker-build      Builds the docker image for the APK Shell
 find-usb-path     Find the USB path by mobile device brand/name
                   $ ./apk find-usb-path Samsung
 
-gradle-build      Builds the APK
+gradle-build      Builds the APK for each build type and product flavor
                   $ ./apk gradle-build
 
-install           Installs the APK via USB in the given mobile device
+install           Installs the APK for a product flavor via USB in the given mobile device
                   $ ./apk install Samsung
+                  $ ./apk install Samsung approov
 
 list-usb          List all USB devices
                   $ ./apk list-usb
@@ -44,7 +45,6 @@ unpack            Unpacks the APK to readable code
                   $ ./apk unpack
 
 "
-
 }
 
 Apk_Repackage() {
@@ -59,7 +59,9 @@ Adb_Install() {
   local USB_DEVICE_PATH=$(lsusb | grep -i "${device_brand}" - | awk '{print "/dev/bus/usb/" $2 "/" $4}')
   local RUN_MODE="--privileged"
 
-  Docker_Run "adb install -r app/android/kotlin/ShipFast/app/build/outputs/apk/release/app-release.apk"
+  local _apk_dir="app/android/kotlin/ShipFast/app/build/outputs/apk/${product_flavour}/release/app-${product_flavour}-release.apk"
+
+  Docker_Run "adb install -r ${_apk_dir}"
 }
 
 Create_Keystore() {
@@ -116,7 +118,11 @@ Docker_Run() {
 }
 
 Gradle_Build() {
-  Docker_Run "./app/android/kotlin/ShipFast/bin/apk-cli.sh --app-dir app/android/kotlin/ShipFast build"
+  Docker_Run "./app/android/kotlin/ShipFast/bin/apk-cli.sh --app-dir app/android/kotlin/ShipFast build ${@}"
+
+  printf "\n\nInstall an APK in your mobile device with the ./apk install command:\n\n"
+  ./apk | grep -B 1 -i 'apk install' -
+  echo
 }
 
 List_Usb() {
@@ -157,6 +163,8 @@ Main() {
 
     local GRADLE_HOST_DIR="${PWD}"/.local/.gradle
     local MAVEN_HOST_DIR="${PWD}/.local/maven/.m2"
+
+    local PRODUCT_FLAVOUR="api_key"
 
     if [ -f .apk.local.vars ]; then
       . .apk.local.vars
@@ -228,12 +236,15 @@ Main() {
           ;;
 
         gradle-build )
-          Gradle_Build
+          shift 1
+          Gradle_Build "${@}"
           exit $?
           ;;
 
         install )
           local device_brand="${2? Please provide brand of your mobile device. e.g: Samsung}"
+          local product_flavour="${3:-${PRODUCT_FLAVOUR}}"
+
           Adb_Install
           exit $?
           ;;

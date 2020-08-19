@@ -25,19 +25,19 @@ const info = function(message, log_identifier) {
 }
 
 const debug = function(message, log_identifier) {
-    console.debug("[" + log_identifier + "]", message)
+    console.debug("[" + log_identifier.string + "]", message)
 }
 
 const raw = function(message, log_identifier) {
-    console.log("[" + log_identifier + "]", message)
+    console.log("[" + log_identifier.string + "]", message)
 }
 
 const consoleLog = function(log_identifier, message, color) {
-    console.log("[" + log_identifier + "]", ctx.keyword(color)(message))
+    console.log("[" + log_identifier.string + "]", ctx.keyword(color)(message))
 }
 
 const consoleLogBold = function(log_identifier, message, color) {
-    console.log("[" + log_identifier + "]", ctx.keyword(color).bold(message))
+    console.log("[" + log_identifier.string + "]", ctx.keyword(color).bold(message))
 }
 
 module.exports = {

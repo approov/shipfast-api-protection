@@ -6,8 +6,6 @@
         <title>ShipRaider by @crackmyapi</title>
         <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css">
         <link rel="stylesheet" type="text/css" href="css/shipraider.css"/>
-        <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
-        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
     </head>
     <body >
         <div class="container">
@@ -18,7 +16,7 @@
             </div>
             <form>
                 <div class="panel panel-<%= BOOTSTRAP_COLOR_CLASS %>">
-                    <div class="panel-heading">CONFIGURATION FOR DEMO STAGE: <span id="demo-stage"><%= SHIPFAST_CURRENT_DEMO_STAGE_NAME %></span></div>
+                    <div class="panel-heading">CONFIGURATION FOR DEMO STAGE: <span id="demo-stage"><%= CURRENT_DEMO_STAGE_NAME %></span></div>
                     <div class="panel-body">
                         <div class="input-group">
                             <span class="input-group-addon" id="server-url">ShipFast API URL</span>
@@ -101,10 +99,12 @@
             const HMAC_SECRET = "<%= HMAC_SECRET %>";
             const BOOTSTRAP_COLOR_CLASS = "<%= BOOTSTRAP_COLOR_CLASS %>";
             const SHIPFAST_API_VERSION = "<%= SHIPFAST_API_VERSION %>";
-            const SHIPFAST_CURRENT_DEMO_STAGE = "<%= SHIPFAST_CURRENT_DEMO_STAGE %>";
-            const SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_STATIC_SECRET_PROTECTION %>";
-            const SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION = "<%= SHIPFAST_DEMO_STAGES.HMAC_DYNAMIC_SECRET_PROTECTION %>";
+            const CURRENT_DEMO_STAGE = "<%= CURRENT_DEMO_STAGE %>";
+            const DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION = "<%= DEMO_STAGES.HMAC_STATIC_SECRET_PROTECTION %>";
+            const DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION = "<%= DEMO_STAGES.HMAC_DYNAMIC_SECRET_PROTECTION %>";
         </script>
+        <script type="text/javascript" src="https://code.jquery.com/jquery-3.2.1.min.js"></script>
+        <script type="text/javascript" src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js"></script>
         <script type="text/javascript" src="https://cdn.auth0.com/js/auth0/8.10.1/auth0.min.js"></script>
         <script type="text/javascript" src="https://cdn.auth0.com/js/lock/10.21.1/lock.min.js"></script>
         <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/crypto-js/3.1.9-1/crypto-js.min.js"></script>

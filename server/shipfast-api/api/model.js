@@ -39,10 +39,9 @@ const MAX_SHIPMENT_DISTANCE_IN_METRES = 20000
 const TOTAL_SHIPMENTS_TO_CREATE = 100 // 10 * 5 = 50 shipments to create in each batch.
 const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 4 // 50 * 5 = 250 shipments max in memory at any given time.
 
-let TOTAL_SHIPMENT_COUNT = 0 // keeps track of total shipments created since server was started/re-started.
-let NEXT_SHIPMENT_TO_DELETE = 0 // keeps track of the oldest shipment ID in the `shipments` object.
-
 const MAX_DELIVERED_SHIPMENTS = 10 // Max of last delivered shipments to return to the mobile app.
+
+let TOTAL_SHIPMENT_COUNT = 0 // keeps track of total shipments created since server was started/re-started.
 
 const cache_delete = function(key) {
     return cache.del(key)

@@ -23,8 +23,9 @@ package com.criticalblue.shipfast
 
 import android.app.Dialog
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.Bundle
-import androidx.appcompat.app.AppCompatActivity
+import android.util.Log
 import android.view.View
 import android.widget.Button
 import android.widget.ProgressBar
@@ -36,9 +37,6 @@ import com.auth0.android.provider.WebAuthProvider
 import com.auth0.android.result.Credentials
 import com.criticalblue.shipfast.config.JniEnv
 import com.criticalblue.shipfast.user.saveUserCredentials
-import android.content.pm.PackageManager
-import android.util.Log
-import java.lang.RuntimeException
 
 
 /**
@@ -47,7 +45,7 @@ import java.lang.RuntimeException
  * TODO: use Auth0 CredentialsManager
  * TODO: use Android Lock rather than web Lock
  */
-class LoginActivity : AppCompatActivity() {
+class LoginActivity : BaseActivity() {
 
     /** The progress bar */
     private lateinit var loginProgressBar: ProgressBar

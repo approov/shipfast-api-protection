@@ -5,6 +5,7 @@ const jwksRsa = require('jwks-rsa')
 const log = require('./../utils/logging')
 const config = require('./../config/auth0')
 const request = require('./../utils/request')
+const response = require('./../utils/response')
 
 // Create middleware for checking the user's ID token JWT
 const checkUserAuthJWT = jwt({
@@ -34,7 +35,7 @@ router.use(function(err, req, res, next) {
   const log_id = request.log_identifier(req, 'authorization', 'sub', 'auth0.js')
   log.error("AUTH0 ERROR: " + err.message, log_id)
   res.status(401)
-  res.json({})
+  res.json(response.invalid_request(log_id))
 })
 
 module.exports = router

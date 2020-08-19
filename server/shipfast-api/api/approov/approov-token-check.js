@@ -3,6 +3,7 @@ const crypto = require('crypto')
 const config = require('./../config/approov')
 const log = require('./../utils/logging')
 const request = require('./../utils/request')
+const response = require('./../utils/response')
 
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -94,7 +95,7 @@ const handlesRequestWithInvalidTokenBinding = function(req, res, next, httpStatu
 const buildBadRequestResponse = function(req, res, httpStatusCode, logMessage) {
   res.status(httpStatusCode)
   logError(req, res, logMessage)
-  res.json({error: "Invalid Request!"})
+  res.json(response.bad_request(log_identifier(req)))
 }
 
 ////////////////////////////////////////////////////////////////////////////////

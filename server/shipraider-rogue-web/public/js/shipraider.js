@@ -75,6 +75,18 @@ const showAlertOnError = function(error = "Unknown error!!!") {
     alert("Man, it didn't work this time!\n\n" + error)
 }
 
+const showJsonResponseError = function(xhr) {
+    const json = xhr.responseJSON
+
+    if (json && json.error) {
+        showAlertOnError(json.error + "\n\nRequest Id: " + json.request_id)
+        return true
+    }
+
+    showAlertOnError()
+    return false
+}
+
 const searchForShipments = function() {
     updateProgressBar(0)
     shipments = {}
@@ -140,14 +152,10 @@ const searchForShipments = function() {
                 }
             },
             error: function(xhr) {
-                const json = xhr.responseJSON
-
-                if (json && json.error) {
-                    showAlertOnError(json.error)
+                if (showJsonResponseError(xhr)) {
                     updateProgressBar(0)
                     hasJsonError = true
                 } else {
-                    showAlertOnError()
                     hasJsonError = false
                 }
             }
@@ -167,7 +175,7 @@ const searchForShipments = function() {
                 let isEmptyTableBody = $("#results-table-body").is(':empty')
 
                 if (isEmptyTableBody) {
-                    setTimeout(showAlertOnError, 1000)
+                    setTimeout(showAlertOnError('Unable to find shipments...'), 1000)
                 }
 
                 updateProgressBar(100)
@@ -252,7 +260,7 @@ const grabShipment = function(shipmentID) {
             alert("You got shipment ID" + shipmentID + " - check the app and enjoy the extra cash!\n\n@crackmaapi - don't forget da bitcoin pls")
         },
         error: function(xhr) {
-            showAlertOnError()
+            showJsonResponseError(xhr)
             updateProgressBar(0)
         }
     })
@@ -260,14 +268,14 @@ const grabShipment = function(shipmentID) {
 }
 
 const computeHMAC = function(url, idToken) {
-    if (SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION
-            || SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION)  {
+    if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION
+            || CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION)  {
         let hmacSecret
-        if (SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
+        if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
             // Just use the static secret in the HMAC for this demo stage
             hmacSecret = HMAC_SECRET
         }
-        else if (SHIPFAST_CURRENT_DEMO_STAGE == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
+        else if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
             // Obfuscate the static secret to produce a dynamic secret to
             // use in the HMAC for this demo stage
             let staticSecret = HMAC_SECRET

@@ -1,12 +1,13 @@
 const express = require('express')
 const cors = require('cors')
 const log = require('./utils/logging')
+const request = require('./utils/request')
 const fs = require('fs')
 const https = require('https')
 const config = require('./config/server').config
 
 const api = express()
-const LOG_IDENTIFIER = "server.js"
+const LOG_IDENTIFIER = request.log_simple_identifier('no_user', 'server.js')
 
 // Support CORS
 api.use(cors())

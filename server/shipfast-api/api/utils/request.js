@@ -8,7 +8,12 @@ const log_identifier = function(req, header_name, claim, script_name) {
 const log_simple_identifier = function(user_hash, script_name) {
   // Cut at 15 chars in order we can see the INVALID_REQUEST string in the logs
   // when an exception occurs at hash_header_payload_claim().
-  return script_name + " | " + user_hash.substring(0, 15)
+  const request_id = user_hash.substring(0, 15)
+  return {
+    request_id: request_id,
+    script: script_name,
+    string: script_name + " | " + request_id
+  }
 }
 
 const hash_header_payload_claim = function(req, header_name, claim) {

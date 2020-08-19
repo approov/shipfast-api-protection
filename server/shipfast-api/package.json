@@ -1,7 +1,7 @@
 {
   "name": "shipfast",
   "version": "1.0.0",
-  "description": "The ShipFast API protection walkthrough server",
+  "description": "The ShipFast API server",
   "main": "api/api.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
@@ -18,8 +18,7 @@
     "jwks-rsa": "^1.2.0",
     "mersenne-twister": "^1.1.0",
     "node-cache": "^5.1.1",
-    "random-location": "^1.1.2",
-    "selfsigned": "^1.10.1"
+    "random-location": "^1.1.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"

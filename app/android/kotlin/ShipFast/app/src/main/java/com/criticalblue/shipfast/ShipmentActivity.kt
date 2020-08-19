@@ -54,7 +54,7 @@ const val TAG = "SHIPFAST_APP"
 /**
  * The Shipment activity class.
  */
-class ShipmentActivity : AppCompatActivity(), OnMapReadyCallback {
+class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
 
     /** The active state of the activity */
     private var activityActive = false

@@ -3,6 +3,7 @@ const log = require('./utils/logging')
 const express = require('express')
 const router = express.Router()
 const request = require('./utils/request')
+const response = require('./utils/response')
 
 router.post('/admin/:version/cache/delete', function(req, res) {
   try {
@@ -12,7 +13,7 @@ router.post('/admin/:version/cache/delete', function(req, res) {
     if (!model.cache_has(user_uid)) {
       const message = "Cache is missing an entry for the key"
       log.warning(message + ": " + user_uid, log_id)
-      res.status(400).json({error: message})
+      res.status(400).json(response.bad_request(log_id, message))
       return
     }
 
@@ -28,11 +29,11 @@ router.post('/admin/:version/cache/delete', function(req, res) {
     const message="Failed to delete the cache"
 
     log.error(message + ": " + user_uid, log_id)
-    res.status(400).json({error: message})
+    res.status(400).json(response.bad_request(log_id, message))
 
   } catch(error) {
     log.error(error.message, req.params.version + ': admin.js')
-    res.status(500).json({error: "Unknown error!!!"})
+    res.status(500).json(response.failed_request(log_id))
   }
 })
 

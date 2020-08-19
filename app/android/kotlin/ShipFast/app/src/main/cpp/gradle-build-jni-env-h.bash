@@ -31,15 +31,10 @@ Main() {
 
     local _http_protocol="${SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL? Missing env var: SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL}"
     local _url="${SHIPFAST_PUBLIC_DOMAIN? Missing env var: SHIPFAST_PUBLIC_DOMAIN}"
-    local _api_version="${SHIPFAST_API_VERSION? Missing env var: SHIPFAST_API_VERSION}"
 
     printf "\nSTART CREATION OF: ${_jni_env_file}\n"
 
     cat <<- EOF > "${_jni_env_file}"
-#ifndef SHIPFAST_DEMO_STAGE
-#define SHIPFAST_DEMO_STAGE "${SHIPFAST_DEMO_STAGE? Missing env var: SHIPFAST_DEMO_STAGE}"
-#endif
-
 #ifndef SHIPFAST_API_KEY
 #define SHIPFAST_API_KEY "${SHIPFAST_API_KEY? Missing env var: SHIPFAST_API_KEY}"
 #endif
@@ -49,7 +44,7 @@ Main() {
 #endif
 
 #ifndef SHIPFAST_API_BASE_URL
-#define SHIPFAST_API_BASE_URL "${_http_protocol}://${_url}/${_api_version}"
+#define SHIPFAST_API_BASE_URL "${_http_protocol}://${_url}"
 #endif
 
 #ifndef DRIVER_LATITUDE

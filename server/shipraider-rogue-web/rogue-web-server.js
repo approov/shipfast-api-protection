@@ -9,9 +9,7 @@
 
 const express = require('express')
 const app = express()
-const jquery = require('jquery')
 const cors = require('cors')
-const serverPath = __dirname + '/'
 const https = require('https')
 const fs = require('fs')
 const config = require('./demo-configuration').config
@@ -20,14 +18,7 @@ const chalk = require('chalk')
 // Auto detection of colour support does not work always, thus we need to
 // enforce it to support 256 colors.
 const ctx = new chalk.constructor({level: 2})
-const error = ctx.bold.red
-const warning = ctx.bold.yellow
 const info = ctx.bold.blue
-const debug = ctx.bold.cyan
-
-// needs to be hex colours, otherwise the contrast in the android terminal is very bad.
-const success = ctx.bgHex('#008000').bold.hex('#ffffff')
-const fatalError = ctx.bgHex('#ff0000').bold.hex('#ffffff')
 
 app.use(express.static('public'))
 
@@ -39,12 +30,12 @@ app.set('views', './views')
 
 app.get('/', function(req, res) {
   res.render('pages/index', {
-    SHIPFAST_CURRENT_DEMO_STAGE_NAME: config.SHIPFAST_CURRENT_DEMO_STAGE_NAME,
+    CURRENT_DEMO_STAGE_NAME: config.CURRENT_DEMO_STAGE_NAME,
     BOOTSTRAP_COLOR_CLASS: config.BOOTSTRAP_COLOR_CLASS,
     SHIPFAST_API_BASE_URL: config.SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL + "://" + config.SHIPFAST_PUBLIC_DOMAIN,
     SHIPFAST_API_VERSION: config.SHIPFAST_API_VERSION,
-    SHIPFAST_DEMO_STAGES: config.SHIPFAST_DEMO_STAGES,
-    SHIPFAST_CURRENT_DEMO_STAGE: config.SHIPFAST_CURRENT_DEMO_STAGE,
+    DEMO_STAGES: config.DEMO_STAGES,
+    CURRENT_DEMO_STAGE: config.CURRENT_DEMO_STAGE,
     API_KEY: config.SHIPFAST_API_KEY,
     DRIVER_LATITUDE: config.DRIVER_LATITUDE,
     DRIVER_LONGITUDE: config.DRIVER_LONGITUDE,
@@ -58,7 +49,7 @@ if (config.SHIPRAIDER_HTTP_PROTOCOL === "https") {
 
     console.log("Host Name: " + config.SHIPRAIDER_SERVER_HOSTNAME)
 
-  // Load the certificate and key data for our server to be hosted over HTTPS
+  // Load the certificatie and key data for our server to be hosted over HTTPS
   let serverOptions = {
     key: fs.readFileSync(config.NODE_SSL_DIR + config.SHIPRAIDER_SERVER_HOSTNAME + ".key"),
     cert: fs.readFileSync(config.NODE_SSL_DIR + config.SHIPRAIDER_SERVER_HOSTNAME + ".pem"),

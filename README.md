@@ -2,150 +2,133 @@
 
 Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts on practical API security techniques. The series walks you through the process of defending a mobile API backend against various exploits which an attacker may use to gain access to the data it holds. In this demonstration scenario, the attack allows real users of the system to gain an unfair business advantage at the expense of the company.
 
-## SETTING UP THE DEMO
 
-Only required when you want to play around as you follow the blog post series.
+## Why?
 
-Regardless of the demo stack you will choose, the following steps are required.
+When a developer builds or use an API the attestation mechanism used to ensure that the API only serves requests to the authorized mobile apps involves an identifier(a long and random string) that it's commonly named as an API key, and that is often used along side with user authentication for that endpoints the business logic requires to know the user.
 
-### Clone the Shipfast Repository
+This demo purpose is to educate the developer that an API key is easily bypassed, and show how other more sophisticated alternatives can be used, like HMAC, that unfortunately is also not hard to bypass.
 
-```bash
-git clone https://github.com/approov/shipfast-api-protection.git && cd shipfast-api-protection
-```
+By the end of the demo a mobile app attestation solution is introduced to show the developers how it's possible to mitigate with an high degree of confidence all the previous techniques bypasses.
 
-### The Env File
 
-We will use a `.env` file in the root of this project to drive the configuration of the ShipFast demo.
+## How it Works?
 
-```bash
-cp .env.example .env
-```
+This demo repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of blog posts that goes into a great detail to explain how several techniques can be used in order to lock the mobile app to the API server.
 
-Through the rest of this setup we will ask you several times to edit this file and replace some placeholder with their real world values.
+For each technique the blog post will show how it's implemented by the mobile app and API server, and how an attacker can bypass it in order to make requests to the API server as if it was the mobile app itself. So each blog post in the series will have a section dedicated how to perform the attack and another section about how to defend against it, with code examples and links to the lines of code on this repo.
 
-### The Shipfast API Key
+### ShipFast Mobile App
 
-The value for the `SHIPFAST_API_KEY` in the `.env` file needs to be:
+The [releases page](https://github.com/approov/shipfast-api-protection/releases) of this repo will contain APKs for each of the demo stages that you can install in your mobile device to follow along the demo.
 
-```text
-SHIPFAST_API_KEY=2db3be3ce3f9a96ab32bbb997a176dd0c70ad31086a88e26b5152e522d50d331
-```
+Each APK was built from the code at [app/android/kotlin/ShipFast](/app/android/kotlin/ShipFast) with the [./apk](/apk) bash script on the root of this folder.
 
-### The HMAC Secret
+All APKs can coexist side by side on your mobile device, because they were built as product flavors, as you can see at the [app/android/kotlin/ShipFast/app/build.gradle](/app/android/kotlin/ShipFast/app/build.gradle#L69).
 
-The value for the `SHIPFAST_API_HMAC_SECRET` in the `.env` file needs to be:
+Each demo stage will have it's own color scheme on the mobile app so that you can easily identify what demo stage you are in:
 
-```text
-SHIPFAST_API_HMAC_SECRET=3XqYZ17+dy1LMmTNkCqlcsNy2kJEtuD8gzZaRV53bHKc9Lu2Qh4h9fVAcsyXSBcXvaKOWyKuaa3v4uWjOXGYYg==
-```
+* *API_KEY_PROTECTION* - blue
+* *HMAC_STATIC_SECRET_PROTECTION* - orange
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - red
+* *APPROOV_APP_AUTH_PROTECTION* - green
 
-### Google Maps API Key
+The colors do not have any special meaning.
 
-A Google Maps API key, which you can get from the [Google Cloud Platform Console](https://debians.google.com/maps/documentation/android-api/signup), and that you will need to add into the `.env` file:
+### ShipFast API
 
-```text
-ANDROID_GEO_API_KEY=your-google-maps-api-key-here
-```
+Both the ShipFast mobile app ShipRaider will talk with the ShipFast API located at [server/shipfast-api](/server/shipfast-api), and we made i available at https://shipfast.demo.approov.io.
 
-### Free AUTH0 Account
+The ShipFast API is versioned from `v1` to `v4` to reflect each demo stage, and you can access directly each stage as per:
 
-A free Auth0 account, which you can get from [auth0.com](https://auth0.com).
+* *API_KEY_PROTECTION* - [v1](https://shipfast.demo.approov.io/v1)
+* *HMAC_STATIC_SECRET_PROTECTION* - [v2](https://shipfast.demo.approov.io/v2)
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - [v3](https://shipfast.demo.approov.io/v3)
+* *APPROOV_APP_AUTH_PROTECTION* - [v4](https://shipfast.demo.approov.io/v4)
 
-#### Configuring Auth0 in their Dashboard
+### ShipRaider
 
-1. Create a new Native Client in the Auth0 dashboard and name it "ShipFast"
-2. Take careful note of your Auth0 Domain and Client ID as these will be
-required to add later into the `.env` file.
-3. In the "Allowed Callback URLs" field, enter:
-    `demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipfast/callback, shipraider.dev.example.com, http://127.0.0.1`
-    replacing *YOUR-ACCOUNT* with your Auth0 account name
-4. Auth0 should already be pre-configured to include Google and GitHub social
-accounts allowing you to log in to ShipFast with those, but go ahead and add
-more if you wish.
+The attacks for each demo stage are performed via a web based application that is provided by the evil pirate ShipRaider.
 
-#### Configuring Auth0 in the .env File
+For your convenience we provide a version of ShipRaider for each demo stage at:
 
-Now edit the `.env` file and add replace the placehoders for:
+* *API_KEY_PROTECTION* - [api-key](https://api-key.shipraider.demo.approov.io)
+* *HMAC_STATIC_SECRET_PROTECTION* - [static-hmac](https://static-hmac.shipraider.demo.approov.io)
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - [dynamic-hmac](https://dynamic-hmac.shipraider.demo.approov.io)
+* *APPROOV_APP_AUTH_PROTECTION* - [approov](https://approov.shipraider.demo.approov.io)
 
-```text
-AUTH0_DOMAIN=your-domain-for-auth0
-AUTH0_CLIENT_ID=your-auth0-client-id
-```
+The ShipRaider web interface also follows the same color scheme used for the ShipFast mobile app in order to facilitate pairing them when following the demo.
 
-## THE DEMO STACK
 
-To follow along the blog series and play around with the Shipfast mobile app we need to build the APK for the Shipfast app and have the ShipfFast API and the Shipraider Web interface running in an online server.
+## The Demo Overview
 
-### For the Mobile App
+Below we will briefly give an overview about each of the techniques used in the demo to lock the API server to the mobile app, with links to the relevant lines of code and respective blog post in the series.
 
-#### From the Command Line
+### API Key
 
-We recommend to build the APK with the bash scripts we provide, as per instructions from each blog in the series, because this makes easier and more consistent to follow the demo across the several demo stages, but you are free to not use this approach.
+The most common method used by developers to identify **what** is making a request to the API server is to use a long string in the request header, that is often named as `Api-Key`.
 
-#### Using the command line from a docker container
+The API key is very simple to implement in the API server and in the mobile app. The mobile just needs to add it to every request as seen in [this code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L211) and the API server will validate it with a simple check as per [this code](/server/shipfast-api/api/middleware/api-key.js#L28).
 
-The `apk` bash script in the root of the repo is a wrapper around a docker container with all the necessary dependencies to build the Android APK and install it in a real mobile device.
+#### The First Attack
 
-Using the docker container dispenses you from configuring your computer with the dependencies to run the demo, but we understand that not everyone has Docker installed, therefore alternatives are purposed below.
+In this [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-2) we walk you through the first attack scenario where we show you how easy is to extract the API key with a MitM(Man in the Middle) attack.
 
->**IMPORTANT:** ADB server in your computer needs to be stopped when using this approach, because we cannot have two ADB servers connected to the real mobile device via USB. The bash script will stop the server for you, therefore after your are done with the demo you need to restart it again with `adb start-server`.
 
-#### Using the command line from your computer
+### Static HMAC
 
-To use the command line from your computer its necessary that all dependencies are available.
+[HMAC(Keyed-Hash Message Authentication Code)](https://en.wikipedia.org/wiki/Hash-based_message_authentication_code) is a common method used to digitally sign API requests in order to detect when the request was hijacked/tampered.
 
-For example the Android build tools version `29.0.3` and the NDK version `21.0.6113669`. Bear in mind that is not an exhaustive list, because the dependencies to install will depend on your system, thats why we recommend to use the docker container approach.
+So we will use HMAC to digitally sign the request as the first defense in order to enhance the API protection against the API key extraction outlined in the first attack scenario.
 
-This approach will use the bash scripts at `app/android/kotlin/ShipFast/bin`.
+The HMAC implementation is a little more elaborated then the API key implementation, but it's still a simple one to implement in the mobile app and in the API server. You can check [this code](/server/shipfast-api/api/middleware/static-hmac.js#L15) for the mobile app implementation and [this code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L252) for the mobile app implementation.
 
-#### With Android Studio from a Docker Container
+#### The First Defence
 
-Some companies restrict what Android Studio version a developer may be using and/or what they can install on it, thus we offer a docker image with Android Studio. Using this approach will not affect the current Android Studio installation on your computer, and when you are done with the demo you just remove the docker container and image to remove any traces of it in your system.
+On the same [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-2) we walk you through the first attack scenario we also show you in the *The First Defence* section how to mitigate it with a static HMAC algorithm implementation. We say the HMAC is static, because it relies on an hard-coded secret to digitally sign the request, thus this secret needs to be shipped within the code of the mobile app.
 
-See how you can do it on the section: [Running Android Studio from a Docker Container](/docs/FULL_STACK.md#running-android-studio-from-a-docker-container).
+#### The Second Attack
 
-#### With your Android Studio
+So if the HMAC secret used to digitally sign the requests is hard-coded, then it can be easily retrieved from the code by performing static binary analysis with open source tools. This same tools will also reveal the HMAC algorithm logic, thus allowing an attacker to easily spoof correctly HMAC signed requests from it's own server, and this is explained in more detail at the section *The Second Attack* on this [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3).
 
-If at work you don't have constrains in what version of Android Studio you can use, neither what can be installed on it, then you can just use this repo as any other mobile project you are used to work in to build the APK and run it in the emulator or mobile device.
 
-### For the Backend
+### Dynamic HMAC
 
-The backend is made of two NodeJS servers, one for the ShipFast API, and another for the ShipRaider web interface.
+The second attack scenario revealed us that using a static secret on as part of the HMAC algorithm was a weak point, because it allows an attacker to bypass it, thus we need a dynamic HMAC secret, one that is computed at runtime.
 
-#### With our Online Servers
+The implementation for the mobile app can be seen in this [lines of code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L259) while the API server equivalent can be seen [here](server/shipfast-api/api/middleware/dynamic-hmac.js#L16).
 
-To make it easier to follow the demo we provide the ShipFast API at `https://shipfast.demo.approov.io` and the ShipRaider web interface at [shipraider.demo.approov.io](https://shipraider.demo.approov.io).
+#### The Second Defense
 
-#### With your Online Servers
+To compute the HMAC secret at runtime we will use something on the request and merge it with the static HMAC secret to give us the dynamic HMAC secret that the HMAC algorithm will use to digitally sign the request, and we go into a lot of more detail on the section *The Second Defense* on this [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3).
 
-If you prefer to be in control of the backend servers, then they need to be reachable from the Internet, therefore you need to deploy them into an online server. Deploying them on localhost will not allow for some of the best features of Approov to be seen in action, like the dynamic certificate pinning.
+#### The Third Attack
 
-You can deploy very easily your own online servers by following one of our guides:
+What changed from the static HMAC to the dynamic HMAC is that the secret is now computed during runtime, thus making it harder to bypass, but not impossible, because if we have reverse engineered previously the HMAC algorithm for the static HMAC implementation, we just need to do the same for the dynamic HMAC secret implementation, and the section *The Third Attack* on this [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) as great detail about how this is achieved.
 
-* [AWS EC2 Traefik Setup](https://github.com/approov/aws-ec2-traefik-setup)
-* [Debian Setup](/docs/SETUP_ONLINE_DEBIAN_SERVER.md)
 
-### The Full Stack
+### Approov Mobile App Attestation
 
-If you want to be in control of the full stack, then please see the instructions [here](/docs/FULL_STACK.md).
+The mobile app attestion is a concept developed by Approov and described in detail on this [white paper](https://approov.io/download/Approov-Whitepaper-Security-Trust-Gap.pdf) or if you prefer a shorter read on our [product overview](https://approov.io/product) page. In a nutshell Approov can be described has the mechanism that will allow you to lock-down the API server to genuine instances of your mobile apps, with a very high degree of confidence.
 
-## RUNNING THE DEMO
+The Approov integration is simple as it can be for the mobile app developers, that only need to write *4 lines of code* to use the [Approoov SDK](https://approov.io/docs/latest/approov-usage-documentation/#sdk-integration) from the [Approov Service](https://approov.io/docs/latest/approov-integration-examples/mobile-app/) more adequate to the HTTP stack being used by the mobile framework/platform that the mobile app is being developed for, as it can be seen in the [ShipFastApp.kt](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ShipFastApp.kt) class for the lines that are preceded by `// *** UNCOMMENT THE CODE BELOW FOR APPROOV ***`.
 
-Please follow the instructions for each stage of the demo as per instructions in [this series](https://blog.approov.io/tag/a-series-shipfast) of blog posts.
+The backend integration is also simple and only requires to use a JWT library to verify the Approov token, and in this NodeJS backend we use the [express-jwt](https://www.npmjs.com/package/express-jwt). The minimal code to verify the Approov toke with this library can be seen on the [checkApproovToken](/server/shipfast-api/api/approov/approov-token-check.js#L129) callback at the [approov-token-check.js](server/shipfast-api/api/approov/approov-token-check.js) file.
 
-## TROUBLESHOOTING
+#### The Final Defense
 
-### Environment values not reflected in the demo
+Approov is used to ensure that the API server know with a very high degree of confidence if it can trust in the incoming request as one originated from a genuine and untampered version of the mobile app, thus making the mobile app the only one that is now capable of sending valid requests to the API server, and the section *The Final Defense* on the last [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) on this series as a lot of detail on why and how the Approov integration is implemented.
 
-* Every time you update the `.env` file you need to rebuild an install the ShipFast mobile app.
 
-### Not Getting Active Shipments in the Mobile App
+## Useful Links
 
-Check in the `.env` file that `SHIPFAST_DEMO_STAGE` and `SHIPFAST_API_VERSION` have the correct values as per the comments on the same file.
-
-### ShipRaider not Getting Shipments or just a couple of them
-
-* You need to login with same user as you have logged in the mobile app.
-* When using the mobile app in a real device you need to click in the find my location button first.
-* If you tweak the location sweep radius and/or the location sweep step you may get less or no shipments at all.
+* [Approov Free Trial](https://approov.io/signup)(no credit card needed)
+* [Approov QuickStarts](https://approov.io/docs/latest/approov-integration-examples/)
+* [Approov Live Demo](https://approov.io/product/demo)
+* [Approov Docs](https://approov.io/docs)
+* [Approov Blog](https://blog.approov.io)
+* [Approov Resources](https://approov.io/resource/)
+* [Approov Customer Stories](https://approov.io/customer)
+* [Approov Support](https://approov.zendesk.com/hc/en-gb/requests/new)
+* [About Us](https://approov.io/company)
+* [Contact Us](https://approov.io/contact)

@@ -37,7 +37,7 @@ The colors do not have any special meaning.
 
 ### ShipFast API
 
-Both the ShipFast mobile app ShipRaider will talk with the ShipFast API located at [server/shipfast-api](/server/shipfast-api), and we made i available at https://shipfast.demo.approov.io.
+Both the ShipFast mobile app ShipRaider will talk with the ShipFast API located at [server/shipfast-api](/server/shipfast-api), and we made it available at https://shipfast.demo.approov.io.
 
 The ShipFast API is versioned from `v1` to `v4` to reflect each demo stage, and you can access directly each stage as per:
 
@@ -81,7 +81,7 @@ In this [blog post](https://blog.approov.io/practical-api-security-walkthrough-p
 
 So we will use HMAC to digitally sign the request as the first defense in order to enhance the API protection against the API key extraction outlined in the first attack scenario.
 
-The HMAC implementation is a little more elaborated then the API key implementation, but it's still a simple one to implement in the mobile app and in the API server. You can check [this code](/server/shipfast-api/api/middleware/static-hmac.js#L15) for the mobile app implementation and [this code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L252) for the mobile app implementation.
+The HMAC implementation is a little more elaborated then the API key implementation, but it's still a simple one to implement in the mobile app and in the API server. You can check [this code](/server/shipfast-api/api/middleware/static-hmac.js#L15) for the API server implementation, and [this code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L252) for the mobile app implementation.
 
 #### The First Defence
 
@@ -94,13 +94,13 @@ So if the HMAC secret used to digitally sign the requests is hard-coded, then it
 
 ### Dynamic HMAC
 
-The second attack scenario revealed us that using a static secret on as part of the HMAC algorithm was a weak point, because it allows an attacker to bypass it, thus we need a dynamic HMAC secret, one that is computed at runtime.
+The second attack scenario revealed us that using a static secret on the HMAC algorithm is a weak point, because it allows an attacker to bypass it, thus we need a dynamic HMAC secret, one that is computed at runtime.
 
 The implementation for the mobile app can be seen in this [lines of code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L259) while the API server equivalent can be seen [here](server/shipfast-api/api/middleware/dynamic-hmac.js#L16).
 
 #### The Second Defense
 
-To compute the HMAC secret at runtime we will use something on the request and merge it with the static HMAC secret to give us the dynamic HMAC secret that the HMAC algorithm will use to digitally sign the request, and we go into a lot of more detail on the section *The Second Defense* on this [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3).
+To compute the HMAC secret at runtime we will use something from the request and merge it with the static HMAC secret to give us the dynamic HMAC secret that the HMAC algorithm will use to digitally sign the request, and we go into a lot of more detail on the section *The Second Defense* on this [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3).
 
 #### The Third Attack
 
@@ -113,11 +113,11 @@ The mobile app attestion is a concept developed by Approov and described in deta
 
 The Approov integration is simple as it can be for the mobile app developers, that only need to write *4 lines of code* to use the [Approoov SDK](https://approov.io/docs/latest/approov-usage-documentation/#sdk-integration) from the [Approov Service](https://approov.io/docs/latest/approov-integration-examples/mobile-app/) more adequate to the HTTP stack being used by the mobile framework/platform that the mobile app is being developed for, as it can be seen in the [ShipFastApp.kt](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ShipFastApp.kt) class for the lines that are preceded by `// *** UNCOMMENT THE CODE BELOW FOR APPROOV ***`.
 
-The backend integration is also simple and only requires to use a JWT library to verify the Approov token, and in this NodeJS backend we use the [express-jwt](https://www.npmjs.com/package/express-jwt). The minimal code to verify the Approov toke with this library can be seen on the [checkApproovToken](/server/shipfast-api/api/approov/approov-token-check.js#L129) callback at the [approov-token-check.js](server/shipfast-api/api/approov/approov-token-check.js) file.
+The API server integration is also simple and only requires to use a JWT library to verify the Approov token, and in this NodeJS backend we use the [express-jwt](https://www.npmjs.com/package/express-jwt). The minimal code to verify the Approov token with this library can be seen on the [checkApproovToken](/server/shipfast-api/api/approov/approov-token-check.js#L129) callback at the [approov-token-check.js](server/shipfast-api/api/approov/approov-token-check.js) file.
 
 #### The Final Defense
 
-Approov is used to ensure that the API server know with a very high degree of confidence if it can trust in the incoming request as one originated from a genuine and untampered version of the mobile app, thus making the mobile app the only one that is now capable of sending valid requests to the API server, and the section *The Final Defense* on the last [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) on this series as a lot of detail on why and how the Approov integration is implemented.
+Approov is used to ensure that the API server can trust, with a very high degree of confidence, in the incoming request as one that was originated from a genuine and untampered version of the mobile app, thus making the mobile app the only one that is now capable of sending valid requests to the API server, and the section *The Final Defense* on the last [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) on this series as a lot of detail on why you should use Approov, and how the Approov integration is implemented.
 
 
 ## Useful Links

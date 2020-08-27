@@ -3,24 +3,32 @@
 Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts on practical API security techniques. The series walks you through the process of defending a mobile API backend against various exploits which an attacker may use to gain access to the data it holds. In this demonstration scenario, the attack allows real users of the system to gain an unfair business advantage at the expense of the company.
 
 
-## Why?
+## The Repository Structure
 
-When a developer builds or use an API the attestation mechanism used to ensure that the API only serves requests to the authorized mobile apps involves an identifier(a long and random string) that it's commonly named as an API key, and that is often used along side with user authentication for that endpoints the business logic requires to know the user.
+This repository supports the ShipFast demo for all the demo stages in the [blog series](https://blog.approov.io/tag/a-series-shipfast) on the same branch, and consists of 3 distinct projects:
 
-This demo purpose is to educate the developer that an API key is easily bypassed, and show how other more sophisticated alternatives can be used, like HMAC, that unfortunately is also not hard to bypass.
+* [ShipFast API](/README.md#shipfast-api) - The API that we want to defend from being used by non legit clients.
+* [ShipFast Mobile App](/README.md#shipfast-mobile-app) - Legit client for the ShipFast API.
+* [ShipRaider Web Interface](/README.md#shipraider-web-interface) - Unauthorized client of the ShipFast API, that impersonates the ShipFast Mobile App.
 
-By the end of the demo a mobile app attestation solution is introduced to show the developers how it's possible to mitigate with an high degree of confidence all the previous techniques bypasses.
+Having all 3 projects on the same repository and with the code for each demo stage in the same branch will make easier to follow the demo in order to understand the code differences between each blog post.
 
+Each blog post will introduce a technique to lock down the API server to the mobile app, with links to the relevant parts of the code on this repository in order for you to learn how it's implemented by the mobile app and API server, and how an attacker can bypass them to make requests to the API server as if it was the mobile app itself. So each blog post in the series will have a section dedicated how to perform the attack and another section about how to defend against it, with code examples and links to the lines of code on this repository.
 
-## How it Works?
+### ShipFast API
 
-This demo repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of blog posts that goes into a great detail to explain how several techniques can be used in order to lock the mobile app to the API server.
+The ShipFast API code can be found on the folder [server/shipfast-api](/server/shipfast-api), and for your convenience we made this API server available online at https://shipfast.demo.approov.io.
 
-For each technique the blog post will show how it's implemented by the mobile app and API server, and how an attacker can bypass it in order to make requests to the API server as if it was the mobile app itself. So each blog post in the series will have a section dedicated how to perform the attack and another section about how to defend against it, with code examples and links to the lines of code on this repo.
+The ShipFast API is versioned from `v1` to `v4` to reflect each demo stage, and you can access directly each stage as per:
+
+* *API_KEY_PROTECTION* - https://shipfast.demo.approov.io/v1
+* *HMAC_STATIC_SECRET_PROTECTION* - https://shipfast.demo.approov.io/v2
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - https://shipfast.demo.approov.io/v3
+* *APPROOV_APP_AUTH_PROTECTION* - https://shipfast.demo.approov.io/v4
 
 ### ShipFast Mobile App
 
-The [releases page](https://github.com/approov/shipfast-api-protection/releases) of this repo will contain APKs for each of the demo stages that you can install in your mobile device to follow along the demo.
+The [releases page](https://github.com/approov/shipfast-api-protection/releases) of this repository will contain APKs for each of the demo stages that you can install in your mobile device to follow along the demo.
 
 Each APK was built from the code at [app/android/kotlin/ShipFast](/app/android/kotlin/ShipFast) with the [./apk](/apk) bash script on the root of this folder.
 
@@ -35,27 +43,16 @@ Each demo stage will have it's own color scheme on the mobile app so that you ca
 
 The colors do not have any special meaning.
 
-### ShipFast API
-
-Both the ShipFast mobile app ShipRaider will talk with the ShipFast API located at [server/shipfast-api](/server/shipfast-api), and we made it available at https://shipfast.demo.approov.io.
-
-The ShipFast API is versioned from `v1` to `v4` to reflect each demo stage, and you can access directly each stage as per:
-
-* *API_KEY_PROTECTION* - [v1](https://shipfast.demo.approov.io/v1)
-* *HMAC_STATIC_SECRET_PROTECTION* - [v2](https://shipfast.demo.approov.io/v2)
-* *HMAC_DYNAMIC_SECRET_PROTECTION* - [v3](https://shipfast.demo.approov.io/v3)
-* *APPROOV_APP_AUTH_PROTECTION* - [v4](https://shipfast.demo.approov.io/v4)
-
-### ShipRaider
+### ShipRaider Web Interface
 
 The attacks for each demo stage are performed via a web based application that is provided by the evil pirate ShipRaider.
 
-For your convenience we provide a version of ShipRaider for each demo stage at:
+For your convenience we provide an online version of ShipRaider for each demo stage as per:
 
-* *API_KEY_PROTECTION* - [api-key](https://api-key.shipraider.demo.approov.io)
-* *HMAC_STATIC_SECRET_PROTECTION* - [static-hmac](https://static-hmac.shipraider.demo.approov.io)
-* *HMAC_DYNAMIC_SECRET_PROTECTION* - [dynamic-hmac](https://dynamic-hmac.shipraider.demo.approov.io)
-* *APPROOV_APP_AUTH_PROTECTION* - [approov](https://approov.shipraider.demo.approov.io)
+* *API_KEY_PROTECTION* - https://api-key.shipraider.demo.approov.io
+* *HMAC_STATIC_SECRET_PROTECTION* - https://static-hmac.shipraider.demo.approov.io
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - https://dynamic-hmac.shipraider.demo.approov.io
+* *APPROOV_APP_AUTH_PROTECTION* - https://approov.shipraider.demo.approov.io
 
 The ShipRaider web interface also follows the same color scheme used for the ShipFast mobile app in order to facilitate pairing them when following the demo.
 

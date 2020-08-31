@@ -15,9 +15,9 @@ We have kept all 3 projects in the same repository and structured the code to in
 After setting the scene in the first blog post, successive entries show how security measures may be strengthened (or bypassed) using links to the code in this GitHub repository where appropriate. The blog series may be summarized by referring to the main security method under discussion in each one:
 
 1. [*API Keys*](https://blog.approov.io/practical-api-security-walkthrough-part-1)
-1. [*Static HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-2)
-1. [*Dynamic HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-3)
-1. [*Approov Protection*](https://blog.approov.io/practical-api-security-walkthrough-part-4)
+2. [*Static HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-2)
+3. [*Dynamic HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-3)
+4. [*Approov Protection*](https://blog.approov.io/practical-api-security-walkthrough-part-4)
 
 We provide freely available deployments of the two services and APKs for you to download and install, so you can work with them as you read the blog. The following sections give a brief summary of the services we have deployed, the apps we provide, where to find the associated code in this repository, and where the changes for each blog post are located.
 
@@ -49,7 +49,7 @@ The colors do not have any special meaning, but obviously, green is the best.
 
 ### ShipRaider Web Interface
 
-The rogue web service, ShipRaider, was setup by an evil pirate to take advantage of ShipFast customers.
+The rogue web service, ShipRaider, was setup by an evil pirate to help ShipFast drivers take advantage of ShipFast customers gratuities.
 The code can be found in the [server/shipraider-rogue-web](/server/shipraider-rogue-web) folder.
 
 Each version of the website is served from a different domain:
@@ -73,7 +73,7 @@ API keys are very simple to implement in both the server and the client. [This a
 
 #### The First Attack
 
-Unfortunately, bypassing the API Key protection is also easy, as it is a secret communicated on every request. The [second blog](https://blog.approov.io/practical-api-security-walkthrough-part-2) in the series starts off by showing how to extract the API key with a MitM(Man in the Middle) attack. The key is then [added to the Shipraider website](<<PAULO PLEASE ADD THE LINK HERE>>) to be used in the requests it makes to the ShipFast API.
+Unfortunately, bypassing the API Key protection is also easy, as it is a secret communicated on every request. The [second blog](https://blog.approov.io/practical-api-security-walkthrough-part-2) in the series starts off by showing how to extract the API key with a MitM(Man in the Middle) attack. The key is then [added to the Shipraider website](/server/shipraider-rogue-web/views/pages/index.ejs#L27) to be [used](/server/shipraider-rogue-web/public/js/shipraider.js#L51) in the requests it makes to the ShipFast API.
 
 ### Static HMAC
 
@@ -83,7 +83,7 @@ The HMAC implementation is a little more elaborate than the API key implementati
 
 #### The Second Attack
 
-However, if the HMAC secret is hard-coded, then it is still easy for an attacker to extract. The [third blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3) demonstrates this by using open source binary analysis tools to reveal the HMAC secret and the associated algorithm used to sign the requests. Once these are copied across to the [ShipRaider code](<<PAULO PLEASE ADD THE LINK HERE>>) the rogue website can get up and running again.
+However, if the HMAC secret is hard-coded, then it is still easy for an attacker to extract. The [third blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3) demonstrates this by using open source binary analysis tools to reveal the HMAC secret and the associated algorithm used to sign the requests. Once these are copied across to the [ShipRaider code](/server/shipraider-rogue-web/public/js/shipraider.js#L269) the rogue website can get up and running again.
 
 ### Dynamic HMAC
 
@@ -93,11 +93,11 @@ The implementation for the mobile app can be seen in these [lines of code](/app/
 
 #### The Third Attack
 
-Computing the HMAC secret at runtime makes it harder to bypass but not impossible. The attacker now needs to understand a larger section of code in order to reproduce the behavior in the ShipRaider website. The [fourth blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) lists several approaches for this, giving a more detailed example using app repackaging and the Android Studio debugger. Again, the attacker can write [equivalent code](<<PAULO PLEASE ADD THE LINK HERE>>) in ShipRaider to continue using the ShipFast API.
+Computing the HMAC secret at runtime makes it harder to bypass but not impossible. The attacker now needs to understand a larger section of code in order to reproduce the behavior in the ShipRaider website. The [fourth blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) lists several approaches for this, giving a more detailed example using app repackaging and the Android Studio debugger. Again, the attacker can write [equivalent code](server/shipraider-rogue-web/public/js/shipraider.js#L269) in ShipRaider to continue using the ShipFast API.
 
 ### Approov Mobile App Attestation
 
-The [fourth blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4), introduces the final security measure in the series.Mobile app attestation is the API security concept implemented in Approov. In a nutshell, Approov checks the whole app and the environment in which it runs before enabling access to the API - *the App is the key*. It gives you a high degree of confidence that your API accesses are locked-down to legitimate instances of your app. This approach is described in more detail in our [product overview](https://approov.io/product) page and in the associated [white paper](https://approov.io/download/Approov-Whitepaper-Security-Trust-Gap.pdf).
+The [fourth blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4), introduces the final security measure in the series. Mobile app attestation is the API security concept implemented in Approov. In a nutshell, Approov checks the whole app and the environment in which it runs before enabling access to the API - *the App is the key*. It gives you a high degree of confidence that your API accesses are locked-down to legitimate instances of your app. This approach is described in more detail in our [product overview](https://approov.io/product) page and in the associated [white paper](https://approov.io/download/Approov-Whitepaper-Security-Trust-Gap.pdf).
 
 The Approov integration is as simple as it can be for mobile app developers. Add the [Approoov SDK](https://approov.io/docs/latest/approov-usage-documentation/#sdk-integration) to your build, hopefully using one of the [quickstart integration examples]](https://approov.io/docs/latest/approov-integration-examples/mobile-app/) to speed up the process and then call the SDK to obtain an Approov token to include on API requests. You can see this in the ShipFast app in [ShipFastApp.kt](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ShipFastApp.kt), search for the lines that are preceded by `// *** UNCOMMENT THE CODE BELOW FOR APPROOV ***`.
 

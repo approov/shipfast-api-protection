@@ -75,6 +75,7 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
         longitude: originLongitude
     }
 
+    let gratuity = config.CURRENCY_SYMBOL + "0"
     let shipments = {}
 
     if (cache.has(user_uid)) {
@@ -86,7 +87,11 @@ function populateShipments(originLatitude, originLongitude, user_uid) {
         let pickupName = FAKER.address.streetAddress()
         let deliveryName = FAKER.address.streetAddress()
         let description = FAKER.name.findName() + " #" + randomNumber(1000, 9999)
-        let gratuity = calculateShipmentGratuity(shipmentID)
+
+        // For demos purposes we want the first shipments to have zero gratuity.
+        if (i >= 3) {
+            gratuity = calculateShipmentGratuity(shipmentID)
+        }
 
         // Get pickup random coordinates from within `MAX_SHIPMENT_DISTANCE_IN_METRES` of the `DRIVER_COORDINATES`.`
         const pickup = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.5)

@@ -17,6 +17,9 @@ let lock = new Auth0Lock(AUTH0_CLIENT_ID, AUTH0_DOMAIN, {
     auth: {
         redirectUrl: window.url,
         responseType: "id_token",
+        params: {
+            prompt: 'select_account'
+        },
         redirect: true
     },
     oidcConformant: false,

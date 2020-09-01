@@ -17,8 +17,8 @@ const config = {
     NODE_SSL_DIR: dotenv.parsed.NODE_SSL_DIR || process.env.HOME + "/.ssl",
     SHIPRAIDER_SERVER_HOSTNAME: dotenv.parsed.SHIPRAIDER_SERVER_HOSTNAME || 'localhost',
     SHIPRAIDER_HTTP_PROTOCOL: dotenv.parsed.SHIPRAIDER_HTTP_PROTOCOL || 'https',
-    SHIPRAIDER_HTTP_PORT: dotenv.parsed.SHIPRAIDER_HTTP_PORT || '4333',
-    SHIPRAIDER_HTTPS_PORT: dotenv.parsed.SHIPRAIDER_HTTPS_PORT || '4443',
+    SHIPRAIDER_HTTP_PORT: dotenv.parsed.SHIPRAIDER_HTTP_PORT || process.env.SHIPRAIDER_HTTP_PORT || undefined,
+    SHIPRAIDER_HTTPS_PORT: dotenv.parsed.SHIPRAIDER_HTTPS_PORT || undefined,
     SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL || undefined,
     SHIPFAST_PUBLIC_DOMAIN: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN || undefined,
     SHIPFAST_API_KEY: dotenv.parsed.SHIPFAST_API_KEY || undefined,
@@ -70,7 +70,7 @@ const SHIPFAST_API_VERSIONS = {
 }
 
 // The current demo stage
-let demo_stage = dotenv.parsed.DEMO_STAGE || undefined
+let demo_stage = dotenv.parsed.DEMO_STAGE || process.env.DEMO_STAGE || undefined
 
 if (demo_stage === undefined) {
     throw new Error("Missing Env Var value for: DEMO_STAGE")

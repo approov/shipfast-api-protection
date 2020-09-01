@@ -52,17 +52,14 @@ Docker_Container_Is_Running() {
   return $?
 }
 
-Build_Api_Server() {
+Build_NodeJS_Server() {
+    # ShipFast and ShipRaider share the same NodeJS docker image.
     ${DOCKER_COMPOSE} build api
 }
 
 Build_Editor() {
     ${DOCKER_COMPOSE} build editor
     ./docker/setup/docker-volumes-dirs.sh "${PROJECT_NAME}" "${PROJECT_HOST_DIR}" "${ANDROID_STUDIO_MAJOR_VERSION}"
-}
-
-Build_Web_Server() {
-    ${DOCKER_COMPOSE} build web
 }
 
 Start_Editor() {
@@ -83,11 +80,12 @@ Start_Editor() {
     ${DOCKER_COMPOSE} up -d editor
 
     if [ ! -f "${APPROOV_SDK_PATH}" ]; then
-        printf "\n---> WARNING: Missing file ${APPROOV_SDK_PATH} <---\n"
+        printf "\n---> WARNING: Missing the APPROOV SDK ${APPROOV_SDK_PATH} <---\n"
         printf "Note: This can be ignored until you need to build the 'approov' product flavour\n"
-        printf "\n---> ADD FILE WITH: approov sdk ./path/to/dev.token -getLibrary ${APPROOV_SDK_PATH} <---\n"
-        printf "\n---> APPROOV CONFIG: approov sdk ./path/to/dev.token -getConfig .approov-initial.config <---\n"
-        printf "\n---> Add the Approov initial config to the strings resource file. <---\n\n"
+        printf "\n> ADD THE APPROOV SDK WITH: approov sdk -getLibrary ${APPROOV_SDK_PATH}\n"
+        printf "\n> GET THE APPROOV SDK INITIAL CONFIG: approov sdk -getConfig approov-initial.config\n"
+        printf "\n> Add the content of the file approov-initial.config to the var APPROOV_INITIAL_CONFIG in the .env file\n\n"
+        exit 1
     fi
 }
 
@@ -123,10 +121,13 @@ Destroy_Api_Server() {
 Start_Web_Server() {
 
     if [ ! -d "./server/shipraider-rogue-web/node_modules" ]; then
-        ${DOCKER_COMPOSE} run web sh -c 'npm install && exit || exit'
+        ${DOCKER_COMPOSE} run web-api-key sh -c 'npm install && exit || exit'
     fi
 
-    ${DOCKER_COMPOSE} up -d web
+    ${DOCKER_COMPOSE} up -d web-api-key
+    ${DOCKER_COMPOSE} up -d web-static-hmac
+    ${DOCKER_COMPOSE} up -d web-dynamic-hmac
+    ${DOCKER_COMPOSE} up -d web-approov
 }
 
 Restart_Web_Server() {
@@ -134,8 +135,18 @@ Restart_Web_Server() {
 }
 
 Destroy_Web_Server() {
-    ${DOCKER_COMPOSE} stop web
-    ${DOCKER_COMPOSE} rm -f web
+    ${DOCKER_COMPOSE} stop web-api-key
+    ${DOCKER_COMPOSE} rm -f web-api-key
+
+    ${DOCKER_COMPOSE} stop web-static-hmac
+    ${DOCKER_COMPOSE} rm -f web-static-hmac
+
+    ${DOCKER_COMPOSE} stop web-dynamic-hmac
+    ${DOCKER_COMPOSE} rm -f web-dynamic-hmac
+
+    ${DOCKER_COMPOSE} stop web-approov
+    ${DOCKER_COMPOSE} rm -f web-approov
+
 }
 
 Logs() {
@@ -268,7 +279,7 @@ Main() {
             build )
                 case "${2:-}" in
                     api )
-                        Build_Api_Server
+                        Build_NodeJS_Server
                     ;;
 
                     editor )
@@ -276,12 +287,11 @@ Main() {
                     ;;
 
                     servers )
-                        Build_Api_Server
-                        Build_Web_Server
+                        Build_NodeJS_Server
                     ;;
 
                     web )
-                        Build_Web_Server
+                        Build_NodeJS_Server
                     ;;
 
                     * )

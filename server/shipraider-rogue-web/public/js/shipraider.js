@@ -48,7 +48,7 @@ $("#refresh-shipments-button").click(function(event) {
 })
 
 const getShipfastApiUrl = function(endpoint) {
-    return $("#shipfast-api-url").val() + "/" + SHIPFAST_API_VERSION + endpoint
+    return $("#shipfast-api-url").val() + endpoint
 }
 
 const getShipFastAPIKey = function() {
@@ -74,7 +74,7 @@ const getDriverLongitude = function() {
     return $("#location-longitude-input").val()
 }
 
-const showAlertOnError = function(error = "Unknown error!!!") {
+const showAlertOnError = function(error = "Unknown error in response!!!") {
     alert("Man, it didn't work this time!\n\n" + error)
 }
 

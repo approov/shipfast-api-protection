@@ -57,16 +57,20 @@ services:
       - "traefik.backend=${ENVIRONMENT:-dev}.shipfast-api"
       - "traefik.docker.network=traefik"
       - "traefik.port=${SHIPFAST_HTTP_PORT}"
+      - "traefik.http.middlewares.corsheaders.headers.accesscontrolalloworigin=*"
       - "traefik.frontend.rule=Host:${SHIPFAST_PUBLIC_DOMAIN:-localhost}"
 
-  web:
+  web-api-key:
     image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
-    container_name: "${ENVIRONMENT:-dev}.web"
-    hostname: "${ENVIRONMENT:-dev}.web"
+    container_name: "${ENVIRONMENT:-dev}.web-api-key"
+    hostname: "${ENVIRONMENT:-dev}.web-api-key"
     working_dir: /home/node/workspace/server/shipraider-rogue-web
+    environment:
+      - DEMO_STAGE=API_KEY_PROTECTION
+      - SHIPRAIDER_HTTP_PORT=${SHIPRAIDER_API_KEY_HTTP_PORT? Missing SHIPRAIDER_API_KEY_HTTP_PORT}
     env_file:
       - .env
     volumes:
@@ -78,13 +82,107 @@ services:
       - shipfast
       - traefik
     ports:
-      - 127.0.0.1:${SHIPRAIDER_HTTP_PORT}:${SHIPRAIDER_HTTP_PORT}
+      - 127.0.0.1:${SHIPRAIDER_API_KEY_HTTP_PORT}:${SHIPRAIDER_API_KEY_HTTP_PORT}
     labels:
       - "traefik.enable=true"
-      - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web-api-key"
       - "traefik.docker.network=traefik"
-      - "traefik.port=${SHIPRAIDER_HTTP_PORT}"
-      - "traefik.frontend.rule=Host:${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+      - "traefik.port=${SHIPRAIDER_API_KEY_HTTP_PORT}"
+      - "traefik.frontend.headers.customResponseHeaders=Access-Control-Allow-Origin:${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+      - "traefik.frontend.rule=Host:api-key.${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+
+  web-static-hmac:
+    image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
+    build:
+      context: ./docker/build
+      dockerfile: nodejs.Dockerfile
+    container_name: "${ENVIRONMENT:-dev}.web-static-hmac"
+    hostname: "${ENVIRONMENT:-dev}.web-static-hmac"
+    working_dir: /home/node/workspace/server/shipraider-rogue-web
+    environment:
+      - DEMO_STAGE=HMAC_STATIC_SECRET_PROTECTION
+      - SHIPRAIDER_HTTP_PORT=${SHIPRAIDER_STATIC_HMAC_HTTP_PORT? Missing SHIPRAIDER_STATIC_HMAC_HTTP_PORT}
+    env_file:
+      - .env
+    volumes:
+      - ./:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    ports:
+      - 127.0.0.1:${SHIPRAIDER_STATIC_HMAC_HTTP_PORT}:${SHIPRAIDER_STATIC_HMAC_HTTP_PORT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web-static-hmac"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPRAIDER_STATIC_HMAC_HTTP_PORT}"
+      - "traefik.frontend.headers.customResponseHeaders=Access-Control-Allow-Origin:${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+      - "traefik.frontend.rule=Host:static-hmac.${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+
+  web-dynamic-hmac:
+    image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
+    build:
+      context: ./docker/build
+      dockerfile: nodejs.Dockerfile
+    container_name: "${ENVIRONMENT:-dev}.web-dynamic-hmac"
+    hostname: "${ENVIRONMENT:-dev}.web-dynamic-hmac"
+    working_dir: /home/node/workspace/server/shipraider-rogue-web
+    environment:
+      - DEMO_STAGE=HMAC_DYNAMIC_SECRET_PROTECTION
+      - SHIPRAIDER_HTTP_PORT=${SHIPRAIDER_DYNAMIC_HMAC_HTTP_PORT? Missing SHIPRAIDER_DYNAMIC_HMAC_HTTP_PORT}
+    env_file:
+      - .env
+    volumes:
+      - ./:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    ports:
+      - 127.0.0.1:${SHIPRAIDER_DYNAMIC_HMAC_HTTP_PORT}:${SHIPRAIDER_DYNAMIC_HMAC_HTTP_PORT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web-dynamic-hmac"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPRAIDER_DYNAMIC_HMAC_HTTP_PORT}"
+      - "traefik.frontend.headers.customResponseHeaders=Access-Control-Allow-Origin:${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+      - "traefik.frontend.rule=Host:dynamic-hmac.${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+
+  web-approov:
+    image: approov/shipfast-nodejs:${ENVIRONMENT:-dev}
+    build:
+      context: ./docker/build
+      dockerfile: nodejs.Dockerfile
+    container_name: "${ENVIRONMENT:-dev}.web-approov"
+    hostname: "${ENVIRONMENT:-dev}.web-approov"
+    working_dir: /home/node/workspace/server/shipraider-rogue-web
+    environment:
+      - DEMO_STAGE=APPROOV_APP_AUTH_PROTECTION
+      - SHIPRAIDER_HTTP_PORT=${SHIPRAIDER_APPROOV_HTTP_PORT? Missing SHIPRAIDER_APPROOV_HTTP_PORT}
+    env_file:
+      - .env
+    volumes:
+      - ./:/home/node/workspace
+    command:
+      - npm
+      - start
+    networks:
+      - shipfast
+      - traefik
+    ports:
+      - 127.0.0.1:${SHIPRAIDER_APPROOV_HTTP_PORT}:${SHIPRAIDER_APPROOV_HTTP_PORT}
+    labels:
+      - "traefik.enable=true"
+      - "traefik.backend=${ENVIRONMENT:-dev}.shipraider-web-approov"
+      - "traefik.docker.network=traefik"
+      - "traefik.port=${SHIPRAIDER_APPROOV_HTTP_PORT}"
+      - "traefik.frontend.headers.customResponseHeaders=Access-Control-Allow-Origin:${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
+      - "traefik.frontend.rule=Host:approov.${SHIPRAIDER_PUBLIC_DOMAIN:-localhost}"
 
 networks:
   shipfast:

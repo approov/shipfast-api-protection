@@ -2,11 +2,6 @@
 
 set -eu
 
-Setup_Sudo_User() {
-    adduser developer
-    usermod -aG sudo developer
-}
-
 Setup_Depedencies() {
     apt update
 

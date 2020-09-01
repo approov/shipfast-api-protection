@@ -72,8 +72,12 @@ Clean_Cache() {
   # The cache here can also cause problems during a build
   rm -rf \
     ~/.gradle/caches \
+    "${app_dir}"/.gradle \
     "${app_dir}"/app/.externalNativeBuild \
-    "${app_dir}"/app/build app/.cxx
+    "${app_dir}"/app/android \
+    "${app_dir}"/app/build \
+    "${app_dir}"/app/.cxx \
+    "${app_dir}"/approov/build
 }
 
 Gradle_Run() {

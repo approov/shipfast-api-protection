@@ -21,11 +21,14 @@ docker-build      Builds the docker image for the APK Shell
 find-usb-path     Find the USB path by mobile device brand/name
                   $ ./apk find-usb-path Samsung
 
-gradle-build      Builds the APK for each build type and product flavor
-                  $ ./apk gradle-build
+gradle            Builds the APK for each build type and product flavor
+                  $ ./apk gradle build
 
 install           Installs the APK for a product flavor via USB in the given mobile device
                   $ ./apk install Samsung
+                  $ ./apk install Samsung api_key
+                  $ ./apk install Samsung static_hmac
+                  $ ./apk install Samsung dynamic_hmac
                   $ ./apk install Samsung approov
 
 list-usb          List all USB devices
@@ -117,8 +120,19 @@ Docker_Run() {
     ${@}
 }
 
-Gradle_Build() {
-  Docker_Run "./app/android/kotlin/ShipFast/bin/apk-cli.sh --app-dir app/android/kotlin/ShipFast build ${@}"
+Gradle() {
+
+  local APPROOV_SDK_PATH=./app/android/kotlin/ShipFast/approov/approov.aar
+
+  if [ ! -f "${APPROOV_SDK_PATH}" ]; then
+      printf "\n---> ERRROR: Missing the APPROOV SDK ${APPROOV_SDK_PATH} <---\n"
+      printf "\n> ADD THE APPROOV SDK: approov sdk -getLibrary ${APPROOV_SDK_PATH}\n"
+      printf "\n> GET THE APPROOV SDK INITIAL CONFIG: approov sdk -getConfig approov-initial.config\n"
+      printf "\n> Add the content of the file approov-initial.config to the var APPROOV_INITIAL_CONFIG in the .env file\n\n"
+      exit 1
+  fi
+
+  Docker_Run "./app/android/kotlin/ShipFast/bin/apk-cli.sh --app-dir app/android/kotlin/ShipFast ${@}"
 
   printf "\n\nInstall an APK in your mobile device with the ./apk install command:\n\n"
   ./apk | grep -B 1 -i 'apk install' -
@@ -235,9 +249,9 @@ Main() {
           exit $?
           ;;
 
-        gradle-build )
+        gradle )
           shift 1
-          Gradle_Build "${@}"
+          Gradle "${@}"
           exit $?
           ;;
 

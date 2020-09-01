@@ -17,7 +17,7 @@ const chalk = require('chalk')
 
 // Auto detection of colour support does not work always, thus we need to
 // enforce it to support 256 colors.
-const ctx = new chalk.constructor({level: 2})
+const ctx = new chalk.Instance({level: 2})
 const info = ctx.bold.blue
 
 app.use(express.static('public'))

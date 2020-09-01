@@ -92,7 +92,7 @@ const showJsonResponseError = function(xhr) {
 
 const searchForShipments = function() {
     updateProgressBar(0)
-    shipments = {}
+    let shipments = {}
 
     let count = 0
     let progress = 0
@@ -122,7 +122,7 @@ const searchForShipments = function() {
 
     let url = getShipfastApiUrl("/shipments/nearest_shipment")
 
-    const fetchNearestShipment = function(latVal, lonVal, url, auth) {
+    const fetchNearestShipment = function(latVal, lonVal, url, auth, shipments) {
 
         progress++
         let progress_made = progress / totalProgress
@@ -146,12 +146,7 @@ const searchForShipments = function() {
                 hasJsonError = false
 
                 if (json.id) {
-                    let shipmentID = json.id
-                    let shipmentPickupLatitude = json.pickupLatitude
-                    let shipmentPickupLongitude = json.pickupLongitude
-                    shipments[shipmentID] = json
-
-                    addShipmentsToResults()
+                    shipments[json.id] = json
                 }
             },
             error: function(xhr) {
@@ -165,7 +160,7 @@ const searchForShipments = function() {
         })
     }
 
-    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth)
+    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth, shipments)
 
     if (hasJsonError) {
         return
@@ -175,18 +170,21 @@ const searchForShipments = function() {
         for (let lon = lonStart; lon <= lonEnd; lon += locStep) {
             if (count++ > 100) {
                 totalProgress = 1
-                let isEmptyTableBody = $("#results-table-body").is(':empty')
-
-                if (isEmptyTableBody) {
-                    setTimeout(showAlertOnError('Unable to find shipments...'), 1000)
-                }
 
                 updateProgressBar(100)
 
                 return
             }
-            fetchNearestShipment(lat, lon, url, auth)
+            fetchNearestShipment(lat, lon, url, auth, shipments)
         }
+    }
+
+    if (Object.keys(shipments).length > 0) {
+        addShipmentsToResults(shipments)
+    }
+
+    if ($("#results-table-body").is(':empty')) {
+        showAlertOnError('Unable to find shipments...')
     }
 }
 
@@ -195,9 +193,7 @@ const updateProgressBar = function(progress) {
     $("#progress-bar-text").text(progress + "% Complete")
 }
 
-const addShipmentsToResults = function() {
-    let resultsTableBody = $("#results-table-body")
-    resultsTableBody.empty()
+const addShipmentsToResults = function(shipments) {
     Object.entries(shipments).forEach(
         ([shipmentID, json]) => {
             shipmentID = json["id"]
@@ -221,7 +217,8 @@ const addShipmentsToResults = function() {
             }
 
             let grabShipmentButton = "<button type='button' class='btn " + buttonClass + "' id='shipment-" + shipmentID + "'>Grab It!</button>"
-            resultsTableBody.append(
+
+            $("#results-table-body").append(
                   "<tr id=shipment-row-" + shipmentID + " class=" + gratuityRowClass + ">"
                 + "<td>" + shipmentID + "</td>"
                 + "<td>" + shipmentName + "</td>"
@@ -230,7 +227,8 @@ const addShipmentsToResults = function() {
                 + "<td>" + shipmentPickupDistance + "</td>"
                 + "<td>" + shipmentDelivery + "</td>"
                 + "<td>" + grabShipmentButton + "</td>"
-                + "</tr>")
+                + "</tr>"
+            )
 
             $("#shipment-" + shipmentID).click(function(event) {
                 event.preventDefault()

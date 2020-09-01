@@ -38,9 +38,9 @@ class ShipFastApp : Application() {
                 else -> {
                     // Use a simple client for non-Approov demo stages
                     return OkHttpClient.Builder()
-                            .connectTimeout(2, TimeUnit.SECONDS)
-                            .readTimeout(2, TimeUnit.SECONDS)
-                            .writeTimeout(2, TimeUnit.SECONDS)
+                            .connectTimeout(15, TimeUnit.SECONDS)
+                            .readTimeout(15, TimeUnit.SECONDS)
+                            .writeTimeout(15, TimeUnit.SECONDS)
                             .build()
                 }
             }

@@ -107,10 +107,17 @@ class LoginActivity : BaseActivity() {
 
         val auth0 = Auth0(jniEnv.getAuth0ClientId(), auth0Domain)
 
+        // Always prompt the user, otherwise if we have multiple Gmail accounts
+        // we will not know wich one was used by the ShipFast App in order to
+        // login with the same one in ShipRaider.
+        val parameters: HashMap<String, Any> = HashMap()
+        parameters.put("prompt", "select_account")
+
         auth0.isOIDCConformant = true
         WebAuthProvider.init(auth0)
                 .withScheme(this.getManifestValueFor("com.criticalblue.shipfast.auth0Scheme"))
                 .withAudience(String.format("https://%s/userinfo", auth0Domain))
+                .withParameters(parameters)
                 .start(this@LoginActivity, object : AuthCallback {
                     override fun onFailure(dialog: Dialog) {
                         stopProgress()

@@ -12,6 +12,7 @@ services:
         ANDROID_STUDIO_VERSION: "${ANDROID_STUDIO_VERSION:? Missing ANDROID_STUDIO_VERSION}"
     container_name: "${ENVIRONMENT:-dev}.editor"
     hostname: "${ENVIRONMENT:-dev}.editor"
+    restart: always
     env_file:
       - .env
     environment:
@@ -37,6 +38,7 @@ services:
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
+    restart: always
     container_name: "${ENVIRONMENT:-dev}.api"
     hostname: "${ENVIRONMENT:-dev}.api"
     working_dir: /home/node/workspace/server/shipfast-api
@@ -65,6 +67,7 @@ services:
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
+    restart: always
     container_name: "${ENVIRONMENT:-dev}.web-api-key"
     hostname: "${ENVIRONMENT:-dev}.web-api-key"
     working_dir: /home/node/workspace/server/shipraider-rogue-web
@@ -96,6 +99,7 @@ services:
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
+    restart: always
     container_name: "${ENVIRONMENT:-dev}.web-static-hmac"
     hostname: "${ENVIRONMENT:-dev}.web-static-hmac"
     working_dir: /home/node/workspace/server/shipraider-rogue-web
@@ -127,6 +131,7 @@ services:
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
+    restart: always
     container_name: "${ENVIRONMENT:-dev}.web-dynamic-hmac"
     hostname: "${ENVIRONMENT:-dev}.web-dynamic-hmac"
     working_dir: /home/node/workspace/server/shipraider-rogue-web
@@ -158,6 +163,7 @@ services:
     build:
       context: ./docker/build
       dockerfile: nodejs.Dockerfile
+    restart: always
     container_name: "${ENVIRONMENT:-dev}.web-approov"
     hostname: "${ENVIRONMENT:-dev}.web-approov"
     working_dir: /home/node/workspace/server/shipraider-rogue-web

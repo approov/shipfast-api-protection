@@ -103,16 +103,13 @@ The Approov integration is as simple as it can be for mobile app developers. Add
 
 The API server integration is also simple: use one of the many [JWT libraries](https://jwt.io/) to verify the Approov token before responding to API requests. The Shipfast API uses the [express-jwt](https://www.npmjs.com/package/express-jwt) node package to verify the Approov token with the [`checkApproovToken`](/server/shipfast-api/api/approov/approov-token-check.js#L129) callback.
 
-
 ## Advanced Usage
 
-The [Advanced Usage](/docs/ADVANCED_USAGE.md) guide is an optional starting point to setup your playground in order to accept the challenge made in the end of the last [blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4), that challenges you to perform some homework tasks to test the ShipFast mobile app resilience to attack when protected by the Approov mobile app attestation solution.
-
-You are free to take the challenge without using this guide to setup a ShipFast demo that you have full control of, but please remember that Approov's app and API protection features can be enabled and disabled by changing the [security policies](https://approov.io/docs/latest/approov-usage-documentation/#security-policies) with the Approov CLI tool. These policies cannot be changed by you when using the ShipFast Demo with the APKs and online servers provided by us, just when using a [free trial](https://approov.io/signup) account(no credit card needed). So this means that in the ShipFast demo the policies may not necessarily all be running during your penetration tests.
+The [Advanced Usage](/docs/ADVANCED_USAGE.md) document describes the build and deployment steps for each of the components that make up the ShipFast and ShipRaider services. To follow the blog series, it is normally sufficient to use the services and apps deployed and maintained by the Approov team, in which case you don't need to follow that document. However, you will need it if you attempt the optional pentesting challenge, described at the end of the [last blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4).
 
 ## Useful Links
 
-The blog series, as a whole, shows a gradual improvement in API security by ensuring that requests only come from legitimate sources. The blogs and the code in this repository are used to show how to easily circumvent some protection mechanisms that are commonly used in API development. It culminates in an Approov integration which gives the highest degree of confidence in verified requests that the ShipFast API receives. If you wish to explore the Approov solution in more depth then why not try one of the following links as a jumping off point:
+The blog series, as a whole, shows a gradual improvement in API security by ensuring that requests only come from legitimate sources. The blogs and the code in this repository are used to show how to easily circumvent some protection mechanisms that are commonly used in API development. It culminates in an Approov integration which gives the highest degree of confidence in the verified requests received by the ShipFast API. If you wish to explore the Approov solution in more depth then why not try one of the following links as a jumping off point:
 
 * [Approov Free Trial](https://approov.io/signup)(no credit card needed)
 * [Approov QuickStarts](https://approov.io/docs/latest/approov-integration-examples/)
@@ -124,6 +121,3 @@ The blog series, as a whole, shows a gradual improvement in API security by ensu
 * [Approov Support](https://approov.zendesk.com/hc/en-gb/requests/new)
 * [About Us](https://approov.io/company)
 * [Contact Us](https://approov.io/contact)
-
-
-

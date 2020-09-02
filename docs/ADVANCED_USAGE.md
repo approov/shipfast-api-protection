@@ -1,7 +1,17 @@
-# ShipFast Demo - Advanced Usage
+# ShipFast - Advanced Usage
 
-The advanced usage guide is for anyone that wants to take full control of the entire stack for the ShipFast demo.
+This guide is for anyone that wants to build all the components used in the Shipfast blog series from scratch. This is not normally necessary as you can follow the blog series using the services and apps deployed and maintained by the Approov team, as described in the [blog series](https://blog.approov.io/tag/a-series-shipfast) and in the top level [README](/README.md#the-repository-structure). You will need to follow these instructions if you take up the challenge to pentest Approov, presented at the end of the [final blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) of the series.
 
+The setup steps can be summarized as follows:
+
+* Install dependencies: Docker, Docker Compose, Git, Approov CLI
+* Sign up for a free trial Approov account
+* Obtain Google Maps API Key
+* Sign up and configure a free trial Auth0 account
+* Clone this repository then configure and build it
+* Configure a box to serve the ShipFast API and the ShipRaider website and deploy it
+
+This process will probably take around <<X>> hours.
 
 ## Advanced Usage Overview
 

@@ -4,14 +4,16 @@ This guide is for anyone that wants to build all the components used in the Ship
 
 The setup steps can be summarized as follows:
 
-* Install dependencies: Docker, Docker Compose, Git, Approov CLI
-* Sign up for a free trial Approov account
-* Obtain Google Maps API Key
-* Sign up and configure a free trial Auth0 account
-* Clone this repository then configure and build it
-* Configure a box to serve the ShipFast API and the ShipRaider website and deploy it
+* [Install dependencies](/docs/ADVANCED_USAGE.md#install-dependencies): Docker, Docker Compose, Git, Approov CLI
+* [Approov Free Trial](/docs/ADVANCED_USAGE.md#approov-free-trial) - Sign up for a free trial Approov account(no credit card needed)
+* [Google Maps](/docs/ADVANCED_USAGE.md#google-maps) - Obtain Google Maps API Key
+* [Free Auth0 Account](/docs/ADVANCED_USAGE.md#free-auth0-account) - Sign up and configure a free trial Auth0 account
+* [DNS records](/docs/ADVANCED_USAGE.md#dns-records) - Configure a sub-domain to be used as the base domain for creating the ShipFast and ShipRaider ones.
+* [ShipFast Demo Setup](/docs/ADVANCED_USAGE.md#shipfast-demo-setup) - Clone this repository then configure it to be able to run all demo stages side by side
+* [ShipFast App APKs](/docs/ADVANCED_USAGE.md#shipfast-app-apks) - Build the ShipFast APKs for each demo stage
+* [Backend Servers Setup](/docs/ADVANCED_USAGE.md#backend-servers-setup) - Configure a box to serve the ShipFast API and the ShipRaider website and deploy it
 
-This process will probably take around <<X>> hours.
+This process will probably take around 1 hour in average. It can take less time if you already have some of the dependencies in your computer and if you already have an online server with Traefik installed. Being familiar with some of the technologies and services used will also help you go faster through this setup.
 
 ## Advanced Usage Overview
 
@@ -28,22 +30,66 @@ Building the APKs for the ShipFast mobile app is also made easy by using a bash 
 
 In order to avoid changes to your operating system installed packages and to your Android Studio setup we have chosen to run everything from Docker containers, therefore both your computer and online server need to have installed:
 
-### Generic
+### Install Dependencies
+
+#### Docker
 
 * [Docker](https://docs.docker.com/install/).
 * [Docker Compose](https://docs.docker.com/compose/install/) `>= 2.1`.
+
+#### Git
+
 * [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
 
-### Approov CLI Tool
+#### Approov CLI Tool
 
 The Approov CLI tool is necessary to perform several tasks in the last stage of the demo, when we integrate Approov into the ShipFast app. Please follow [this instructions](https://approov.io/docs/latest/approov-installation/#approov-tool) to install it for your computer operating system.
 
+### Approov Free Trial
+
 To use the Approov CLI tool you need a developer management token and and administration management token for the CLI tool to be able to talk with the Approov Cloud Service, thus you need to signup for a free Approov trial [here](https://approov.io/signup). No credit card needed.
 
+### Google Maps
 
-## Demo Setup
+The ShipFast app uses Google maps, thus a [Google Maps API key](https://developers.google.com/maps/documentation/android-sdk/get-api-key) is needed, which you can get from the [Google Cloud Platform Console](https://cloud.google.com/console/google/maps-apis/overview) in order to use later when configuring the demo.
 
-The bash script to build the ShipFast App APKs, the ShipFast API server and the ShipRaider Web servers will depend on the `.env` file, therefore the online servers for ShipFast and ShipRaider must use the same `.env` file used in your computer for building the ShipFast App APKs.
+### Free AUTH0 Account
+
+The ShipFast app uses OAUTH2 for the user authentication via the Auth0 provider, and you can get a free Auth0 account from https://auth0.com.
+
+#### Configuring Auth0 in their Dashboard
+
+1. Create a new Native Client in the Auth0 dashboard and name it "ShipFast"
+2. Take careful note of your Auth0 Domain and Client ID as these will be
+required to add later into the `.env` file.
+3. In the "Allowed Callback URLs" field, enter:
+    ```
+    demo://com.criticalblue.shipFast/android,
+    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.api_key/callback,
+    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.static_hmac/callback,
+    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.dynamic_hmac/callback,
+    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.approov/callback,
+    https://shipFast.demo.example.com,
+    https://api-key.shipRaider.demo.example.com,
+    https://static-hmac.shipRaider.demo.example.com,
+    https://dynamic-hmac.shipRaider.demo.example.com,
+    https://approov.shipRaider.demo.example.com
+    ```
+    > **NOTE:** Replace *YOUR-ACCOUNT* with your Auth0 account name
+
+4. Auth0 should already be pre-configured to include Google and GitHub social
+accounts allowing you to log in to ShipFast with those, but go ahead and add
+more if you wish.
+
+### DNS Records
+
+Traefik is used in front of the docker containers for the ShipFast API and ShipRaider, therefore you need to create a subdomain in a domain you control. So let's say that you own `example.com`, then you just need to create a record with a name of your choice, let's use for example `demo`, that you must point to the IP address of the server where Traefik will be installed on. This will give us `demo.example.com` as the base domain to use across all docker containers we will put behind Traefik.
+
+The DNS records for `demo.example.com` must have a wildcard `*` entry that points to the IP address for the Traefik server. This will allow Traefik to automatically handle any sub domain of `demo.example.com`, like `shipfast.demo.example.com`. Traefik will generate the LetsEncrypt certificates for the domain and renew them when the time comes.
+
+## ShipFast Demo Setup
+
+The demo setup is mainly driven by the `.env` file in the root of this repository. The bash script to build the ShipFast App APKs, the ShipFast API server and the ShipRaider Web servers will depend on the `.env` file, therefore the online servers for ShipFast and ShipRaider must use the same `.env` file that you are about to setup.
 
 ### Clone the ShipFast Repository
 
@@ -139,43 +185,13 @@ SHIPFAST_API_HMAC_SECRET=the-hmac-secret
 
 ### Google Maps API Key
 
-The ShipFast app uses Google maps, thus a [Google Maps API key](https://developers.google.com/maps/documentation/android-sdk/get-api-key) is needed, which you can get from the [Google Cloud Platform Console](https://cloud.google.com/console/google/maps-apis/overview).
-
 Now that you have one add it to the `.env` file:
 
 ```txt
 ANDROID_GEO_API_KEY=your-google-maps-api-key-here
 ```
 
-### Free AUTH0 Account
-
-The ShipFast app uses OAUTH2 for the user authentication via the Auth0 provider, and you can get a free Auth0 account from https://auth0.com.
-
-#### Configuring Auth0 in their Dashboard
-
-1. Create a new Native Client in the Auth0 dashboard and name it "ShipFast"
-2. Take careful note of your Auth0 Domain and Client ID as these will be
-required to add later into the `.env` file.
-3. In the "Allowed Callback URLs" field, enter:
-    ```
-    demo://com.criticalblue.shipFast/android,
-    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.api_key/callback,
-    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.static_hmac/callback,
-    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.dynamic_hmac/callback,
-    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipFast.approov/callback,
-    https://shipFast.demo.example.com,
-    https://api-key.shipRaider.demo.example.com,
-    https://static-hmac.shipRaider.demo.example.com,
-    https://dynamic-hmac.shipRaider.demo.example.com,
-    https://approov.shipRaider.demo.example.com
-    ```
-    > **NOTE:** Replace *YOUR-ACCOUNT* with your Auth0 account name
-
-4. Auth0 should already be pre-configured to include Google and GitHub social
-accounts allowing you to log in to ShipFast with those, but go ahead and add
-more if you wish.
-
-#### Configuring Auth0 in the .env File
+### Configuring Auth0 in the .env File
 
 Now edit the `.env` file and add replace the placehoders for:
 
@@ -185,8 +201,6 @@ AUTH0_CLIENT_ID=your-auth0-client-id
 ```
 
 ### The ShipFast and ShipRaider Domains
-
-Traefik is used in front of the docker containers for the ShipFast API and ShipRaider, therefore you only need to create a subdomain in a domain you control. So let's say that you own `example.com`, then you just need to create a record with a name of your choice, let's use for example `demo`, that points to the server Traefik will be installed on. This will give us `demo.example.com` as the base domain to use across all docker containers we will put behind Traefik.
 
 Now the domain for the ShipFast API in the `.env` file will look like:
 
@@ -205,6 +219,8 @@ SHIPRAIDER_PUBLIC_DOMAIN=shipRaider.demo.example.com
 When using the demo we may want to adapt it to your location, like center the map on you address or nearest city, and use your local currency and metric system.
 
 #### Custom location
+
+The custom location is only taken in account when you run the ShipFast in the emulator, otherwise in a mobile device it will use your current location.
 
 Get from Google maps the coordinates for your preferred location and set them in the following env vars:
 
@@ -263,16 +279,24 @@ To build the APKs for all demo stages at once you just need to ran from the root
 
 The build command will build the APK for all the four demo stages as per defined in the product flavors of the [app/android/kotlin/ShipFast/app/build.gradle](https://github.com/approov/shipfast-api-protection/blob/dev-shipFast-improved_top-level-readme/app/android/kotlin/ShipFast/app/build.gradle#L69) file.
 
-## The Online Servers
+## Backend Servers Setup
+
+The reason why the ShipFast App needs to run against an online server is so that you can see the full potential of using Approov, like dynamic certificate pinning, that only works in an online server, because the Approov Cloud needs to be able to reach the domain for the server in order to create an hash of the certificate public key.
+
+### Install and Setup Traefik
+
+The online servers setup relies on Traefik and Docker, thus you can skip this section if you already have an online playground with Traefik listening on port `80` and `443` and configured to auto generated LetsEncrypted certificates.
 
 To easily deploy your own online servers just follow one of our guides:
 
 * [AWS EC2 Traefik Setup](https://github.com/approov/aws-ec2-traefik-setup)
 * [Debian Traefik Setup](https://github.com/approov/debian-traefik-setup)
 
-The reason why the ShipFast App needs to run against an online server is so that you can see the full potential of using Approov, like dynamic certificate pinning, that only works in an online server, because the Approov Cloud needs to be able to reach the domain for the server in order to create an hash of the certificate public key.
+### Install and Setup ShipFast and ShipRaider server
 
-### Working Directory
+You will need to run the instructions for this section in the Traefik server you setup in the previous step.
+
+#### Working Directory
 
 The ShipFast repo for this demo it's assumed to be installed in the `~/demo` folder, therefore create it:
 
@@ -280,7 +304,9 @@ The ShipFast repo for this demo it's assumed to be installed in the `~/demo` fol
 mkdir ~/demo
 ```
 
-### Clone the ShipFast Repository
+> **NOTE:** You can use another folder location in your system, just remember to replace all occurrences of `~/demo` with your own preferred location path.
+
+#### Clone the ShipFast Repository
 
 From the location `~/demo` run:
 
@@ -294,7 +320,7 @@ All subsequent instructions will assume that you are inside the folder `~/demo/s
 cd ~/demo/shipfast-api-protection
 ```
 
-### Copy the Env File from your Computer
+#### Copy the Env File from your Computer
 
 From your local computer run:
 
@@ -315,13 +341,13 @@ output should be like:
 .env.example
 ```
 
-### Building the Docker Images
+#### Building the Docker Images
 
 ```txt
 ./shipFast build servers
 ```
 
-### Running the ShipFast API Server and ShipRaider Web Servers
+### Deploy the ShipFast API Server and ShipRaider Web Servers
 
 Bring up with:
 

@@ -33,7 +33,13 @@ const hash_user_claim_by_api_version = function(req) {
 }
 
 const _extract_unverified_payload_claim = function(req, header_name, claim) {
+
+  if (!req.headers[header_name]) {
+    return ""
+  }
+
   const auth_token = req.headers[header_name].substring(7)
+
   const auth_payload = auth_token.split('.')
   const decoded = Buffer.from(auth_payload[1], 'base64').toString('utf-8')
   const auth_decoded = JSON.parse(decoded)

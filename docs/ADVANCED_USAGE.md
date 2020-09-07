@@ -38,7 +38,7 @@ In our setup, the ShipFast API and ShipRaider website will be deployed in docker
 
 You cannot add the Address records to your DNS configuration until you have deployed the ShipFast services, but you need the DNS names you will use to configure Auth0. So, at this stage, please choose the subdomain you will use and then proceed with Auth0 configuration.
 
-For example, if you controlled the domain, `example.com` and you chose the subdomain `shipfast`, you will later need to add the Address record `*.shipfast.example.com` targeting the server running the shipfast backend examples.
+For example, if you controlled the domain, `example.com` and you chose the subdomain `server`, you will later need to add the Address record `*.server.example.com` targeting the server running the shipfast backend examples.
 
 ## Free Auth0 Account
 
@@ -53,16 +53,16 @@ Once you have an account, please follow these steps to configure it for ShipFast
 3. In the "Allowed Callback URLs" field, enter:
 
     ```txt
-    demo://com.criticalblue.shipFast/android,
-    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipFast.api_key/callback,
-    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipFast.static_hmac/callback,
-    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipFast.dynamic_hmac/callback,
-    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipFast.approov/callback,
-    https://shipFast.<<YOUR-DOMAIN>>,
-    https://api-key.shipRaider.<<YOUR-DOMAIN>>,
-    https://static-hmac.shipRaider.<<YOUR-DOMAIN>>,
-    https://dynamic-hmac.shipRaider.<<YOUR-DOMAIN>>,
-    https://approov.shipRaider.<<YOUR-DOMAIN>>
+    demo://com.criticalblue.shipfast/android,
+    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipfast.api_key/callback,
+    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipfast.static_hmac/callback,
+    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipfast.dynamic_hmac/callback,
+    demo://<<YOUR-ACCOUNT>>.auth0.com/android/com.criticalblue.shipfast.approov/callback,
+    https://shipfast.<<YOUR-DOMAIN>>,
+    https://api-key.shipraider.<<YOUR-DOMAIN>>,
+    https://static-hmac.shipraider.<<YOUR-DOMAIN>>,
+    https://dynamic-hmac.shipraider.<<YOUR-DOMAIN>>,
+    https://approov.shipraider.<<YOUR-DOMAIN>>
     ```
 
 4. Auth0 should already be pre-configured to include Google and GitHub social
@@ -181,8 +181,8 @@ AUTH0_CLIENT_ID=your-auth0-client-id
 Now add the domain for the ShipFast API and the ShipRaider website to the `.env` file, again replacing `<<YOUR-DOMAIN>>` with the domain you chose in the DNS configuration step:
 
 ```txt
-SHIPFAST_PUBLIC_DOMAIN=shipFast.<<YOUR-DOMAIN>>
-SHIPRAIDER_PUBLIC_DOMAIN=shipRaider.<<YOUR-DOMAIN>>
+SHIPFAST_PUBLIC_DOMAIN=shipfast.<<YOUR-DOMAIN>>
+SHIPRAIDER_PUBLIC_DOMAIN=shipraider.<<YOUR-DOMAIN>>
 ```
 
 ### Optional Customization
@@ -241,7 +241,7 @@ To build the APKs for all blog posts at once, run the following command:
 ```
 
 > **NOTE:** The bash script wrapper supports gradle option forwarding. For example, if you run into problems, try the following: `./apk gradle build --stacktrace`.
-> **NOTE:** The different product flavours can be found in the [build.gradle](https://github.com/approov/shipfast-api-protection/blob/dev-shipFast-improved_top-level-readme/app/android/kotlin/ShipFast/app/build.gradle#L69) file.
+> **NOTE:** The different product flavours can be found in the [build.gradle](https://github.com/approov/shipfast-api-protection/blob/dev-shipfast-improved_top-level-readme/app/android/kotlin/ShipFast/app/build.gradle#L69) file.
 
 ## Backend Servers Setup
 
@@ -292,7 +292,7 @@ output should be something like the following:
 #### Building the Docker Images
 
 ```txt
-./shipFast build servers
+./shipfast build servers
 ```
 
 ### Deploy the ShipFast API Server and ShipRaider Web Servers
@@ -300,34 +300,34 @@ output should be something like the following:
 Bring up with:
 
 ```txt
-./shipFast up servers
+./shipfast up servers
 ```
 
 Tail the logs with:
 
 ```txt
-./shipFast logs --follow
+./shipfast logs --follow
 ```
 
 or with:
 
 ```txt
-./shipFast logs --follow api
+./shipfast logs --follow api
 ```
 
 Restart with:
 
 ```txt
-./shipFast restart servers
+./shipfast restart servers
 ```
 
 Bring the services down with:
 
 ```txt
-./shipFast down servers
+./shipfast down servers
 ```
 
-> **NOTE:** you can handle just the API server or the Web servers by replacing `servers` with `api` or `web`, like `./shipFast restart api`.
+> **NOTE:** you can handle just the API server or the Web servers by replacing `servers` with `api` or `web`, like `./shipfast restart api`.
 
 ### Accessing the Online Servers
 
@@ -340,7 +340,7 @@ The top level README of this repository contains the urls for the versioned APIs
 
 ### Environment values not reflected in the servers
 
-* Every time you update the `.env` file you need to restart the servers with `./shipFast restart servers`.
+* Every time you update the `.env` file you need to restart the servers with `./shipfast restart servers`.
 
 ### Not Getting Active Shipments in the Mobile App
 

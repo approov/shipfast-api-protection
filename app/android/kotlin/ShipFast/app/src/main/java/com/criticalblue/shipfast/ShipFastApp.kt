@@ -7,32 +7,41 @@ import com.criticalblue.shipfast.config.CURRENT_DEMO_STAGE
 import okhttp3.OkHttpClient
 import java.util.concurrent.TimeUnit
 
-// *** UNCOMMENT THE CODE BELOW FOR APPROOV ***
+// *** APPROOV IMPLEMENTATION ***
+// The Approov service with the Android OkHttp client to wrap the Approov SDK usage.
+// @link https://github.com/approov/quickstart-android-kotlin-okhttp
 import io.approov.framework.okhttp.ApproovService
 
 class ShipFastApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // *** UNCOMMENT THE CODE BELOW FOR APPROOV ***
+        // *** APPROOV IMPLEMENTATION ***
+        // Initializes the Approov SDK with the Approov initial configuration
+        // @link https://approov.io/docs/latest/approov-usage-documentation/#sdk-configuration
         approovService = ApproovService(applicationContext, resources.getString(R.string.approov_config))
+
+        // *** APPROOV IMPLEMENTATION ***
+        // Enables the Approov token binding advanced feature, by binding the
+        // Approov token with the Authorization token header.
+        // @link https://approov.io/docs/latest/approov-usage-documentation/#token-binding
         approovService!!.setBindingHeader("Authorization")
+
         Log.d(TAG, "Created The ShipFastApp")
     }
 
     companion object {
-        // *** UNCOMMENT THE CODE BELOW FOR APPROOV ***
+        // *** APPROOV IMPLEMENTATION ***
         var approovService: ApproovService? = null
 
         fun getOkHttpClient(): OkHttpClient {
             when (CURRENT_DEMO_STAGE) {
                 DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
 
-                    // *** COMMENT OUT THE CODE BELOW FOR APPROOV ***
-                    // throw RuntimeException("The Approov demo stage is enabled, but Approov OkHttpClient not configured!")
-
-                    // *** UNCOMMENT THE CODE BELOW FOR APPROOV ***
-                    // The Approov OkHttpClient with the correct pins preset
+                    // *** APPROOV IMPLEMENTATION ***
+                    // The Approov OkHttpClient with the correct pins preset via
+                    // the Approov dynamic pinning feature.
+                    // @link https://approov.io/docs/latest/approov-usage-documentation/#approov-dynamic-pinning
                     return approovService!!.getOkHttpClient()
                 }
                 else -> {

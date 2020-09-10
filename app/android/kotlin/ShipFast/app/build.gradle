@@ -139,6 +139,8 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.4.0")
     implementation 'com.google.android.material:material:1.1.0'
 
-    // *** UNCOMMENT THE CODE BELOW FOR APPROOV ***
+    // *** APPROOV IMPLEMENTATION ***
+    // Requires the Approov SDK
+    // @link https://approov.io/docs/latest/approov-usage-documentation/#importing-the-approov-sdk-into-android-studio
      implementation project(':approov')
 }

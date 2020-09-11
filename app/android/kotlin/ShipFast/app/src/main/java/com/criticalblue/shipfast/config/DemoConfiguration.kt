@@ -21,11 +21,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.criticalblue.shipfast.config
 
+import com.criticalblue.shipfast.BuildConfig
+
+private val jniEnv = JniEnv()
+
 /**
  * The enumeration of various stages of the demo.
  */
 enum class DemoStage {
-    /** The demo which uses basic protection by way of API key specified in the manifest */
     API_KEY_PROTECTION,
     /** The demo which introduces API request signing by HMAC using a static secret in code */
     HMAC_STATIC_SECRET_PROTECTION,
@@ -35,10 +38,22 @@ enum class DemoStage {
     APPROOV_APP_AUTH_PROTECTION
 }
 
-val jniEnv = JniEnv()
+object ApiUrl {
+    fun build(): String {
+        val api_version = when (BuildConfig.DEMO_STAGE) {
+            "API_KEY_PROTECTION" -> "v1"
+            "HMAC_STATIC_SECRET_PROTECTION" -> "v2"
+            "HMAC_DYNAMIC_SECRET_PROTECTION" -> "v3"
+            "APPROOV_APP_AUTH_PROTECTION" -> "v4"
+            else -> ""
+        }
+
+        return "${jniEnv.getApiBaseUrl()}/${api_version}"
+    }
+}
 
 /** The current demo stage */
-val currentDemoStage = DemoStage.valueOf(jniEnv.getDemoStage())
+val CURRENT_DEMO_STAGE = DemoStage.valueOf(BuildConfig.DEMO_STAGE)
 
 // 51.535472, -0.104971   -> London
 // 37.441883, -122.143019 -> Palo Alto, California
@@ -48,7 +63,7 @@ val DRIVER_LONGITUDE: Double = jniEnv.getDriverLongitude()
 
 /** The ShipFast server's base URL */
 //const val API_BASE_URL = "http://10.0.2.2:3333"
-val API_BASE_URL = jniEnv.getApiBaseUrl()
+val API_BASE_URL = ApiUrl.build()
 
 /** The maximum number of attempts to try to make an API request before reporting a failure */
 const val API_REQUEST_ATTEMPTS = 3

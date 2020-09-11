@@ -4,6 +4,11 @@ apply plugin: 'kotlin-android'
 
 apply plugin: 'kotlin-android-extensions'
 
+Properties properties = new Properties()
+if (project.rootProject.file('local.properties').canRead()) {
+    properties.load(project.rootProject.file("local.properties").newDataInputStream())
+}
+
 // Reads the `.env` file in the root of the project and creates the file `app/android/kotlin/ShipFast/app/src/main/cpp/.jni.env.h`
 //  with the environment variables that will be injected inside native C code when it compiles the
 //  mobile app. This variables will be made available to the Kotlin code via the JNI interface.
@@ -31,12 +36,76 @@ android {
         // Required by the Auth0 Android Manifest
         manifestPlaceholders = [auth0Domain: "$System.env.AUTH0_DOMAIN", auth0Scheme: "$System.env.AUTH0_SCHEME"]
 
+        resValue "string", "app_name", "ShipFast"
+        resValue "string", "APPROOV_INITIAL_CONFIG", ""
         resValue "string", "ANDROID_GEO_API_KEY", "$System.env.ANDROID_GEO_API_KEY"
+        resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#aaaaaa"
+        resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#666666"
+        buildConfigField "String", "DEMO_STAGE", "\"API_KEY_PROTECTION\""
+    }
+    signingConfigs {
+        release {
+            storeFile file("${properties.getProperty('android.keystore.path')}")
+            keyAlias "${properties.getProperty('android.private.key.alias')}"
+            storePassword "${properties.getProperty('android.keystore.password')}"
+            keyPassword "${properties.getProperty('android.private.key.password')}"
+        }
     }
     buildTypes {
         release {
+            debuggable false
             minifyEnabled true
-            proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
+            shrinkResources true
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
+            signingConfig signingConfigs.release
+        }
+        debug {
+            debuggable true
+            minifyEnabled false
+            shrinkResources false
+        }
+    }
+    flavorDimensions "demo_stages"
+    productFlavors {
+        api_key {
+            dimension "demo_stages"
+            applicationIdSuffix ".api_key"
+            versionNameSuffix "-api_key"
+            buildConfigField "String", "DEMO_STAGE", "\"API_KEY_PROTECTION\""
+            resValue "string", "app_name", "SF-API-Key"
+            resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#3f51b5"
+            resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#303f9f"
+        }
+
+        static_hmac {
+            dimension "demo_stages"
+            applicationIdSuffix ".static_hmac"
+            versionNameSuffix "-static_hmac"
+            buildConfigField "String", "DEMO_STAGE", "\"HMAC_STATIC_SECRET_PROTECTION\""
+            resValue "string", "app_name", "SF-SHMAC"
+            resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#ec971f"
+            resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#d58512"
+        }
+
+        dynamic_hmac {
+            dimension "demo_stages"
+            applicationIdSuffix ".dynamic_hmac"
+            versionNameSuffix "-dynamic_hmac"
+            buildConfigField "String", "DEMO_STAGE", "\"HMAC_DYNAMIC_SECRET_PROTECTION\""
+            resValue "string", "app_name", "SF-DHMAC"
+            resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#d9534f"
+            resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#d43f3a"
+        }
+
+        approov {
+            dimension "demo_stages"
+            applicationIdSuffix ".approov"
+            versionNameSuffix "-approov"
+            buildConfigField "String", "DEMO_STAGE", "\"APPROOV_APP_AUTH_PROTECTION\""
+            resValue "string", "app_name", "SF-Approov"
+            resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#449d44"
+            resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#398439"
+            resValue "string", "APPROOV_INITIAL_CONFIG", "$System.env.APPROOV_INITIAL_CONFIG"
         }
     }
     compileOptions {
@@ -47,6 +116,9 @@ android {
         cmake {
             path file('./src/main/cpp/CMakeLists.txt')
         }
+    }
+    lintOptions {
+        abortOnError false
     }
 }
 
@@ -67,6 +139,8 @@ dependencies {
     implementation("com.squareup.okhttp3:okhttp:4.4.0")
     implementation 'com.google.android.material:material:1.1.0'
 
-    // *** UNCOMMENT THE CODE BELOW FOR APPROOV ***
-    //implementation project(':approov')
+    // *** APPROOV IMPLEMENTATION ***
+    // Requires the Approov SDK
+    // @link https://approov.io/docs/latest/approov-usage-documentation/#importing-the-approov-sdk-into-android-studio
+     implementation project(':approov')
 }

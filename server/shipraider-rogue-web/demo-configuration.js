@@ -17,11 +17,10 @@ const config = {
     NODE_SSL_DIR: dotenv.parsed.NODE_SSL_DIR || process.env.HOME + "/.ssl",
     SHIPRAIDER_SERVER_HOSTNAME: dotenv.parsed.SHIPRAIDER_SERVER_HOSTNAME || 'localhost',
     SHIPRAIDER_HTTP_PROTOCOL: dotenv.parsed.SHIPRAIDER_HTTP_PROTOCOL || 'https',
-    SHIPRAIDER_HTTP_PORT: dotenv.parsed.SHIPRAIDER_HTTP_PORT || '4333',
-    SHIPRAIDER_HTTPS_PORT: dotenv.parsed.SHIPRAIDER_HTTPS_PORT || '4443',
+    SHIPRAIDER_HTTP_PORT: dotenv.parsed.SHIPRAIDER_HTTP_PORT || process.env.SHIPRAIDER_HTTP_PORT || undefined,
+    SHIPRAIDER_HTTPS_PORT: dotenv.parsed.SHIPRAIDER_HTTPS_PORT || undefined,
     SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN_HTTP_PROTOCOL || undefined,
     SHIPFAST_PUBLIC_DOMAIN: dotenv.parsed.SHIPFAST_PUBLIC_DOMAIN || undefined,
-    SHIPFAST_API_VERSION: dotenv.parsed.SHIPFAST_API_VERSION || undefined,
     SHIPFAST_API_KEY: dotenv.parsed.SHIPFAST_API_KEY || undefined,
     SHIPFAST_API_HMAC_SECRET: dotenv.parsed.SHIPFAST_API_HMAC_SECRET || undefined,
     AUTH0_DOMAIN: dotenv.parsed.AUTH0_DOMAIN || undefined,
@@ -54,19 +53,38 @@ const STAGES = {
     APPROOV_APP_AUTH_PROTECTION: 3
 }
 
+// The color scheme to be used in a per demo stage basis
+const BOOTSTRAP_COLOR_CLASSES = {
+    API_KEY_PROTECTION: "info",
+    HMAC_STATIC_SECRET_PROTECTION: "warning",
+    HMAC_DYNAMIC_SECRET_PROTECTION: "danger",
+    APPROOV_APP_AUTH_PROTECTION: "success"
+}
+
+// The map for the ShipFast API version to be used per demo stage
+const SHIPFAST_API_VERSIONS = {
+    API_KEY_PROTECTION: "v1",
+    HMAC_STATIC_SECRET_PROTECTION: "v2",
+    HMAC_DYNAMIC_SECRET_PROTECTION: "v3",
+    APPROOV_APP_AUTH_PROTECTION: "v4"
+}
+
 // The current demo stage
-let demo_stage = dotenv.parsed.SHIPFAST_DEMO_STAGE || undefined
+let demo_stage = dotenv.parsed.DEMO_STAGE || process.env.DEMO_STAGE || undefined
 
 if (demo_stage === undefined) {
-    throw new Error("Missing Env Var value for: SHIPFAST_DEMO_STAGE")
+    throw new Error("Missing Env Var value for: DEMO_STAGE")
 }
 
 if (STAGES[demo_stage] === undefined) {
-    throw new Error("Invalid value for env var: SHIPFAST_DEMO_STAGE")
+    throw new Error("Invalid value for env var: DEMO_STAGE")
 }
 
-config["SHIPFAST_CURRENT_DEMO_STAGE"] = STAGES[demo_stage]
-config["SHIPFAST_DEMO_STAGES"] = STAGES
+config["SHIPFAST_API_VERSION"] = SHIPFAST_API_VERSIONS[demo_stage]
+config["BOOTSTRAP_COLOR_CLASS"] = BOOTSTRAP_COLOR_CLASSES[demo_stage]
+config["CURRENT_DEMO_STAGE"] = STAGES[demo_stage]
+config["CURRENT_DEMO_STAGE_NAME"] = demo_stage
+config["DEMO_STAGES"] = STAGES
 
 module.exports = {
     config

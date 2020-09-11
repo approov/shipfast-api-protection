@@ -1,322 +1,123 @@
 # ShipFast API Protection Walkthrough
 
-Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of Blog posts on practical API security techniques.
+Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of blog posts on practical API security techniques. The series walks you through the process of defending a mobile API backend against various exploits which an attacker may use to gain access to the data it holds. In this demonstration scenario, the attack allows real users of the system to gain an unfair business advantage at the expense of the company.
 
-This demo will walk you through the process of defending against various exploits in a mobile application to gain access to data on a remote server allowing real users of the system to gain an unfair business advantage at the expense of the company.
+## The Repository Structure
 
-## REQUIREMENTS
+This repository holds all three components that are used to describe the ShipFast story:
 
-The Shipfast demo has three components: Shipfast API, Shipraider Web and Android Studio. In order to use dynamic certificate pinning, the Shipfast API needs to run in an online server. Once we already have an online server, we will use it to also run the ShipRaider web interface. Android Studio will run from your computer, inside a Docker container.
+* [ShipFast API](/README.md#shipfast-api) - The API that we want to defend from being used by illegitimate clients.
+* [ShipFast Mobile App](/README.md#shipfast-mobile-app) - The legitimate client of the ShipFast API.
+* [ShipRaider Web Interface](/README.md#shipraider-web-interface) - A rogue web service, setup to abuse the ShipFast API by impersonating the ShipFast Mobile App while making its requests.
 
-### For Your Computer and Online Server:
+We have kept all 3 projects in the same repository and structured the code to include all the steps from the blog series progression. We hope that this makes it easier to understand as a whole.
 
-* [Docker](https://docs.docker.com/install/).
-* [Docker Compose](https://docs.docker.com/compose/install/) `>= 2.1`.
-* [Git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git).
+After setting the scene in the first blog post, successive entries show how security measures may be strengthened (or bypassed) using links to the code in this GitHub repository where appropriate. The blog series may be summarized by referring to the main security method under discussion in each one:
 
+1. [*API Keys*](https://blog.approov.io/practical-api-security-walkthrough-part-1)
+2. [*Static HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-2)
+3. [*Dynamic HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-3)
+4. [*Approov Protection*](https://blog.approov.io/practical-api-security-walkthrough-part-4)
 
-## SETTING UP THE DEMO
+We provide freely available deployments of the two services and APKs for you to download and install, so you can work with them as you read the blog. The following sections give a brief summary of the services we have deployed, the apps we provide, where to find the associated code in this repository, and where the changes for each blog post are located.
 
-Both Android Studio, Shipfast API and Shipraider Web will depend on the `.env` file, therefore the online servers for Shipfast and Shipraider **MUST** use the same `.env` file used in your computer.
+### ShipFast API
 
-### Clone the Shipfast Repository
+The ShipFast API code can be found in the [server/shipfast-api](/server/shipfast-api) folder. The code is deployed in the cloud and made available at https://shipfast.demo.approov.io.
 
-```bash
-git clone https://github.com/approov/shipfast-api-protection.git && cd shipfast-api-protection
-```
+The ShipFast API is versioned from `v1` to `v4` to follow the blog story and you can access each stage using the following URLs:
 
-### The Env File
+* *API_KEY_PROTECTION* - https://shipfast.demo.approov.io/v1
+* *HMAC_STATIC_SECRET_PROTECTION* - https://shipfast.demo.approov.io/v2
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - https://shipfast.demo.approov.io/v3
+* *APPROOV_APP_AUTH_PROTECTION* - https://shipfast.demo.approov.io/v4
 
-We will use a `.env` file in the root of this project to drive the configuration of the demo across the mobile app, Shipfast API and Shipraider Web.
+### ShipFast Mobile App
 
-```
-cp .env.example .env
-```
+The [releases page](https://github.com/approov/shipfast-api-protection/releases) of this repository contains an APK for each stage. They are setup so that you can install all of them at once on your Android device (sorry no iOS at the moment).
 
-Through the rest of this setup we will ask you several times to edit this file and replace some placeholder with their real world values.
+The code for the apps is all in one AndroidStudio project: [app/android/kotlin/ShipFast](/app/android/kotlin/ShipFast).
 
-### The Shipfast API Key
+We have used a different color scheme in each version of the app so you can quickly identify which one is running:
 
-We need one to add into the `.env` file, and we can generate one with:
+* *API_KEY_PROTECTION* - blue
+* *HMAC_STATIC_SECRET_PROTECTION* - orange
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - red
+* *APPROOV_APP_AUTH_PROTECTION* - green
 
-```
-openssl rand -hex 64 | base64 | tr -d '\n'; echo
-```
+The colors do not have any special meaning, but obviously, green is the best.
 
-or with:
+### ShipRaider Web Interface
 
-```
-strings /dev/urandom | head -n 256 | openssl dgst -sha256
-```
+The rogue web service, ShipRaider, was setup by an evil pirate to help ShipFast drivers take advantage of ShipFast customers gratuities.
+The code can be found in the [server/shipraider-rogue-web](/server/shipraider-rogue-web) folder.
 
-Now edit the `.env` file and add it:
+Each version of the website is served from a different domain:
 
-```
-SHIPFAST_API_KEY=your-api-key-here
-```
+* *API_KEY_PROTECTION* - https://api-key.shipraider.demo.approov.io
+* *HMAC_STATIC_SECRET_PROTECTION* - https://static-hmac.shipraider.demo.approov.io
+* *HMAC_DYNAMIC_SECRET_PROTECTION* - https://dynamic-hmac.shipraider.demo.approov.io
+* *APPROOV_APP_AUTH_PROTECTION* - https://approov.shipraider.demo.approov.io
 
-### The HMAC Secret
+The ShipRaider website follows the same color scheme as the mobile apps to differentiate between versions.
 
-To generate one:
+## Code Links
 
-```
-openssl rand -base64 64 | tr -d '\n'; echo
-```
+Below we give a brief overview of the techniques used in the blog series to lock down the API with links to the relevant lines of code and the associated blog post.
 
-Now copy the output and and add it into the `.env` file:
+### API Key
 
-```
-SHIPFAST_API_HMAC_SECRET=the-hmac-secret
-```
+The most common method used by developers to identify **what** is making a request to the API server is to use a long string in the request header, most often called an `Api-Key`, [see the first blog post](https://blog.approov.io/practical-api-security-walkthrough-part-1).
 
-### Google Maps API Key
+API keys are very simple to implement in both the server and the client. [This app code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L211) adds the key to every request and the server validates the request with a simple header check, as shown by [this code](/server/shipfast-api/api/middleware/api-key.js#L28).
 
-A Google Maps API key, which you can get from the [Google Cloud Platform Console](https://debians.google.com/maps/documentation/android-api/signup), and that you will need to add into the `.env` file:
+#### The First Attack
 
-```
-ANDROID_GEO_API_KEY=your-google-maps-api-key-here
-```
+Unfortunately, bypassing the API Key protection is also easy, as it is a secret communicated on every request. The [second blog](https://blog.approov.io/practical-api-security-walkthrough-part-2) in the series starts off by showing how to extract the API key with a MitM(Man in the Middle) attack. The key is then [added to the Shipraider website](/server/shipraider-rogue-web/views/pages/index.ejs#L27) to be [used](/server/shipraider-rogue-web/public/js/shipraider.js#L51) in the requests it makes to the ShipFast API.
 
-### Free AUTH0 Account
+### Static HMAC
 
-A free Auth0 account, which you can get from https://auth0.com.
+To improve protection, the [second blog post](https://blog.approov.io/practical-api-security-walkthrough-part-2) introduces an HMAC to digitally sign API requests and therefore prevent them from being hijacked or tampered. It is better than an API Key as the *secret part* is never explicitly sent from the client to the server and in this version it is statically embedded in the code.
 
-#### Configuring Auth0 in their Dashboard
+The HMAC implementation is a little more elaborate than the API key implementation, but it's still simple. You can check [this code](/server/shipfast-api/api/middleware/static-hmac.js#L15) for the API server implementation, and [this code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L252) for the mobile app implementation.
 
-1. Create a new Native Client in the Auth0 dashboard and name it "ShipFast"
-2. Take careful note of your Auth0 Domain and Client ID as these will be
-required to add later into the `.env` file.
-3. In the "Allowed Callback URLs" field, enter:
-    ```
-    demo://YOUR-ACCOUNT.auth0.com/android/com.criticalblue.shipfast/callback, shipraider.dev.example.com, http://127.0.0.1
-    ```
-replacing *YOUR-ACCOUNT* with your Auth0 account name
+#### The Second Attack
 
-4. Auth0 should already be pre-configured to include Google and GitHub social
-accounts allowing you to log in to ShipFast with those, but go ahead and add
-more if you wish.
+However, if the HMAC secret is hard-coded, then it is still easy for an attacker to extract. The [third blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3) demonstrates this by using open source binary analysis tools to reveal the HMAC secret and the associated algorithm used to sign the requests. Once these are copied across to the [ShipRaider code](/server/shipraider-rogue-web/public/js/shipraider.js#L269) the rogue website can get up and running again.
 
-#### Configuring Auth0 in the .env File
+### Dynamic HMAC
 
-Now edit the `.env` file and add replace the placehoders for:
+The second attack scenario revealed that using a static secret for the HMAC algorithm is a weak point. The next defense is to use a dynamic secret; one that is computed at runtime. The [third blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3) explains how to combine a static secret with dynamic data to yield a dynamic secret with which to initialize the HMAC algorithm.
 
-```
-AUTH0_DOMAIN=your-domain-for-auth0
-AUTH0_CLIENT_ID=your-auth0-client-id
-```
+The implementation for the mobile app can be seen in these [lines of code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L259) while the API server equivalent can be seen [here](server/shipfast-api/api/middleware/dynamic-hmac.js#L16).
 
-### The Shipfast and Shipraider Domains
+#### The Third Attack
 
-The Shipfast mobile app will need to communicate with the Shipfast API and for that to happen we need to set `SHIPFAST_PUBLIC_DOMAIN` in the `.env` file.
+Computing the HMAC secret at runtime makes it harder to bypass but not impossible. The attacker now needs to understand a larger section of code in order to reproduce the behavior in the ShipRaider website. The [fourth blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4) lists several approaches for this, giving a more detailed example using app repackaging and the Android Studio debugger. Again, the attacker can write [equivalent code](server/shipraider-rogue-web/public/js/shipraider.js#L269) in ShipRaider to continue using the ShipFast API.
 
-```
-SHIPFAST_PUBLIC_DOMAIN=shipfast.dev.example.com
-```
+### Approov Mobile App Attestation
 
-During the demo the ShipRaider Web will be used to attack the ShipFast API, therefore we also need to set `SHIPRAIDER_PUBLIC_DOMAIN`:
+The [fourth blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4), introduces the final security measure in the series. Mobile app attestation is the API security concept implemented in Approov. In a nutshell, Approov checks the whole app and the environment in which it runs before enabling access to the API - *the App is the key*. It gives you a high degree of confidence that your API accesses are locked-down to legitimate instances of your app. This approach is described in more detail in our [product overview](https://approov.io/product) page and in the associated [white paper](https://approov.io/download/Approov-Whitepaper-Security-Trust-Gap.pdf).
 
-```
-SHIPRAIDER_PUBLIC_DOMAIN=shipraider.dev.example.com
-```
+The Approov integration is as simple as it can be for mobile app developers. Add the [Approoov SDK](https://approov.io/docs/latest/approov-usage-documentation/#sdk-integration) to your build, hopefully using one of the [quickstart integration examples]](https://approov.io/docs/latest/approov-integration-examples/mobile-app/) to speed up the process and then call the SDK to obtain an Approov token to include on API requests. You can see this in the ShipFast app in [ShipFastApp.kt](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ShipFastApp.kt), search for the lines that are preceded by `// *** UNCOMMENT THE CODE BELOW FOR APPROOV ***`.
 
-### Optional Customization
+The API server integration is also simple: use one of the many [JWT libraries](https://jwt.io/) to verify the Approov token before responding to API requests. The Shipfast API uses the [express-jwt](https://www.npmjs.com/package/express-jwt) node package to verify the Approov token with the [`checkApproovToken`](/server/shipfast-api/api/approov/approov-token-check.js#L129) callback.
 
-If you want to customize the Shipfast demo to match your current location, currency and metric system, then follow [this instructions](/docs/CUSTOMIZE_THE_SHIPFAST_DEMO.md).
+## Advanced Usage
 
+The [Advanced Usage](/docs/ADVANCED_USAGE.md) document describes the build and deployment steps for each of the components that make up the ShipFast and ShipRaider services. To follow the blog series, it is normally sufficient to use the services and apps deployed and maintained by the Approov team, in which case you don't need to follow that document. However, you will need it if you attempt the optional pentesting challenge, described at the end of the [last blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4).
 
-### Building the Docker Image for Android Studio
+## Useful Links
 
-```
-./shipfast build editor
-```
+The blog series, as a whole, shows a gradual improvement in API security by ensuring that requests only come from legitimate sources. The blogs and the code in this repository are used to show how to easily circumvent some protection mechanisms that are commonly used in API development. It culminates in an Approov integration which gives the highest degree of confidence in the verified requests received by the ShipFast API. If you wish to explore the Approov solution in more depth then why not try one of the following links as a jumping off point:
 
-### Running Android Studio from a Docker Container
-
-```
-./shipfast up editor
-```
-
-The first time the Android Studio is open, its a fresh installation of it from scratch, therefore you will be prompted several times to configure the editor as usual.
-
-At some point of the build you may get this error:
-
-```
-A problem occurred configuring project ':app'.
-> com.android.builder.sdk.LicenceNotAcceptedException: Failed to install the following Android SDK packages as some licences have not been accepted.
-     ndk;21.0.6113669 NDK (Side by side) 21.0.6113669
-  To build this project, accept the SDK license agreements and install the missing components using the Android Studio SDK Manager.
-```
-
-To fix it open `File > Settings > Appearance & Behavior > System Settings > Android Sdk`, then click in the `SDK Tools` tab, select the boxes for `LLDB, NDK (Side by side), CMake` , clik `ok` to install them, then accept the licenses in order for the installation to complete, and finally rebuild the project, but if fails again with the same error then the best is to invalidate caches and restart Android Studio, and then try to rebuild the project.
-
-Now you can use the AVD manager to create a mobile device, so that you can run Shipfast in the emulator.
-
-Afterwards you need to open the Shipfast project, and:
-
-* Build the project, and be prepared for some more downloads.
-* Start the Shipfast app in the emulator:
-    + Enable high accuracy location in the emulator mobile device settings.
-    + In the emulator settings, set the location to the same driver coordinates you have on the `.env` file.
-
-> **NOTE:** Before you can play with the Shipfast app on the emulator you need to setup the online server for the Shipfast API.
-
-### Setup the Online Server
-
-Using a VPS provider or a Cloud Provider, just spin the cheapest Linux server they allow running on Debian or Ubuntu, because after you finish this demo you will throw it away, therefore it will cost you only a few cents.
-
-You will also need to create a sub domain on a domain you own, that you will point to this new server, like `dev.example.com`. You can also throw it away after you are done with this demo.
-
-#### Update the New Server
-
-Assuming that you have a new brand server you should have now a shell as the `root` user, thus let's get it up to date with:
-
-```
-apt update && apt -y upgrade
-```
-
-#### Create Unprivileged User
-
-We will not run the demo as `root`, because it's a best security practice to not run as `root`.
-
-Check if the server already have an unprivileged user:
-
-```
-grep -irn :1000: /etc/passwd
-```
-
-Output example for a server that already has one:
-
-```
-28:debian:x:1000:1000:Cloud-init-user,,,:/home/debian:/bin/bash
-```
-
-If you don't get any output, then it means it doesn't exist yet, thus you can add a new unprivileged user with:
-
-```
-adduser debian
-```
-> **NOTE**: Type you password and reply to all other questions with just hitting `enter`.
-
-Add the user to `sudo` with:
-
-```
-usermod -aG sudo debian
-```
-
-Switch to the `debian` user with:
-
-```
-su - debian
-```
-
-#### Clone the Shipfast Repository
-
-We need `git` for this:
-
-```
-sudo apt install -y git
-```
-
-Now we can clone the repo with:
-
-```bash
-git clone https://github.com/approov/shipfast-api-protection.git && cd shipfast-api-protection
-```
-
-#### Server Setup
-
-This will install Docker, Docker Compose, and Traefik running on a Docker container.
-
-This setup will use a `docker-compose.yml` file to setup a [Traefik](https://docs.traefik.io/) reverse proxy on port `80` and `443` for all docker containers running in the same host machine, therefore you cannot setup this in an existing server.
-
-> **NOTE:** Traefik is being used to automated the process of using `https` for the Shipfast API, because it will auto generate the TLS certificates, meaning zero effort from you to have `https`.
-
-##### Traefik `.env` file
-
-```
-cp ./traefik/.env.example ./traefik/.env
-```
-
-Now edit `./traefik/.env` to update the place-holder values with your own values:
-
-```
-nano ./traefik/.env
-```
-
-##### Run the Setup
-
-```
-sudo ./bin/setup-online-server.sh
-```
-
-#### Shipfast API and Shipraider Web Setup
-
-##### Copy the Env File from your Computer
-
-From your local computer run:
-
-```
-scp .env root@my-online-server-ip-or-domain:/home/debian/shipfast-api-protection
-```
-
-Confirm it exists in the online server:
-
-```
-ls -a | grep .env -
-```
-
-output should be like:
-
-```
-.env
-.env.example
-```
-
-#### Building the Docker Images
-
-```
-./shipfast build servers
-```
-
-#### Running the ShipFast API and ShipRaider Web
-
-Bring up with:
-
-```
-./shipfast up servers
-```
-
-Tail the logs with:
-
-```
-./shipfast logs servers
-```
-
-Restart with:
-
-```
-./shipfast restart servers
-```
-
-Bring down with:
-
-```
-./shipfast down servers
-```
-
-> **NOTE:** you can handle just the API server or the Web server by replacing `server` with `api` or `web`, like `./shipfast logs api`.
-
-
-## TROUBLESHOOTING
-
-### Environment values not reflected in the demo
-
-Every time you update the `.env` file you need to restart the editor, ShipFast API and the ShipRaider Web.
-
-### Not Getting Active Shipments in the Mobile App
-
-Please ensure in the emulator settings that the default location is set to be as near as possible of the coordinates in the environment variables `DRIVER_LATITUDE` and `DRIVER_LONGITUDE`.
-
-### ShipRaider Not Getting Shipments or just a couple of them
-
-Ensure that the driver coordinates in the web interface are as close as possible from the ones in the environment variables `DRIVER_LATITUDE` and `DRIVER_LONGITUDE`.
+* [Approov Free Trial](https://approov.io/signup)(no credit card needed)
+* [Approov QuickStarts](https://approov.io/docs/latest/approov-integration-examples/)
+* [Approov Live Demo](https://approov.io/product/demo)
+* [Approov Docs](https://approov.io/docs)
+* [Approov Blog](https://blog.approov.io)
+* [Approov Resources](https://approov.io/resource/)
+* [Approov Customer Stories](https://approov.io/customer)
+* [Approov Support](https://approov.zendesk.com/hc/en-gb/requests/new)
+* [About Us](https://approov.io/company)
+* [Contact Us](https://approov.io/contact)

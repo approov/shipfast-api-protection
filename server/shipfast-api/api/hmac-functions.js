@@ -1,13 +1,16 @@
 const log = require('./utils/logging')
+const request = require('./utils/request')
 
 const isValidHmac = function(hmac, config, req) {
+
+  const log_id = request.log_identifier(req, 'authorization', 'sub', 'hmac-functions.js')
 
   let requestProtocol
 
   // Retrieve the ShipFast HMAC used to sign the API request from the request header
   let requestShipFastHMAC = req.get('HMAC')
   if (!requestShipFastHMAC) {
-    log.error('\tShipFast HMAC not specified or in the wrong format')
+    log.error('ShipFast HMAC not specified or in the wrong format', log_id)
     return false
   }
 
@@ -17,10 +20,10 @@ const isValidHmac = function(hmac, config, req) {
     requestProtocol = req.protocol
   }
 
-  log.info("protocol: " + requestProtocol)
-  log.info("host: " + req.hostname)
-  log.info("originalUrl: " + req.originalUrl)
-  log.info("Authorization: " + req.get('Authorization'))
+  log.info("protocol: " + requestProtocol, log_id)
+  log.info("host: " + req.hostname, log_id)
+  log.info("originalUrl: " + req.originalUrl, log_id)
+  log.info("Authorization: " + req.get('Authorization'), log_id)
 
   // Compute the request HMAC using the HMAC SHA-256 algorithm
   hmac.update(requestProtocol)
@@ -32,12 +35,12 @@ const isValidHmac = function(hmac, config, req) {
   // Check to see if our HMAC matches the one sent in the request header
   // and send an error response if it doesn't
   if (ourShipFastHMAC != requestShipFastHMAC) {
-    log.error("\tShipFast HMAC invalid: received " + requestShipFastHMAC
-      + " but should be " + ourShipFastHMAC)
+    log.error("ShipFast HMAC invalid: received " + requestShipFastHMAC
+      + " but should be " + ourShipFastHMAC, log_id)
     return false
   }
 
-  log.success("\nValid HMAC.")
+  log.success("Valid HMAC.", log_id)
 
   return true
 }

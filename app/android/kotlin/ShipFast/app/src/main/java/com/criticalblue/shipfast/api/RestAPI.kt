@@ -34,7 +34,7 @@ import com.criticalblue.shipfast.TAG
 import com.criticalblue.shipfast.config.API_BASE_URL
 import com.criticalblue.shipfast.config.DemoStage
 import com.criticalblue.shipfast.config.JniEnv
-import com.criticalblue.shipfast.config.currentDemoStage
+import com.criticalblue.shipfast.config.CURRENT_DEMO_STAGE
 import com.criticalblue.shipfast.dto.*
 import com.criticalblue.shipfast.user.loadUserCredentials
 import okhttp3.RequestBody.Companion.toRequestBody
@@ -211,8 +211,8 @@ object RestAPI {
                 .addHeader(SHIPFAST_API_KEY_HEADER, shipFastAPIKey)
 
         // Depending on the demo stage, calculate and specify the request HMAC
-        if (currentDemoStage === DemoStage.HMAC_STATIC_SECRET_PROTECTION
-                || currentDemoStage === DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION) {
+        if (CURRENT_DEMO_STAGE === DemoStage.HMAC_STATIC_SECRET_PROTECTION
+                || CURRENT_DEMO_STAGE === DemoStage.HMAC_DYNAMIC_SECRET_PROTECTION) {
             requestBuilder.addHeader(HMAC_HEADER, calculateAPIRequestHMAC(url, auth))
         }
 
@@ -243,7 +243,7 @@ object RestAPI {
         var keySpec: SecretKeySpec
 
         // Configure the request HMAC based on the demo stage
-        when (currentDemoStage) {
+        when (CURRENT_DEMO_STAGE) {
             DemoStage.API_KEY_PROTECTION, DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
                 throw IllegalStateException("calculateAPIRequestHMAC() not used in this demo stage")
             }

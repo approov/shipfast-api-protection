@@ -2,34 +2,42 @@ const chalk = require('chalk')
 
 // Auto detection of colour support does not work always, thus we need to
 // enforce it to support 256 colors.
-const ctx = new chalk.constructor({level: 2})
+const ctx = new chalk.Instance({level: 2})
 
-const success = function(message) {
-    console.log(ctx.keyword('green').bold(message))
+const success = function(message, log_identifier) {
+    consoleLog(log_identifier, message, 'green')
 }
 
-const error = function(message) {
-    console.log(ctx.keyword('red')(message))
+const error = function(message, log_identifier) {
+    consoleLog(log_identifier, message, 'red')
 }
 
-const fatalError = function(message) {
-    console.log(ctx.keyword('red').bold(message))
+const fatalError = function(message, log_identifier) {
+    consoleLogBold(log_identifier, message, 'red')
 }
 
-const warning = function(message) {
-    console.log(ctx.keyword('orange')(message))
+const warning = function(message, log_identifier) {
+    consoleLog(log_identifier, message, 'orange')
 }
 
-const info = function(message) {
-    console.log(ctx.keyword('lightblue')(message))
+const info = function(message, log_identifier) {
+    consoleLog(log_identifier, message, 'lightblue')
 }
 
-const debug = function(message) {
-    console.debug(message)
+const debug = function(message, log_identifier) {
+    console.debug("[" + log_identifier.string + "]", message)
 }
 
-const raw = function(message) {
-    console.log(message)
+const raw = function(message, log_identifier) {
+    console.log("[" + log_identifier.string + "]", message)
+}
+
+const consoleLog = function(log_identifier, message, color) {
+    console.log("[" + log_identifier.string + "]", ctx.keyword(color)(message))
+}
+
+const consoleLogBold = function(log_identifier, message, color) {
+    console.log("[" + log_identifier.string + "]", ctx.keyword(color).bold(message))
 }
 
 module.exports = {

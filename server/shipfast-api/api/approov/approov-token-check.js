@@ -2,40 +2,44 @@ const jwt = require('express-jwt')
 const crypto = require('crypto')
 const config = require('./../config/approov')
 const log = require('./../utils/logging')
+const request = require('./../utils/request')
+const response = require('./../utils/response')
 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// YOUR APPLICATION CUSTOMIZABLE CALLBACKS FOR THE APPROOV INTEGRATION
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// Feel free to customize this callbacks to best suite the needs your needs.
+/// @link https://github.com/approov/quickstart-nodejs-express_shapes-api
 ///
+
+const log_identifier = function(req) {
+  return request.log_identifier(req, 'authorization', 'sub', 'approov-token-check.js')
+}
 
 const buildLogMessagePrefix = function(req, res) {
   return res.statusCode + ' ' + req.method + ' ' + req.originalUrl
 }
 
-// Callback to be customized with your preferred way of logging.
+// Logging callbacks - configured to use the selected logging mechanism
 const logError = function(req, res, message) {
-  log.error(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.error(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
 const logSuccess = function(req, res, message) {
-  log.success(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.success(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
 const logInfo = function(req, res, message) {
-  log.info(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.info(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
 const logWarning = function(req, res, message) {
-  log.warning(buildLogMessagePrefix(req, res) + ' ' + message)
+  log.warning(buildLogMessagePrefix(req, res) + ' ' + message, log_identifier(req))
 }
 
-// Callback to be personalized in order to get the token binding header value being used by
-// your application.
-// In the current scenario we use an Authorization token, but feel free to use what
-// suits best your needs.
+// Callback to get the Authorization token binding header, the same one
+// configured in the Shipfast app at ./app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ShipFastApp.kt
 const getTokenBindingHeader = function(req) {
   return req.get('Authorization')
 }
@@ -89,16 +93,14 @@ const handlesRequestWithInvalidTokenBinding = function(req, res, next, httpStatu
 const buildBadRequestResponse = function(req, res, httpStatusCode, logMessage) {
   res.status(httpStatusCode)
   logError(req, res, logMessage)
-  res.json({})
+  res.json(response.bad_request(log_identifier(req)))
 }
 
 ////////////////////////////////////////////////////////////////////////////////
 /// STARTS NON CUSTOMIZABLE LOGIC FOR THE APPROOV INTEGRATION
 ////////////////////////////////////////////////////////////////////////////////
 ///
-/// This section contains code that is specific to the Approov integration,
-/// thus we think that is not necessary to customize it, once is not
-/// interfering with your application logic or behavior.
+/// @link https://github.com/approov/quickstart-nodejs-express_shapes-api
 ///
 
 ////// APPROOV HELPER FUNCTIONS //////

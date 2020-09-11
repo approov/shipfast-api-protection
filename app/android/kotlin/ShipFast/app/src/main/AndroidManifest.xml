@@ -35,7 +35,7 @@
             android:name="com.criticalblue.shipfast.auth0Scheme"
             android:value="${auth0Scheme}" />
 
-        <activity android:name=".LoginActivity">
+        <activity android:name="com.criticalblue.shipfast.LoginActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 
@@ -43,11 +43,11 @@
             </intent-filter>
         </activity>
         <activity
-            android:name=".ShipmentActivity"
-            android:parentActivityName=".LoginActivity" />
+            android:name="com.criticalblue.shipfast.ShipmentActivity"
+            android:parentActivityName="com.criticalblue.shipfast.LoginActivity" />
         <activity
-            android:name=".SummaryActivity"
-            android:parentActivityName=".ShipmentActivity" />
+            android:name="com.criticalblue.shipfast.SummaryActivity"
+            android:parentActivityName="com.criticalblue.shipfast.ShipmentActivity" />
     </application>
 
 </manifest>

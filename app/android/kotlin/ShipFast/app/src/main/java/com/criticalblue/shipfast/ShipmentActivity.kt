@@ -30,51 +30,37 @@ import android.Manifest
 import android.content.Intent
 import android.graphics.Color
 import android.location.Location
-import android.location.LocationManager
 import android.util.Log
 import android.view.View
 import android.widget.*
+import androidx.core.content.ContextCompat
 import com.criticalblue.shipfast.api.*
 import com.criticalblue.shipfast.config.*
 import com.criticalblue.shipfast.dto.Shipment
 import com.criticalblue.shipfast.dto.ShipmentResponse
 import com.criticalblue.shipfast.dto.ShipmentState
 import com.criticalblue.shipfast.utils.ViewShow
-import com.google.android.gms.common.ConnectionResult
 import com.google.android.gms.location.LocationServices
-import com.google.android.gms.maps.CameraUpdateFactory
-import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.MapView
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import com.google.android.gms.maps.model.CameraPosition
 import com.google.android.gms.maps.model.LatLng
 import com.google.android.gms.maps.model.MarkerOptions
 import com.google.android.gms.maps.model.PolylineOptions
-import com.google.android.gms.common.api.GoogleApiClient
-import com.google.android.gms.location.LocationListener
-import com.google.android.gms.location.LocationRequest
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.maps.*
 
 const val TAG = "SHIPFAST_APP"
 
 /**
  * The Shipment activity class.
  */
-class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallbacks, GoogleApiClient.OnConnectionFailedListener, LocationListener {
+class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
 
     /** The active state of the activity */
     private var activityActive = false
 
     /** The current shipment */
     private var currentShipment: Shipment? = null
-
-    /** The location request */
-    private lateinit var locationRequest: LocationRequest
-
-    /** The last known location */
-    private var lastLocation: Location? = null
-
-    /** The Google API client for location data */
-    private lateinit var googleAPIClient: GoogleApiClient
 
     /** The progress bar */
     private lateinit var updateShipmentProgressBar: ProgressBar
@@ -94,18 +80,33 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
     /** The shipment 'state' text view */
     private lateinit var stateTextView: TextView
 
-    /** The map view */
-    private lateinit var mapView: MapView
-
     /** The next state button */
     private lateinit var nextStateButton: Button
 
     /** The availability switch */
     private lateinit var availabilitySwitch: Switch
 
+    private var map: GoogleMap? = null
+    private var cameraPosition: CameraPosition? = null
+
+    // The entry point to the Fused Location Provider.
+    private lateinit var fusedLocationProviderClient: FusedLocationProviderClient
+
+    // A default location (Sydney, Australia) and default zoom to use when location permission is
+    // not granted.
+    private val defaultLocation = LatLng(-33.8523341, 151.2106085)
+    private var locationPermissionGranted = false
+
+    // The geographical location where the device is currently located. That is, the last-known
+    // location retrieved by the Fused Location Provider.
+    private var lastKnownLocation: Location? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
+        if (savedInstanceState != null) {
+            this.lastKnownLocation = savedInstanceState.getParcelable(KEY_LOCATION)
+            cameraPosition = savedInstanceState.getParcelable(KEY_CAMERA_POSITION)
+        }
         setContentView(R.layout.activity_shipment)
         title = "Current Shipment"
 
@@ -115,89 +116,169 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         pickupTextView = findViewById(R.id.shipmentPickup)
         deliveryTextView = findViewById(R.id.shipmentDelivery)
         stateTextView = findViewById(R.id.shipmentState)
-        mapView = findViewById(R.id.mapView)
-        mapView.onCreate(savedInstanceState)
         nextStateButton = findViewById(R.id.nextStateButton)
         nextStateButton.setOnClickListener { _ -> performAdvanceToNextState(API_REQUEST_ATTEMPTS) }
         availabilitySwitch = findViewById(R.id.availabilitySwitch)
         availabilitySwitch.setOnCheckedChangeListener { _, isChecked -> performToggleAvailability(isChecked) }
 
-        locationRequest = LocationRequest
-                .create()
-                .setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY)
-                .setInterval(500)
-        googleAPIClient = GoogleApiClient.Builder(this)
-                .addConnectionCallbacks(this)
-                .addOnConnectionFailedListener(this)
-                .addApi(LocationServices.API)
-                .build()
+        // Construct a FusedLocationProviderClient.
+        fusedLocationProviderClient = LocationServices.getFusedLocationProviderClient(this)
 
-        // 51.535472, -0.104971   -> London
-        // 37.441883, -122.143019 -> Palo Alto, California
-        // 55.944879, -3.181546   -> Edinburgh
-        mapView.getMapAsync { googleMap ->
-            zoomMapIntoLocation(googleMap, LatLng(DRIVER_LATITUDE, DRIVER_LONGITUDE))
+        // Build the map.
+        val mapFragment = supportFragmentManager.findFragmentById(R.id.mapView) as SupportMapFragment?
+        mapFragment?.getMapAsync(this)
+    }
+
+    override fun onMapReady(map: GoogleMap?) {
+        this.map = map
+
+        // Prompt the user for permission.
+        getLocationPermission()
+
+        // Turn on the My Location layer and the related control on the map.
+        updateLocationUI()
+
+        // Get the current location of the device and set the position of the map.
+        getDeviceLocation()
+    }
+
+    private fun getLocationPermission() {
+
+        if (locationPermissionGranted) {
+            return
+        }
+
+        /*
+         * Request location permission, so that we can get the location of the
+         * device. The result of the permission request is handled by a callback,
+         * onRequestPermissionsResult.
+         */
+        if (ContextCompat.checkSelfPermission(this.applicationContext,
+                        Manifest.permission.ACCESS_FINE_LOCATION)
+                == PackageManager.PERMISSION_GRANTED) {
+            locationPermissionGranted = true
+        } else {
+            ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION),
+                    PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION)
         }
     }
 
+    override fun onRequestPermissionsResult(requestCode: Int,
+                                            permissions: Array<String>,
+                                            grantResults: IntArray) {
+        locationPermissionGranted = false
+        when (requestCode) {
+            PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION -> {
+
+                // If request is cancelled, the result arrays are empty.
+                if (grantResults.isNotEmpty() &&
+                        grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+                    locationPermissionGranted = true
+                    updateLocationUI()
+                    getDeviceLocation()
+                }
+            }
+        }
+    }
+
+
+    private fun getDeviceLocation() {
+        /*
+         * Get the best and most recent location of the device, which may be null in rare
+         * cases when a location is not available.
+         */
+        try {
+            if (locationPermissionGranted) {
+                val locationResult = fusedLocationProviderClient.lastLocation
+                locationResult.addOnCompleteListener(this) { task ->
+                    Log.i(TAG, "Start task to get current device location")
+                    if (task.isSuccessful) {
+                        Log.i(TAG, "Finished task to get the current device location")
+                        // Set the map's camera position to the current location of the device.
+                        this.lastKnownLocation = task.result
+                        if (this.lastKnownLocation != null) {
+                            Log.i(TAG, "Set the current device location on the map.")
+                            this.addCurrentLocationToMap(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+                        } else {
+                            Log.i(TAG, "Last known location is null. Using defaults for Driver Coordinates.")
+                            this.addCurrentLocationToMap(DRIVER_LATITUDE, DRIVER_LONGITUDE)
+                            this.map?.uiSettings?.isMyLocationButtonEnabled = false
+                        }
+
+                    } else {
+                        Log.i(TAG, "Current location is null. Using defaults.")
+                        Log.e(TAG, "Exception: %s", task.exception)
+                        this.addCurrentLocationToMap(DRIVER_LATITUDE, DRIVER_LONGITUDE)
+                        this.map?.uiSettings?.isMyLocationButtonEnabled = false
+                    }
+                }
+            }
+        } catch (e: SecurityException) {
+            Log.e("Exception: %s", e.message, e)
+        }
+    }
+
+    private fun addCurrentLocationToMap(latitude: Double, longitude: Double) {
+        Log.i(TAG, "Added to map the last known location: ${latitude}, ${longitude}")
+
+        this.map?.addMarker(
+                MarkerOptions()
+                        .position(LatLng(latitude, longitude))
+                        .title("Driver Coordinates: ${latitude}, ${longitude}")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
+
+        )
+
+        this.map?.moveCamera(CameraUpdateFactory.newLatLngZoom(
+                LatLng(latitude, longitude), DEFAULT_ZOOM.toFloat()))
+    }
+
+    /**
+     * Updates the map's UI settings based on whether the user has granted location permission.
+     */
+    private fun updateLocationUI() {
+        if (this.map == null) {
+            return
+        }
+        try {
+            if (locationPermissionGranted) {
+                this.map?.isMyLocationEnabled = true
+                this.map?.uiSettings?.isMyLocationButtonEnabled = true
+            } else {
+                this.map?.isMyLocationEnabled = false
+                this.map?.uiSettings?.isMyLocationButtonEnabled = false
+                this.lastKnownLocation = null
+            }
+        } catch (e: SecurityException) {
+            Log.e("Exception: %s", e.message, e)
+        }
+    }
     override fun onStart() {
-        googleAPIClient.connect()
         super.onStart()
         activityActive = true
     }
 
     override fun onPause() {
         super.onPause()
-        mapView.onPause()
         activityActive = false
     }
 
     override fun onResume() {
         super.onResume()
-        mapView.onResume()
         activityActive = true
     }
 
     override fun onStop() {
-        googleAPIClient.disconnect()
         super.onStop()
         activityActive = false
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        mapView.onDestroy()
-    }
-
-    override fun onLowMemory() {
-        super.onLowMemory()
-        mapView.onLowMemory()
-    }
-
     override fun onSaveInstanceState(outState: Bundle) {
+        this.map?.let { map ->
+            outState.putParcelable(KEY_CAMERA_POSITION, map.cameraPosition)
+            outState.putParcelable(KEY_LOCATION, this.lastKnownLocation)
+        }
         super.onSaveInstanceState(outState)
-        mapView.onSaveInstanceState(outState)
-    }
-
-    override fun onConnected(connectionHint: Bundle?) {
-        if (ActivityCompat.checkSelfPermission(this@ShipmentActivity, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            LocationServices.FusedLocationApi.requestLocationUpdates(googleAPIClient, locationRequest, this)
-        }
-        else {
-            ActivityCompat.requestPermissions(this@ShipmentActivity, arrayOf(Manifest.permission.ACCESS_FINE_LOCATION), 123)
-        }
-    }
-
-    override fun onLocationChanged(location: Location?) {
-        lastLocation = location
-    }
-
-    override fun onConnectionSuspended(cause: Int) {
-        Log.i(TAG, "---> Location update suspended: $cause")
-    }
-
-    override fun onConnectionFailed(result: ConnectionResult) {
-        Log.e(TAG, "---> Location update failed: $result")
     }
 
     private fun handleRemainingRetries(remainingRetries: Int, message: String): Boolean {
@@ -231,7 +312,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                 return
             }
 
-            RestAPI.requestShipmentStateUpdate(this@ShipmentActivity, LatLng(DRIVER_LATITUDE, DRIVER_LONGITUDE),
+            RestAPI.requestShipmentStateUpdate(this@ShipmentActivity, LatLng(this.lastKnownLocation!!.latitude, this.lastKnownLocation!!.longitude),
                     it.id, it.nextState) { shipmentResponse: ShipmentResponse ->
 
                 stopProgress()
@@ -354,6 +435,8 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                 fetchShipment(remainingRetries - 1)
                 return@requestActiveShipment
             }
+
+            stopProgress()
         }
     }
 
@@ -367,7 +450,7 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
             return
         }
 
-        lastLocation?.let {
+        this.lastKnownLocation?.let {
 
             RestAPI.requestNearestShipment(this@ShipmentActivity, it.toLatLng()) { shipmentResponse: ShipmentResponse ->
 
@@ -416,6 +499,10 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
                 }
             }
         }
+
+        stopProgress()
+
+        return
     }
 
     /**
@@ -498,9 +585,23 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
             deliveryTextView.text = it.deliveryName
             stateTextView.text = it.state.name
 
-            mapView.getMapAsync { googleMap ->
-                addMapMarker(googleMap, it.pickupLocation, it.pickupName, BitmapDescriptorFactory.HUE_GREEN)
-                addMapMarker(googleMap, it.deliveryLocation, it.deliveryName, BitmapDescriptorFactory.HUE_RED)
+            this.map?.let { googleMap ->
+                googleMap.addMarker(MarkerOptions()
+                        .position(it.pickupLocation)
+                        .title("Pickup from: ${it.pickupName}")
+                        .snippet("${it.pickupLocation.latitude}, ${it.pickupLocation.longitude}")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_GREEN))
+                        .zIndex(1.0f)
+                )
+
+                googleMap.addMarker(MarkerOptions()
+                        .position(it.deliveryLocation)
+                        .title("Delivery to: ${it.deliveryName}")
+                        .snippet("${it.deliveryLocation.latitude}, ${it.deliveryLocation.longitude}")
+                        .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_RED))
+                        .zIndex(1.0f)
+                )
+
                 addMapRoute(googleMap, it.pickupLocation, it.deliveryLocation)
                 zoomMapIntoLocation(googleMap, it.pickupLocation)
             }
@@ -547,7 +648,6 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
      * @param location the zoom location
      */
     private fun zoomMapIntoLocation(googleMap: GoogleMap, location: LatLng) {
-
         val cameraPosition = CameraPosition.Builder().target(location).zoom(10f).build()
         googleMap.animateCamera(CameraUpdateFactory.newCameraPosition(cameraPosition))
     }
@@ -579,18 +679,6 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
         return LatLng(this.latitude, this.longitude)
     }
 
-    /**
-     * Allows LatLng objects to be converted to Location objects.
-     *
-     * @return the Location value
-     */
-    fun LatLng.toLocation(): Location {
-        val location = Location(LocationManager.GPS_PROVIDER)
-        location.latitude = this.latitude
-        location.longitude = this.longitude
-        return location
-    }
-
     private fun showFatalError(view: View, errorMessage: String) {
         Log.e(TAG,errorMessage)
         stopProgress()
@@ -598,5 +686,14 @@ class ShipmentActivity : AppCompatActivity(), GoogleApiClient.ConnectionCallback
             availabilitySwitch.isChecked = false
             ViewShow.error(view, errorMessage)
         }
+    }
+
+    companion object {
+        private const val DEFAULT_ZOOM = 10
+        private const val PERMISSIONS_REQUEST_ACCESS_FINE_LOCATION = 1
+
+        // Keys for storing activity state.
+        private const val KEY_CAMERA_POSITION = "camera_position"
+        private const val KEY_LOCATION = "location"
     }
 }

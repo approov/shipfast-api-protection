@@ -4,10 +4,13 @@ const log = require('./../utils/logging')
 const crypto = require('crypto');
 const hmacHelpers = require('./../hmac-functions.js')
 const config = require('./../config/server').config
+const request = require('./../utils/request')
+const response = require('./../utils/response')
 
 router.use(function(req, res, next) {
+  const log_id = request.log_identifier(req, 'authorization', 'sub', 'static-hmac.js')
 
-  log.info('---> VALIDATING STATIC HMAC <---')
+  log.info('---> VALIDATING STATIC HMAC <---', log_id)
 
   let base64_decoded_hmac_secret = Buffer.from(config.SHIPFAST_API_HMAC_SECRET, 'base64')
 
@@ -19,7 +22,7 @@ router.use(function(req, res, next) {
     return
   }
 
-  res.status(400).send()
+  res.status(400).json(response.bad_request(log_id))
 
   return
 })

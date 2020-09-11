@@ -1,0 +1,60 @@
+body {
+    background-image: url("./../images/skull.png")
+}
+
+.jumbotron {
+    background-image: url("./../images/fire.jpg");
+    background-size: cover;
+    color: yellow;
+    padding: 1rem;
+    margin-top: 0.5rem;
+    margin-bottom: 0.5rem;
+}
+
+.panel-primary {
+    margin-bottom: 0.5rem
+}
+
+.progress {
+    margin-bottom: 0.5rem
+}
+
+#find-me {
+    background-color: #aaa;
+    color: white;
+}
+
+.no-gratuity {
+    opacity: 0.5
+}
+
+.with-gratuity {
+    font-weight: bold;
+}
+
+.good-gratuity {
+    font-weight: bold;
+    color: #449544;
+}
+
+.active-shipment {
+    background: #81df81;
+}
+
+#configuration-footer {
+    margin: 1rem auto;
+}
+
+#configuration-footer button {
+    margin-right: 2rem;
+}
+
+#demo-stage {
+    color: #000000;
+    font-weight: bold;
+}
+
+.btn-info {
+    border-color: #3f51b5;
+    background-color: #303f9f;
+}

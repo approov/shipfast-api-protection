@@ -7,6 +7,17 @@ const FAKER = require('faker');
 const config = require('./config/server').config
 const randomLocation = require('random-location')
 
+// We will cache generated shipments by user id.
+// @link https://github.com/node-cache/node-cache
+const NodeCache = require( "node-cache" );
+const cache = new NodeCache(
+    {
+        stdTTL: 7200, // 2 hours
+        checkperiod: 120, // 2 minutes
+        useClones: false // we get back a reference to the value in memory
+    }
+);
+
 // Define various attributes for generating sample shipment data
 const MIN_GRATUITY = 0
 const MAX_GRATUITY = 30
@@ -15,27 +26,36 @@ const DRIVER_COORDINATES = {
   longitude: config.DRIVER_LONGITUDE
 }
 
-// DANGER: tweaking any of the following constant values can lead to unexpected behavior when Shipraider queries the API.
+// ATTENTION:
 //
-// The reason is that when we try to find the nearest shipment we try to find one stored in `shipments`, and if none is
-//  within the MAX_SHIPMENT_DISTANCE_IN_METRES, we generate a new one, and when the MAX_TOTAL_SHIPMENT_COUNT is reached
-//  we start to remove the oldest entry from `shipments` in order to protect against memory leaks.
-// So if the MAX_SHIPMENT_DISTANCE_IN_METRES is to short it will be hard to find a shipment, and new ones will be
-//  constantly generated, meaning that when a Shipraider asks for a batch it can have the first entries on that batch
-//   already removed from `shipments`, therefore any subsequent calls to that shipmentID will fail.
+// Tweaking any of the following constant values will change how shipments are
+// created and stored in the cache, thus affecting how many can be returned has
+// being within the sweep radius used by default for when Shipraider queries the
+// API.
+//
+// The following constant values guarantee that we always match around 10 to
+// 20 shipments for each time we click in search shipments on Shipraider.
 const MAX_SHIPMENT_DISTANCE_IN_METRES = 20000
 const TOTAL_SHIPMENTS_TO_CREATE = 100 // 10 * 5 = 50 shipments to create in each batch.
-const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 2 // 50 * 5 = 250 shipments max in memory at any given time.
+const MAX_TOTAL_SHIPMENT_COUNT = TOTAL_SHIPMENTS_TO_CREATE * 4 // 50 * 5 = 250 shipments max in memory at any given time.
+
 const MAX_DELIVERED_SHIPMENTS = 10 // Max of last delivered shipments to return to the mobile app.
 
 let TOTAL_SHIPMENT_COUNT = 0 // keeps track of total shipments created since server was started/re-started.
-let NEXT_SHIPMENT_TO_DELETE = 0 // keeps track of the oldest shipment ID in the `shipments` object.
 
-// The shipments object
-let shipments = {}
+const cache_delete = function(key) {
+    return cache.del(key)
+}
+
+const cache_has = function(key) {
+    return cache.has(key)
+}
+
+const cache_keys = function() {
+    return cache.keys()
+}
 
 function randomNumber(min = 0, max = Number.MAX_SAFE_INTEGER) {
-
     return FAKER.random.number({
         'min': min,
         'max': max
@@ -48,25 +68,36 @@ function calculateShipmentGratuity(shipmentID) {
 }
 
 // A function to populate this model with a collection of sample shipment data base on a given location
-function populateShipments(originLatitude, originLongitude) {
+function populateShipments(originLatitude, originLongitude, user_uid) {
 
-    log.info("--------------------------- START ------------------------")
-    log.info("MAX_TOTAL_SHIPMENT_COUNT: " + MAX_TOTAL_SHIPMENT_COUNT)
-    log.info("TOTAL_SHIPMENTS_TO_CREATE: " + TOTAL_SHIPMENTS_TO_CREATE)
-    log.info("TOTAL_SHIPMENT_COUNT_BEFORE: " + TOTAL_SHIPMENT_COUNT)
+    const driver_coordinates = {
+        latitude: originLatitude,
+        longitude: originLongitude
+    }
+
+    let gratuity = config.CURRENCY_SYMBOL + "0"
+    let shipments = {}
+
+    if (cache.has(user_uid)) {
+        shipments = cache.get(user_uid)
+    }
 
     for (let i = 0; i < TOTAL_SHIPMENTS_TO_CREATE; i++) {
         let shipmentID = TOTAL_SHIPMENT_COUNT // + i + 1
         let pickupName = FAKER.address.streetAddress()
         let deliveryName = FAKER.address.streetAddress()
         let description = FAKER.name.findName() + " #" + randomNumber(1000, 9999)
-        let gratuity = calculateShipmentGratuity(shipmentID)
+
+        // For demos purposes we want the first shipments to have zero gratuity.
+        if (i >= 3) {
+            gratuity = calculateShipmentGratuity(shipmentID)
+        }
 
         // Get pickup random coordinates from within `MAX_SHIPMENT_DISTANCE_IN_METRES` of the `DRIVER_COORDINATES`.`
-        const pickup = randomLocation.randomCirclePoint(DRIVER_COORDINATES, MAX_SHIPMENT_DISTANCE_IN_METRES)
+        const pickup = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.5)
 
         // Get deliver coordinates at the exactly `MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3` from the pickup coordinates..
-        const deliver = randomLocation.randomCircumferencePoint(pickup, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.3)
+        const deliver = randomLocation.randomCirclePoint(driver_coordinates, MAX_SHIPMENT_DISTANCE_IN_METRES * 0.5)
 
         shipments[shipmentID] = new Shipment(
             shipmentID,
@@ -82,50 +113,73 @@ function populateShipments(originLatitude, originLongitude) {
 
         TOTAL_SHIPMENT_COUNT++
 
-        if (Object.keys(shipments).length > MAX_TOTAL_SHIPMENT_COUNT) {
-
-            log.warning("SHIPMENT_TO_DELETE: " + NEXT_SHIPMENT_TO_DELETE)
-
-            // remove first element
-            delete shipments[NEXT_SHIPMENT_TO_DELETE]
-            NEXT_SHIPMENT_TO_DELETE++
+        if (Object.keys(shipments).length >= MAX_TOTAL_SHIPMENT_COUNT) {
+            break
         }
     }
 
-    log.info("TOTAL_SHIPMENT_COUNT_AFTER: " + TOTAL_SHIPMENT_COUNT)
-    log.info("--------------------------- END ------------------------")
+    cache.set(user_uid, shipments)
 }
 
-const reCalculateNearestShipment = function(originLatitude, originLongitude) {
+const reCalculateNearestShipment = function(originLatitude, originLongitude, user_uid) {
 
-    populateShipments(originLatitude, originLongitude)
+    populateShipments(originLatitude, originLongitude, user_uid)
 
-    return findNearestShipment(originLatitude, originLongitude)
+    return findNearestShipment(originLatitude, originLongitude, user_uid)
 }
 
 // A function to calculate and return the nearest shipment to a given location
-const calculateNearestShipment = function(originLatitude, originLongitude) {
+const calculateNearestShipment = function(originLatitude, originLongitude, user_uid, user_agent) {
 
     // Ensure we've populated the model with some sample data for this session
-    if (Object.keys(shipments).length == 0) {
-        populateShipments(originLatitude, originLongitude)
+    if (!cache.has(user_uid) && user_agent.startsWith("okhttp")) {
+
+        // Store the coordinates provided by the mobile app. This coordinates
+        // will be used only to generate more shipments in a future request,
+        // where we are not able to find a nearest shipment for Shipraider.
+        cache.set("coordinates", {
+            [user_uid]: {
+                latitude: originLatitude,
+                longitude: originLongitude
+            }
+        })
+
+        populateShipments(originLatitude, originLongitude, user_uid)
+    } else if (!cache.has(user_uid) && !user_agent.startsWith("okhttp")) {
+        return {error: "Please use first the ShipFast mobile app in the same demo stage you want to try from ShipRaider."}
     }
 
-    nearestShipment = findNearestShipment(originLatitude, originLongitude)
+    nearestShipment = findNearestShipment(originLatitude, originLongitude, user_uid)
 
     if (!nearestShipment) {
-        return reCalculateNearestShipment(originLatitude, originLongitude)
+
+        let location
+
+        if (user_agent.startsWith("okhttp")) {
+            // For mobile app requests
+            location = {
+                latitude: originLatitude,
+                longitude: originLongitude
+            }
+        } else {
+            // For Shipraider requests
+            location = cache.get("coordinates")[user_uid]
+        }
+
+        return reCalculateNearestShipment(location.latitude, location.ongitude, user_uid)
     }
 
     return nearestShipment
 }
 
-function findNearestShipment(originLatitude, originLongitude) {
+function findNearestShipment(originLatitude, originLongitude, user_uid) {
 
     let pickup = {
         latitude: originLatitude,
         longitude: originLongitude
     }
+
+    let shipments = cache.get(user_uid)
 
     // Iterate through the shipments and find the one closest to our given location
     for (let shipmentID in shipments) {
@@ -168,34 +222,31 @@ const formatShipmentDistance = function(distance) {
     return formatted_distance + " " + distance_unit
 }
 
-const updateShipmentState = function(shipmentID, newState) {
+const updateShipmentState = function(shipmentID, newState, user_uid) {
 
-    // Find the shipment with the given ID
-    let shipment = getShipment(shipmentID)
+    let shipment = getShipment(shipmentID, user_uid)
 
     if (!shipment) {
-      log.error("\nNo shipment found for ID " + shipmentID + "\n")
-      return false
+      return {error: "No shipment found for ID " + shipmentID}
     }
 
     // Perform basic validation of the new shipment state
     if (newState <= 0
         || newState != shipment.getState() + 1
         || newState >= Object.keys(SHIPMENT_STATE).length) {
-      log.error("\nShipment state invalid\n")
-      return false
+      return {error: "Shipment state invalid"}
     }
 
-    shipment.setState(newState)
-
-    return true
+    return shipment.setState(newState)
 }
 
 // A function to calculate and return an array of shipments in a 'DELIVERED' state
-const getDeliveredShipments = function() {
+const getDeliveredShipments = function(user_uid) {
 
     let countDelivered = 0
     let deliveredShipments = []
+
+    let shipments = cache.get(user_uid)
 
     Object.entries(shipments).reverse().filter(
         ([shipmentID, shipment]) => {
@@ -217,7 +268,9 @@ const getDeliveredShipments = function() {
 }
 
 // A function to retrieve the active shipment, if available (i.e. in an 'ACCEPTED' or 'COLLECTED' state)
-const getActiveShipment = function() {
+const getActiveShipment = function(user_uid) {
+
+    let shipments = cache.get(user_uid)
 
     for (let shipmentID in shipments) {
         let shipment = shipments[shipmentID]
@@ -231,8 +284,13 @@ const getActiveShipment = function() {
 }
 
 // A function to return the shipment with the given ID (or 'undefined' if not found)
-const getShipment = function(shipmentID) {
-    return shipments[shipmentID]
+const getShipment = function(shipmentID, user_uid) {
+    if (cache.has(user_uid)) {
+        let shipments = cache.get(user_uid)
+        return shipments[shipmentID]
+    }
+
+    return undefined
 }
 
 // Add the model utility functions to the exports
@@ -243,5 +301,8 @@ module.exports = {
     getActiveShipment: getActiveShipment,
     getShipment: getShipment,
     updateShipmentState: updateShipmentState,
-    SHIPMENT_STATE: SHIPMENT_STATE
+    SHIPMENT_STATE: SHIPMENT_STATE,
+    cache_delete,
+    cache_has,
+    cache_keys
 }

@@ -33,15 +33,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 //  later, at compile time, is used to inject the same env variables im the current file.
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_criticalblue_shipfast_config_JniEnv_getDemoStage(
-        JNIEnv *env,
-        jobject /* this */) {
-    std::string DEMO_STAGE = SHIPFAST_DEMO_STAGE;
-
-    return env->NewStringUTF(DEMO_STAGE.c_str());
-}
-
-extern "C" JNIEXPORT jstring JNICALL
 Java_com_criticalblue_shipfast_config_JniEnv_getApiKey(
         JNIEnv *env,
         jobject /* this */) {

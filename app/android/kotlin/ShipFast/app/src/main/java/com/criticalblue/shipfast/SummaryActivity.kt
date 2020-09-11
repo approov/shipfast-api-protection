@@ -22,7 +22,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 package com.criticalblue.shipfast
 
 import android.content.Context
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.util.Log
 import android.view.LayoutInflater
@@ -42,7 +41,7 @@ import com.criticalblue.shipfast.utils.ViewShow
 /**
  * The Summary activity class.
  */
-class SummaryActivity : AppCompatActivity() {
+class SummaryActivity : BaseActivity() {
 
     /** The progress bar */
     private lateinit var updateSummaryProgressBar: ProgressBar

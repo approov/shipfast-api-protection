@@ -4,6 +4,8 @@ const jwt = require('express-jwt')
 const jwksRsa = require('jwks-rsa')
 const log = require('./../utils/logging')
 const config = require('./../config/auth0')
+const request = require('./../utils/request')
+const response = require('./../utils/response')
 
 // Create middleware for checking the user's ID token JWT
 const checkUserAuthJWT = jwt({
@@ -24,17 +26,16 @@ const checkUserAuthJWT = jwt({
 router.use(checkUserAuthJWT)
 
 router.use(function(req, res, next) {
-
-  log.success("\nAUTH0: Valid Authorization token \n")
+  const log_id = request.log_identifier(req, 'authorization', 'sub', 'auth0.js')
+  log.success("AUTH0: Valid Authorization token", log_id)
   next()
 })
 
 router.use(function(err, req, res, next) {
-
-  log.error("\nAUTH0 ERROR: " + err.message)
-
+  const log_id = request.log_identifier(req, 'authorization', 'sub', 'auth0.js')
+  log.error("AUTH0 ERROR: " + err.message, log_id)
   res.status(401)
-  res.json({})
+  res.json(response.invalid_request(log_id))
 })
 
 module.exports = router

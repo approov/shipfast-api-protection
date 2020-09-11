@@ -17,6 +17,9 @@ let lock = new Auth0Lock(AUTH0_CLIENT_ID, AUTH0_DOMAIN, {
     auth: {
         redirectUrl: window.url,
         responseType: "id_token",
+        params: {
+            prompt: 'select_account'
+        },
         redirect: true
     },
     oidcConformant: false,
@@ -39,16 +42,13 @@ $("#search-shipments-button").click(function(event) {
     searchForShipments()
 })
 
+$("#refresh-shipments-button").click(function(event) {
+    event.preventDefault()
+    searchForShipments()
+})
+
 const getShipfastApiUrl = function(endpoint) {
-    return $("#shipfast-api-url").val() + "/" + getShipfastApiVersion() + endpoint
-}
-
-const getShipfastApiVersion = function() {
-    return $("#shipfast-api-version").val()
-}
-
-const getShipfastDemoStage = function() {
-    return $("#shipfast-demo-stage").val()
+    return $("#shipfast-api-url").val() + endpoint
 }
 
 const getShipFastAPIKey = function() {
@@ -74,20 +74,29 @@ const getDriverLongitude = function() {
     return $("#location-longitude-input").val()
 }
 
-const showAlertOnError = function() {
-    if (getShipfastApiVersion() == "v4") {
-        alert("Man it doesn't work... this API is now protected by Approov!!!")
-    } else {
-        alert("Man, it didn't work this time!")
+const showAlertOnError = function(error = "Unknown error in response!!!") {
+    alert("Man, it didn't work this time!\n\n" + error)
+}
+
+const showJsonResponseError = function(xhr) {
+    const json = xhr.responseJSON
+
+    if (json && json.error) {
+        showAlertOnError(json.error + "\n\nRequest Id: " + json.request_id)
+        return true
     }
+
+    showAlertOnError()
+    return false
 }
 
 const searchForShipments = function() {
     updateProgressBar(0)
-    shipments = {}
+    let shipments = {}
 
     let count = 0
     let progress = 0
+    let hasJsonError = false
 
     let driver_latitude = getDriverLatitude()
     let driver_longitude = getDriverLongitude()
@@ -113,7 +122,12 @@ const searchForShipments = function() {
 
     let url = getShipfastApiUrl("/shipments/nearest_shipment")
 
-    const fetchNearestShipment = function(latVal, lonVal, url, auth) {
+    const fetchNearestShipment = function(latVal, lonVal, url, auth, shipments) {
+
+        progress++
+        let progress_made = progress / totalProgress
+        let current_progress = Math.min(Math.round((progress_made) * 100), 100)
+        updateProgressBar(current_progress)
 
         $.ajax({
             url: url,
@@ -126,37 +140,51 @@ const searchForShipments = function() {
             },
             method: "GET",
             timeout: 5000,
+            dataType: "json",
             async:false,
             success: function(json) {
-                let shipmentID = json["id"]
-                let shipmentPickupLatitude = json["pickupLatitude"]
-                let shipmentPickupLongitude = json["pickupLongitude"]
-                shipments[shipmentID] = json
-                addShipmentsToResults()
-                updateProgressBar(Math.min(Math.round((progress / totalProgress) * 100), 100))
-                progress++
+                hasJsonError = false
+
+                if (json.id) {
+                    shipments[json.id] = json
+                }
+            },
+            error: function(xhr) {
+                if (showJsonResponseError(xhr)) {
+                    updateProgressBar(0)
+                    hasJsonError = true
+                } else {
+                    hasJsonError = false
+                }
             }
         })
     }
 
-    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth)
+    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth, shipments)
+
+    if (hasJsonError) {
+        return
+    }
 
     for (let lat = latStart; lat <= latEnd; lat += locStep) {
         for (let lon = lonStart; lon <= lonEnd; lon += locStep) {
-            if (count++ > 25) {
+            if (count++ > 100) {
                 totalProgress = 1
-                let isEmptyTableBody = $("#results-table-body").is(':empty')
-
-                if (isEmptyTableBody) {
-                    setTimeout(showAlertOnError, 1000)
-                }
 
                 updateProgressBar(100)
 
                 return
             }
-            fetchNearestShipment(driver_latitude, lon, url, auth)
+            fetchNearestShipment(lat, lon, url, auth, shipments)
         }
+    }
+
+    if (Object.keys(shipments).length > 0) {
+        addShipmentsToResults(shipments)
+    }
+
+    if ($("#results-table-body").is(':empty')) {
+        showAlertOnError('Unable to find shipments...')
     }
 }
 
@@ -165,9 +193,7 @@ const updateProgressBar = function(progress) {
     $("#progress-bar-text").text(progress + "% Complete")
 }
 
-const addShipmentsToResults = function() {
-    let resultsTableBody = $("#results-table-body")
-    resultsTableBody.empty()
+const addShipmentsToResults = function(shipments) {
     Object.entries(shipments).forEach(
         ([shipmentID, json]) => {
             shipmentID = json["id"]
@@ -176,17 +202,33 @@ const addShipmentsToResults = function() {
             let shipmentPickup = json["pickupName"]
             let shipmentPickupDistance = json["pickupDistance"]
             let shipmentDelivery = json["deliveryName"]
-            let grabShipmentButton = "<button type='button' class='btn btn-default' id='shipment-" + shipmentID + "'>Grab It!</button>"
-            resultsTableBody.append(
-                  "<tr>"
-                + "<th scope='row'>" + shipmentID + "</th>"
+            let gratuityRowClass = "no-gratuity"
+            let gratuityValueClass = "no-gratuity"
+            let buttonClass = "btn-default"
+
+            if (shipmentGratuity.substr(1) > 0) {
+                gratuityRowClass = "gratuity-row"
+                gratuityValueClass = "with-gratuity"
+                buttonClass = "btn-" + BOOTSTRAP_COLOR_CLASS
+            }
+
+            if (shipmentGratuity.substr(1) > 5) {
+                gratuityValueClass = "good-gratuity"
+            }
+
+            let grabShipmentButton = "<button type='button' class='btn " + buttonClass + "' id='shipment-" + shipmentID + "'>Grab It!</button>"
+
+            $("#results-table-body").append(
+                  "<tr id=shipment-row-" + shipmentID + " class=" + gratuityRowClass + ">"
+                + "<td>" + shipmentID + "</td>"
                 + "<td>" + shipmentName + "</td>"
-                + "<td>" + shipmentGratuity + "</td>"
+                + "<td class=" + gratuityValueClass + ">" + shipmentGratuity + "</td>"
                 + "<td>" + shipmentPickup + "</td>"
                 + "<td>" + shipmentPickupDistance + "</td>"
                 + "<td>" + shipmentDelivery + "</td>"
                 + "<td>" + grabShipmentButton + "</td>"
-                + "</tr>")
+                + "</tr>"
+            )
 
             $("#shipment-" + shipmentID).click(function(event) {
                 event.preventDefault()
@@ -213,12 +255,13 @@ const grabShipment = function(shipmentID) {
         timeout: 5000,
         async: false,
         success: function(json) {
-            searchForShipments()
             updateProgressBar(100)
+            $("#shipment-row-" + shipmentID).addClass("alert alert-" + BOOTSTRAP_COLOR_CLASS)
+            $("#shipment-" + shipmentID).prop('disabled', true);
             alert("You got shipment ID" + shipmentID + " - check the app and enjoy the extra cash!\n\n@crackmaapi - don't forget da bitcoin pls")
         },
         error: function(xhr) {
-            showAlertOnError()
+            showJsonResponseError(xhr)
             updateProgressBar(0)
         }
     })
@@ -226,16 +269,14 @@ const grabShipment = function(shipmentID) {
 }
 
 const computeHMAC = function(url, idToken) {
-    currentDemoStage = getShipfastDemoStage()
-
-    if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION
-            || currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION)  {
+    if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION
+            || CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION)  {
         let hmacSecret
-        if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
+        if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
             // Just use the static secret in the HMAC for this demo stage
             hmacSecret = HMAC_SECRET
         }
-        else if (currentDemoStage == SHIPFAST_DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
+        else if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
             // Obfuscate the static secret to produce a dynamic secret to
             // use in the HMAC for this demo stage
             let staticSecret = HMAC_SECRET

@@ -92,9 +92,10 @@ const showJsonResponseError = function(xhr) {
 
 const searchForShipments = function() {
     updateProgressBar(0)
-    let shipments = {}
+    let shipments = []
 
-    let count = 0
+    let total_api_calls = 0
+    let total_shipments = 0
     let progress = 0
     let hasJsonError = false
 
@@ -123,7 +124,7 @@ const searchForShipments = function() {
     let url = getShipfastApiUrl("/shipments/nearest_shipment")
 
     const fetchNearestShipment = function(latVal, lonVal, url, auth, shipments) {
-
+        total_api_calls++
         progress++
         let progress_made = progress / totalProgress
         let current_progress = Math.min(Math.round((progress_made) * 100), 100)
@@ -141,15 +142,33 @@ const searchForShipments = function() {
             method: "GET",
             timeout: 5000,
             dataType: "json",
-            async:false,
+            async: false,
             success: function(json) {
                 hasJsonError = false
 
                 if (json.id) {
-                    shipments[json.id] = json
+
+                    if (json.id in shipments) {
+                        return
+                    }
+
+                    shipments[json.id] = json.id
+                    total_shipments++
+                    addShipmentToResults(json)
+                    window.scrollBy(0, window.innerHeight)
                 }
             },
             error: function(xhr) {
+                // We can try up to 100 API calls and we don't want to show an
+                // alert popup error for each failed API call. The error that we
+                // are interested in only occurs in the first call, and its the
+                // error that informs that ShipFast app needs to be used prior
+                // to use ShipRaider.
+                if (total_api_calls > 1) {
+                    hasJsonError = false
+                    return
+                }
+
                 if (showJsonResponseError(xhr)) {
                     updateProgressBar(0)
                     hasJsonError = true
@@ -166,76 +185,79 @@ const searchForShipments = function() {
         return
     }
 
-    for (let lat = latStart; lat <= latEnd; lat += locStep) {
+    let lat = latStart
+
+    for (lat; lat <= latEnd; lat += locStep) {
         for (let lon = lonStart; lon <= lonEnd; lon += locStep) {
-            if (count++ > 100) {
+            if (total_shipments > 10 || total_api_calls > 100) {
                 totalProgress = 1
-
-                updateProgressBar(100)
-
+                endFetchingNearestShipments()
                 return
             }
+
             fetchNearestShipment(lat, lon, url, auth, shipments)
         }
     }
 
-    if (Object.keys(shipments).length > 0) {
-        addShipmentsToResults(shipments)
+    if ((lat += locStep) >= latEnd) {
+        totalProgress = 1
+        endFetchingNearestShipments()
+        return
     }
+}
+
+const endFetchingNearestShipments = function() {
+    updateProgressBar(100)
 
     if ($("#results-table-body").is(':empty')) {
-        showAlertOnError('Unable to find shipments...')
+        showAlertOnError('Unable to find shipments... \n\nThe location coordinates must be as close as possible to the ones used by your mobile app.')
     }
 }
 
 const updateProgressBar = function(progress) {
     $(".progress-bar").attr("aria-valuenow", progress).attr("style", "width: " + progress + "%")
-    $("#progress-bar-text").text(progress + "% Complete")
+    $("#progress-bar-text").text(progress + "% Completed")
 }
 
-const addShipmentsToResults = function(shipments) {
-    Object.entries(shipments).forEach(
-        ([shipmentID, json]) => {
-            shipmentID = json["id"]
-            let shipmentName = json["description"]
-            let shipmentGratuity = json["gratuity"]
-            let shipmentPickup = json["pickupName"]
-            let shipmentPickupDistance = json["pickupDistance"]
-            let shipmentDelivery = json["deliveryName"]
-            let gratuityRowClass = "no-gratuity"
-            let gratuityValueClass = "no-gratuity"
-            let buttonClass = "btn-default"
+const addShipmentToResults = function(json) {
+    let shipmentID = json["id"]
+    let shipmentName = json["description"]
+    let shipmentGratuity = json["gratuity"]
+    let shipmentPickup = json["pickupName"]
+    let shipmentPickupDistance = json["pickupDistance"]
+    let shipmentDelivery = json["deliveryName"]
+    let gratuityRowClass = "no-gratuity"
+    let gratuityValueClass = "no-gratuity"
+    let buttonClass = "btn-default"
 
-            if (shipmentGratuity.substr(1) > 0) {
-                gratuityRowClass = "gratuity-row"
-                gratuityValueClass = "with-gratuity"
-                buttonClass = "btn-" + BOOTSTRAP_COLOR_CLASS
-            }
+    if (shipmentGratuity.substr(1) > 0) {
+        gratuityRowClass = "gratuity-row"
+        gratuityValueClass = "with-gratuity"
+        buttonClass = "btn-" + BOOTSTRAP_COLOR_CLASS
+    }
 
-            if (shipmentGratuity.substr(1) > 5) {
-                gratuityValueClass = "good-gratuity"
-            }
+    if (shipmentGratuity.substr(1) > 5) {
+        gratuityValueClass = "good-gratuity"
+    }
 
-            let grabShipmentButton = "<button type='button' class='btn " + buttonClass + "' id='shipment-" + shipmentID + "'>Grab It!</button>"
+    let grabShipmentButton = "<button type='button' class='btn " + buttonClass + "' id='shipment-" + shipmentID + "'>Grab It!</button>"
 
-            $("#results-table-body").append(
-                  "<tr id=shipment-row-" + shipmentID + " class=" + gratuityRowClass + ">"
-                + "<td>" + shipmentID + "</td>"
-                + "<td>" + shipmentName + "</td>"
-                + "<td class=" + gratuityValueClass + ">" + shipmentGratuity + "</td>"
-                + "<td>" + shipmentPickup + "</td>"
-                + "<td>" + shipmentPickupDistance + "</td>"
-                + "<td>" + shipmentDelivery + "</td>"
-                + "<td>" + grabShipmentButton + "</td>"
-                + "</tr>"
-            )
-
-            $("#shipment-" + shipmentID).click(function(event) {
-                event.preventDefault()
-                grabShipment(shipmentID)
-            })
-        }
+    $("#results-table-body").append(
+          "<tr id=shipment-row-" + shipmentID + " class=" + gratuityRowClass + ">"
+        + "<td>" + shipmentID + "</td>"
+        + "<td>" + shipmentName + "</td>"
+        + "<td class=" + gratuityValueClass + ">" + shipmentGratuity + "</td>"
+        + "<td>" + shipmentPickup + "</td>"
+        + "<td>" + shipmentPickupDistance + "</td>"
+        + "<td>" + shipmentDelivery + "</td>"
+        + "<td>" + grabShipmentButton + "</td>"
+        + "</tr>"
     )
+
+    $("#shipment-" + shipmentID).click(function(event) {
+        event.preventDefault()
+        grabShipment(shipmentID)
+    })
 }
 
 const grabShipment = function(shipmentID) {
@@ -275,8 +297,7 @@ const computeHMAC = function(url, idToken) {
         if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_STATIC_SECRET_PROTECTION) {
             // Just use the static secret in the HMAC for this demo stage
             hmacSecret = HMAC_SECRET
-        }
-        else if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
+        } else if (CURRENT_DEMO_STAGE == DEMO_STAGE_HMAC_DYNAMIC_SECRET_PROTECTION) {
             // Obfuscate the static secret to produce a dynamic secret to
             // use in the HMAC for this demo stage
             let staticSecret = HMAC_SECRET

@@ -12,7 +12,6 @@ services:
         ANDROID_STUDIO_VERSION: "${ANDROID_STUDIO_VERSION:? Missing ANDROID_STUDIO_VERSION}"
     container_name: "${ENVIRONMENT:-dev}.editor"
     hostname: "${ENVIRONMENT:-dev}.editor"
-    restart: always
     env_file:
       - .env
     environment:

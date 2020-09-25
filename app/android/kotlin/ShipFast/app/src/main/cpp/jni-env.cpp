@@ -60,26 +60,6 @@ Java_com_criticalblue_shipfast_config_JniEnv_getApiBaseUrl(
 }
 
 extern "C" JNIEXPORT jstring JNICALL
-Java_com_criticalblue_shipfast_config_JniEnv_driverLatitude(
-        JNIEnv *env,
-        jobject /* this */) {
-
-    std::string LATITUDE = DRIVER_LATITUDE;
-
-    return env->NewStringUTF(LATITUDE.c_str());
-}
-
-extern "C" JNIEXPORT jstring JNICALL
-Java_com_criticalblue_shipfast_config_JniEnv_driverLongitude(
-        JNIEnv *env,
-        jobject /* this */) {
-
-    std::string LONGITUDE = DRIVER_LONGITUDE;
-
-    return env->NewStringUTF(LONGITUDE.c_str());
-}
-
-extern "C" JNIEXPORT jstring JNICALL
 Java_com_criticalblue_shipfast_config_JniEnv_getAuth0ClientId(
         JNIEnv *env,
         jobject /* this */) {

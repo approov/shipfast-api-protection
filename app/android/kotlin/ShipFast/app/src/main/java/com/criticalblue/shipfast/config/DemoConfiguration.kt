@@ -55,12 +55,6 @@ object ApiUrl {
 /** The current demo stage */
 val CURRENT_DEMO_STAGE = DemoStage.valueOf(BuildConfig.DEMO_STAGE)
 
-// 51.535472, -0.104971   -> London
-// 37.441883, -122.143019 -> Palo Alto, California
-// 55.944879, -3.181546   -> Edinburgh
-val DRIVER_LATITUDE: Double = jniEnv.getDriverLatitude()
-val DRIVER_LONGITUDE: Double = jniEnv.getDriverLongitude()
-
 /** The ShipFast server's base URL */
 //const val API_BASE_URL = "http://10.0.2.2:3333"
 val API_BASE_URL = ApiUrl.build()

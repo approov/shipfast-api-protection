@@ -182,7 +182,13 @@ class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
     }
 
 
-    private fun getDeviceLocation() {
+    private fun getDeviceLocation(attempts: Int = 0) {
+
+        if(attempts > 5) {
+            Log.w(TAG, "Giving up of trying to get the last known location, after 5 attempts.")
+            return
+        }
+
         /*
          * Get the best and most recent location of the device, which may be null in rare
          * cases when a location is not available.
@@ -200,21 +206,19 @@ class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
                             Log.i(TAG, "Set the current device location on the map.")
                             this.addCurrentLocationToMap(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
                         } else {
-                            Log.i(TAG, "Last known location is null. Using defaults for Driver Coordinates.")
-                            this.addCurrentLocationToMap(DRIVER_LATITUDE, DRIVER_LONGITUDE)
-                            this.map?.uiSettings?.isMyLocationButtonEnabled = false
+                            Log.i(TAG, "Failed to get the last known location. Retrying...")
+                            this.getDeviceLocation(attempts)
                         }
 
                     } else {
-                        Log.i(TAG, "Current location is null. Using defaults.")
                         Log.e(TAG, "Exception: %s", task.exception)
-                        this.addCurrentLocationToMap(DRIVER_LATITUDE, DRIVER_LONGITUDE)
-                        this.map?.uiSettings?.isMyLocationButtonEnabled = false
+                        Log.i(TAG, "An error occurred while trying to get the last location. Retrying...")
+                        this.getDeviceLocation(attempts)
                     }
                 }
             }
         } catch (e: SecurityException) {
-            Log.e("Exception: %s", e.message, e)
+            Log.e(TAG,"Get Device Location Exception: %s", e)
         }
     }
 
@@ -369,9 +373,8 @@ class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
      * @param isChecked the value of the switch
      */
     private fun performToggleAvailability(isChecked: Boolean) {
-
         if (isChecked) {
-            fetchShipment(API_REQUEST_ATTEMPTS)
+            this.fetchShipment(API_REQUEST_ATTEMPTS)
         }
     }
 
@@ -391,6 +394,9 @@ class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
         }
 
         startProgress()
+
+        // Ensure the device location is the most recent possible
+        this.getDeviceLocation()
 
         RestAPI.requestActiveShipment(this@ShipmentActivity) { shipmentResponse: ShipmentResponse ->
 

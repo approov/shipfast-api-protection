@@ -90,7 +90,7 @@ const showJsonResponseError = function(xhr) {
     return false
 }
 
-const searchForShipments = function() {
+const searchForShipments = async function() {
     updateProgressBar(0)
     let shipments = []
 
@@ -123,63 +123,67 @@ const searchForShipments = function() {
 
     let url = getShipfastApiUrl("/shipments/nearest_shipment")
 
-    const fetchNearestShipment = function(latVal, lonVal, url, auth, shipments) {
+    const fetchNearestShipment = async function(latVal, lonVal, url, auth, shipments) {
         total_api_calls++
         progress++
         let progress_made = progress / totalProgress
         let current_progress = Math.min(Math.round((progress_made) * 100), 100)
         updateProgressBar(current_progress)
 
-        $.ajax({
-            url: url,
-            headers: {
-                "API-KEY" : getShipFastAPIKey(),
-                "Authorization" : auth,
-                "HMAC" : computeHMAC(url, auth),
-                "DRIVER-LATITUDE" : latVal.toString(),
-                "DRIVER-LONGITUDE" : lonVal.toString()
-            },
-            method: "GET",
-            timeout: 5000,
-            dataType: "json",
-            async: false,
-            success: function(json) {
-                hasJsonError = false
+        try {
+            await $.ajax({
+                url: url,
+                headers: {
+                    "API-KEY" : getShipFastAPIKey(),
+                    "Authorization" : auth,
+                    "HMAC" : computeHMAC(url, auth),
+                    "DRIVER-LATITUDE" : latVal.toString(),
+                    "DRIVER-LONGITUDE" : lonVal.toString()
+                },
+                method: "GET",
+                timeout: 5000,
+                dataType: "json",
+                async: true,
+                success: function(json) {
+                    hasJsonError = false
 
-                if (json.id) {
+                    if (json.id) {
 
-                    if (json.id in shipments) {
+                        if (json.id in shipments) {
+                            return
+                        }
+
+                        shipments[json.id] = json.id
+                        total_shipments++
+                        addShipmentToResults(json)
+                        window.scrollBy(0, window.innerHeight)
+                    }
+                },
+                error: function(xhr) {
+                    // We can try up to 100 API calls and we don't want to show an
+                    // alert popup error for each failed API call. The error that we
+                    // are interested in only occurs in the first call, and its the
+                    // error that informs that ShipFast app needs to be used prior
+                    // to use ShipRaider.
+                    if (total_api_calls > 1) {
+                        hasJsonError = false
                         return
                     }
 
-                    shipments[json.id] = json.id
-                    total_shipments++
-                    addShipmentToResults(json)
-                    window.scrollBy(0, window.innerHeight)
+                    if (showJsonResponseError(xhr)) {
+                        updateProgressBar(0)
+                        hasJsonError = true
+                    } else {
+                        hasJsonError = false
+                    }
                 }
-            },
-            error: function(xhr) {
-                // We can try up to 100 API calls and we don't want to show an
-                // alert popup error for each failed API call. The error that we
-                // are interested in only occurs in the first call, and its the
-                // error that informs that ShipFast app needs to be used prior
-                // to use ShipRaider.
-                if (total_api_calls > 1) {
-                    hasJsonError = false
-                    return
-                }
-
-                if (showJsonResponseError(xhr)) {
-                    updateProgressBar(0)
-                    hasJsonError = true
-                } else {
-                    hasJsonError = false
-                }
-            }
-        })
+            })
+        } catch(error) {
+            // already handled in the Ajax error callback.
+        }
     }
 
-    fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth, shipments)
+    await fetchNearestShipment(parseFloat(driver_latitude), parseFloat(driver_longitude), url, auth, shipments)
 
     if (hasJsonError) {
         return
@@ -195,7 +199,7 @@ const searchForShipments = function() {
                 return
             }
 
-            fetchNearestShipment(lat, lon, url, auth, shipments)
+            await fetchNearestShipment(lat, lon, url, auth, shipments)
         }
     }
 

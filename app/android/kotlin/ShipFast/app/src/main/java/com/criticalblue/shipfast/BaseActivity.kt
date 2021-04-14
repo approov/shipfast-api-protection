@@ -29,6 +29,10 @@ open class BaseActivity: AppCompatActivity() {
                 primary_color = "#d9534f"
                 primary_dark_color = "#d43f3a"
             }
+            DemoStage.CERTIFICATE_PINNING_PROTECTION -> {
+              primary_color = "#868646"
+              primary_dark_color = "#646435"
+            }
             DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
                 primary_color = "#449d44"
                 primary_dark_color = "#398439"

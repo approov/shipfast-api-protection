@@ -34,6 +34,8 @@ enum class DemoStage {
     HMAC_STATIC_SECRET_PROTECTION,
     /** The demo which introduces API request signing by HMAC using a dynamic secret in code */
     HMAC_DYNAMIC_SECRET_PROTECTION,
+    /** The demo stage where certificate pinning is implemented through the network security config file **/
+    CERTIFICATE_PINNING_PROTECTION,
     /** The demo which uses CriticalBlue Approov protection by authenticating the app */
     APPROOV_APP_AUTH_PROTECTION
 }
@@ -42,6 +44,7 @@ object ApiUrl {
     fun build(): String {
         val api_version = when (BuildConfig.DEMO_STAGE) {
             "API_KEY_PROTECTION" -> "v1"
+            "CERTIFICATE_PINNING_PROTECTION" -> "v1"
             "HMAC_STATIC_SECRET_PROTECTION" -> "v2"
             "HMAC_DYNAMIC_SECRET_PROTECTION" -> "v3"
             "APPROOV_APP_AUTH_PROTECTION" -> "v4"
@@ -52,12 +55,26 @@ object ApiUrl {
     }
 }
 
+object HomeScreenTitle {
+    fun build(): String {
+        return when (BuildConfig.DEMO_STAGE) {
+            "API_KEY_PROTECTION" -> "DEMO STAGE: Api Key"
+            "CERTIFICATE_PINNING_PROTECTION" -> "DEMO STAGE: Certificate Pinning"
+            "HMAC_STATIC_SECRET_PROTECTION" -> "DEMO STAGE: Static HMAC"
+            "HMAC_DYNAMIC_SECRET_PROTECTION" -> "DEMO STAGE: Dynamic HMAC"
+            "APPROOV_APP_AUTH_PROTECTION" -> "DEMO STAGE: Approov Threat Protection"
+            else -> ""
+        }
+    }
+}
+
 /** The current demo stage */
 val CURRENT_DEMO_STAGE = DemoStage.valueOf(BuildConfig.DEMO_STAGE)
 
 /** The ShipFast server's base URL */
-//const val API_BASE_URL = "http://10.0.2.2:3333"
 val API_BASE_URL = ApiUrl.build()
+
+val HOME_SCREEN_TITLE = HomeScreenTitle.build()
 
 /** The maximum number of attempts to try to make an API request before reporting a failure */
 const val API_REQUEST_ATTEMPTS = 3

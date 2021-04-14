@@ -29,6 +29,7 @@ install           Installs the APK for a product flavor via USB in the given mob
                   $ ./apk install Samsung api_key
                   $ ./apk install Samsung static_hmac
                   $ ./apk install Samsung dynamic_hmac
+                  $ ./apk install Samsung certificate_pinning
                   $ ./apk install Samsung approov
 
 list-usb          List all USB devices
@@ -140,7 +141,7 @@ Gradle() {
 }
 
 List_Usb() {
-  local _result=$(lsusb | grep -i "${device_brand}" -)
+  local _result="$(lsusb | grep -i "${device_brand}" -)"
 
   if [ -z "${_result}" ]; then
     printf "\nNo devices found. His your device connected to the usb port?\n\n"

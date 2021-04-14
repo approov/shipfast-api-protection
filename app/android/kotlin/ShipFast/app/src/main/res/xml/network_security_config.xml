@@ -3,12 +3,18 @@
 <!-- Official Android N API -->
 <!--https://android-developers.googleblog.com/2016/07/changes-to-trusted-certificate.html-->
 <network-security-config>
-    <base-config>
+    <domain-config>
+      <base-config>
         <trust-anchors>
-            <!-- Trust preinstalled CAs -->
-            <certificates src="system" />
-            <!-- Additionally trust user added CAs -->
-            <certificates src="user" />
+          <certificates src="system"/>
         </trust-anchors>
-    </base-config>
+      </base-config>
+
+      <domain includeSubdomains="true">shipfast.demo.approov.io</domain>
+        <pin-set>
+            <pin digest="SHA-256">NHnhk73iktV22yFicZC844iGk+LH5X3yRrC6ZTZJ80w=</pin>
+            <!-- In production is strongly advised to use a backup pin, unless you are using the Approov dynamic certificate pinning -->
+            <!--<pin digest="SHA-256">fwza0LRMXouZHRC8Ei+4PyuldPDcf3UKgO/04cDM1oE=</pin>-->
+        </pin-set>
+    </domain-config>
 </network-security-config>

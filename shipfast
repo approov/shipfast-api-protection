@@ -211,6 +211,8 @@ Main() {
         exit 1
     fi
 
+    mkdir -p "${PROJECT_HOST_DIR}"
+
     local APPROOV_SDK_PATH=./app/android/kotlin/ShipFast/approov/approov.aar
 
     # Setup X11 server authentication

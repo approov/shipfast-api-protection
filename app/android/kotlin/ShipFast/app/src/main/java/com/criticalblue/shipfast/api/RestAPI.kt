@@ -244,7 +244,7 @@ object RestAPI {
 
         // Configure the request HMAC based on the demo stage
         when (CURRENT_DEMO_STAGE) {
-            DemoStage.API_KEY_PROTECTION, DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
+            DemoStage.API_KEY_PROTECTION, DemoStage.APPROOV_APP_AUTH_PROTECTION, DemoStage.CERTIFICATE_PINNING_PROTECTION -> {
                 throw IllegalStateException("calculateAPIRequestHMAC() not used in this demo stage")
             }
             DemoStage.HMAC_STATIC_SECRET_PROTECTION -> {

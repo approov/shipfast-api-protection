@@ -21,15 +21,14 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 
 package com.criticalblue.shipfast
 
-
 import android.content.pm.PackageManager
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import androidx.core.app.ActivityCompat
 import android.Manifest
 import android.content.Intent
 import android.graphics.Color
 import android.location.Location
+import android.location.LocationManager
 import android.util.Log
 import android.view.View
 import android.widget.*
@@ -185,7 +184,14 @@ class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
     private fun getDeviceLocation(attempts: Int = 0) {
 
         if(attempts > 5) {
-            Log.w(TAG, "Giving up of trying to get the last known location, after 5 attempts.")
+            Log.w(TAG, "Not able to fetch the last known location after 5 attempts. The default location for the Google Headquarters in US will be used.")
+            lastKnownLocation = Location(LocationManager.NETWORK_PROVIDER) // OR GPS_PROVIDER based on the requirement
+            // Emulator default coordinates - Google Headquarters in US
+            lastKnownLocation!!.latitude = 37.4220353
+            lastKnownLocation!!.longitude = -122.0839885
+
+            this.addCurrentLocationToMap(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
+
             return
         }
 
@@ -207,13 +213,13 @@ class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
                             this.addCurrentLocationToMap(lastKnownLocation!!.latitude, lastKnownLocation!!.longitude)
                         } else {
                             Log.i(TAG, "Failed to get the last known location. Retrying...")
-                            this.getDeviceLocation(attempts)
+                            this.getDeviceLocation(attempts + 1)
                         }
 
                     } else {
                         Log.e(TAG, "Exception: %s", task.exception)
                         Log.i(TAG, "An error occurred while trying to get the last location. Retrying...")
-                        this.getDeviceLocation(attempts)
+                        this.getDeviceLocation(attempts + 1)
                     }
                 }
             }
@@ -230,7 +236,6 @@ class ShipmentActivity : BaseActivity(), OnMapReadyCallback {
                         .position(LatLng(latitude, longitude))
                         .title("Driver Coordinates: ${latitude}, ${longitude}")
                         .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_AZURE))
-
         )
 
         this.map?.moveCamera(CameraUpdateFactory.newLatLngZoom(

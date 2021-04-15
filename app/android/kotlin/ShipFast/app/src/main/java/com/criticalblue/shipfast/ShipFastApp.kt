@@ -16,16 +16,21 @@ class ShipFastApp : Application() {
     override fun onCreate() {
         super.onCreate()
 
-        // *** APPROOV IMPLEMENTATION ***
-        // Initializes the Approov SDK with the Approov initial configuration
-        // @link https://approov.io/docs/latest/approov-usage-documentation/#sdk-configuration
-        approovService = ApproovService(applicationContext, resources.getString(R.string.approov_config))
+        when (CURRENT_DEMO_STAGE) {
+            DemoStage.APPROOV_APP_AUTH_PROTECTION -> {
 
-        // *** APPROOV IMPLEMENTATION ***
-        // Enables the Approov token binding advanced feature, by binding the
-        // Approov token with the Authorization token header.
-        // @link https://approov.io/docs/latest/approov-usage-documentation/#token-binding
-        approovService!!.setBindingHeader("Authorization")
+              // *** APPROOV IMPLEMENTATION ***
+              // Initializes the Approov SDK with the Approov initial configuration
+              // @link https://approov.io/docs/latest/approov-usage-documentation/#sdk-configuration
+              approovService = ApproovService(applicationContext, resources.getString(R.string.approov_config))
+
+              // *** APPROOV IMPLEMENTATION ***
+              // Enables the Approov token binding advanced feature, by binding the
+              // Approov token with the Authorization token header.
+              // @link https://approov.io/docs/latest/approov-usage-documentation/#token-binding
+              approovService!!.setBindingHeader("Authorization")
+            }
+        }
 
         Log.d(TAG, "Created The ShipFastApp")
     }

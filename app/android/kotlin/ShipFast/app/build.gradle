@@ -34,9 +34,14 @@ android {
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
 
         // Required by the Auth0 Android Manifest
-        manifestPlaceholders = [auth0Domain: "$System.env.AUTH0_DOMAIN", auth0Scheme: "$System.env.AUTH0_SCHEME"]
+        manifestPlaceholders = [
+          auth0Domain: "$System.env.AUTH0_DOMAIN",
+          auth0Scheme: "$System.env.AUTH0_SCHEME",
+          ANDROID_GEO_API_KEY: "$System.env.ANDROID_GEO_API_KEY",
+        ]
 
         resValue "string", "app_name", "ShipFast"
+        resValue "string", "app_launcher_icon_name", "ShipFast"
         resValue "string", "APPROOV_INITIAL_CONFIG", ""
         resValue "string", "ANDROID_GEO_API_KEY", "$System.env.ANDROID_GEO_API_KEY"
         resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#aaaaaa"
@@ -72,7 +77,7 @@ android {
             applicationIdSuffix ".api_key"
             versionNameSuffix "-api_key"
             buildConfigField "String", "DEMO_STAGE", "\"API_KEY_PROTECTION\""
-            resValue "string", "app_name", "SF-API-Key"
+            resValue "string", "app_launcher_icon_name", "SF-API-Key"
             resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#3f51b5"
             resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#303f9f"
         }
@@ -82,7 +87,7 @@ android {
             applicationIdSuffix ".static_hmac"
             versionNameSuffix "-static_hmac"
             buildConfigField "String", "DEMO_STAGE", "\"HMAC_STATIC_SECRET_PROTECTION\""
-            resValue "string", "app_name", "SF-SHMAC"
+            resValue "string", "app_launcher_icon_name", "SF-SHMAC"
             resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#ec971f"
             resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#d58512"
         }
@@ -92,9 +97,19 @@ android {
             applicationIdSuffix ".dynamic_hmac"
             versionNameSuffix "-dynamic_hmac"
             buildConfigField "String", "DEMO_STAGE", "\"HMAC_DYNAMIC_SECRET_PROTECTION\""
-            resValue "string", "app_name", "SF-DHMAC"
+            resValue "string", "app_launcher_icon_name", "SF-DHMAC"
             resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#d9534f"
             resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#d43f3a"
+        }
+
+        certificate_pinning {
+            dimension "demo_stages"
+            applicationIdSuffix ".certificate_pinning"
+            versionNameSuffix "-certificate_pinning"
+            buildConfigField "String", "DEMO_STAGE", "\"CERTIFICATE_PINNING_PROTECTION\""
+            resValue "string", "app_launcher_icon_name", "SF-Pinning"
+            resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#868646"
+            resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#646435"
         }
 
         approov {
@@ -102,7 +117,7 @@ android {
             applicationIdSuffix ".approov"
             versionNameSuffix "-approov"
             buildConfigField "String", "DEMO_STAGE", "\"APPROOV_APP_AUTH_PROTECTION\""
-            resValue "string", "app_name", "SF-Approov"
+            resValue "string", "app_launcher_icon_name", "SF-Approov"
             resValue "color", "DEMO_STAGE_PRIMARY_COLOR", "#449d44"
             resValue "color", "DEMO_STAGE_PRIMARY_DARK_COLOR", "#398439"
             resValue "string", "APPROOV_INITIAL_CONFIG", "$System.env.APPROOV_INITIAL_CONFIG"

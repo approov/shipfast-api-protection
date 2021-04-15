@@ -35,6 +35,8 @@ import com.auth0.android.authentication.AuthenticationException
 import com.auth0.android.provider.AuthCallback
 import com.auth0.android.provider.WebAuthProvider
 import com.auth0.android.result.Credentials
+import com.criticalblue.shipfast.config.API_BASE_URL
+import com.criticalblue.shipfast.config.HOME_SCREEN_TITLE
 import com.criticalblue.shipfast.config.JniEnv
 import com.criticalblue.shipfast.user.saveUserCredentials
 
@@ -57,6 +59,8 @@ class LoginActivity : BaseActivity() {
         super.onCreate(savedInstanceState)
 
         setContentView(R.layout.activity_login)
+        supportActionBar?.title = HOME_SCREEN_TITLE
+        supportActionBar?.subtitle = "URL: $API_BASE_URL"
 
         // Add an 'on-click' listener to the user login button
         loginButton = findViewById(R.id.loginButton)

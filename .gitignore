@@ -22,3 +22,4 @@ apis.json
 avd/
 .cxx/
 .transforms/
+initial-config.*

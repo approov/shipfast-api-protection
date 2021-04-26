@@ -1,7 +1,7 @@
 // ApproovService framework for integrating Approov into apps using OkHttp.
 //
 // MIT License
-// 
+//
 // Copyright (c) 2016-present, Critical Blue Ltd.
 //
 // Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated documentation files
@@ -10,7 +10,7 @@
 // subject to the following conditions:
 //
 // The above copyright notice and this permission notice shall be included in all copies or substantial portions of the Software.
-// 
+//
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
 // MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR
 // ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH
@@ -18,17 +18,15 @@
 
 package io.approov.framework.okhttp
 
-import android.util.Log
 import android.content.Context
-
+import android.util.Log
 import com.criticalblue.approovsdk.Approov
-
-import java.io.IOException
-
 import okhttp3.CertificatePinner
 import okhttp3.Interceptor
 import okhttp3.OkHttpClient
 import okhttp3.Response
+import java.io.IOException
+
 
 // ApproovService provides a mediation layer to the Approov SDK itself
 class ApproovService
@@ -165,10 +163,9 @@ class ApproovService
             if (initialized) {
                 // build the pinning configuration
                 var pinBuilder = CertificatePinner.Builder()
-                val pins = Approov.getPins("public-key-sha256")
-                for (entry in pins.entries) {
-                    for (pin in entry.value)
-                        pinBuilder = pinBuilder.add(entry.key, "sha256/$pin")
+                val pins: Map<String?, List<String>?> = Approov.getPins("public-key-sha256") as Map<String?, List<String>?>
+                for ((key, value) in pins) {
+                  for (pin in value!!) pinBuilder = pinBuilder.add(key!!, "sha256/$pin")
                 }
 
                 // remove any existing ApproovTokenInterceptor from the builder

@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!-- Official Android N API -->
+<!--https://android-developers.googleblog.com/2016/07/changes-to-trusted-certificate.html-->
+<!-- This file is only used when enabled in the Manifest for this build flavour -->
+<network-security-config>
+    <domain-config>
+      <!--<base-config>-->
+        <!-- Will apply to all domains that don't have a dedicated configuration to set their pins -->
+        <!-- The below configuration is the default behaviour when a network security config file is used -->
+        <!--<trust-anchors>-->
+          <!-- Configures the mobile app to only trust in certificates already present in the operating system trusted store -->
+          <!-- Any certificate added by the user will not be trusted, because they will be saved into the user trusted store -->
+          <!--<certificates src="system"/>-->
+        <!--</trust-anchors>-->
+      <!--</base-config>-->
+
+      <domain includeSubdomains="true">shipfast.demo.approov.io</domain>
+        <!-- Configures the mobile app to use certificate pinning for this domain -->
+        <!-- The mobile app will not trust in certificates from the system or user trusted store, unless explicitly configured below in <trust-anchors> -->
+        <pin-set>
+            <pin digest="SHA-256">NHnhk73iktV22yFicZC844iGk+LH5X3yRrC6ZTZJ80w=</pin>
+            <!-- In production is strongly advised to use a backup pin, unless you are using the Approov dynamic certificate pinning -->
+            <!--<pin digest="SHA-256">fwza0LRMXouZHRC8Ei+4PyuldPDcf3UKgO/04cDM1oE=</pin>-->
+        </pin-set>
+
+        <!-- MITMPROXY: ALLOW SELF SIGNED CERTIFICATE -->
+        <!-- Uncomment the trust anchors configuration to allow for the proxy custom certificate to be trusted in the TLS handshake -->
+        <!-- Bear in mind that to bypass pinning you also need to comment out the entire <pin-set> section above -->
+        <!--<trust-anchors>-->
+          <!-- The user will need to add the proxy certificate to the user trusted store on the device. -->
+          <!-- <certificates src="user"/> -->
+        <!--</trust-anchors>-->
+    </domain-config>
+</network-security-config>

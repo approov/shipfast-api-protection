@@ -51,6 +51,19 @@ unpack            Unpacks the APK to readable code
 "
 }
 
+Trim() {
+  local string="${1? Missing string to trim!}"
+  local remove="${2:-" "}"
+
+  # Left trim
+  local string="${string#"${string%%[!${remove}]*}"}"
+
+  # Right trim
+  local string="${string%"${string##*[!${remove}]}"}"
+
+  echo -n "${string}"
+}
+
 Apk_Repackage() {
   Docker_Run "./app/android/kotlin/ShipFast/bin/repackage-apk.sh app/android/kotlin/ShipFast"
 }
@@ -60,8 +73,14 @@ Apk_Unpack() {
 }
 
 Adb_Install() {
-  local USB_DEVICE_PATH=$(lsusb | grep -i "${device_brand}" - | awk '{print "/dev/bus/usb/" $2 "/" $4}')
+  local USB_DEVICE_PATH="$(lsusb | grep -i "${device_brand}" - | head -1 | awk '{print "/dev/bus/usb/" $2 "/" $4}')"
+  local USB_DEVICE_PATH="$(Trim "${USB_DEVICE_PATH}")"
   local RUN_MODE="--privileged"
+
+  if [ -z "${USB_DEVICE_PATH}" ]; then
+    printf "\nERROR: Unable to find any device named with brand '${device_brand}'\n\n"
+    return 1
+  fi
 
   local _apk_dir="app/android/kotlin/ShipFast/app/build/outputs/apk/${product_flavour}/release/app-${product_flavour}-release.apk"
 

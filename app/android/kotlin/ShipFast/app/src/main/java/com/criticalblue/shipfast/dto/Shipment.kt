@@ -111,7 +111,7 @@ class ShipmentsResponse (
             this.errorMessage = "Transient Error: Certificate pinning mismatch!"
             this.hasTransientError = true
         } catch (e: Throwable) {
-            this.errorMessage = exception.message ?: this.errorMessage
+            this.errorMessage = "Exception: " + (exception.message ?: this.errorMessage)
             this.hasFatalError = true
         }
     }
@@ -254,7 +254,7 @@ class ShipmentResponse (
             this.errorMessage = "Transient Error: Certificate pinning mismatch!"
             this.hasTransientError = true
         } catch (e: Throwable) {
-            this.errorMessage = exception.message ?: this.errorMessage
+            this.errorMessage = "Exception: " + (exception.message ?: this.errorMessage)
             this.hasFatalError = true
         }
     }

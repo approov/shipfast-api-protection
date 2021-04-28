@@ -10,11 +10,11 @@
   "author": "Simon Rigg",
   "license": "GPL",
   "dependencies": {
-    "cors": "^2.8.4",
-    "ejs": "^3.0.1",
-    "express": "^4.16.2",
     "chalk": "^4.1.0",
-    "dotenv": "^6.2.0"
+    "cors": "^2.8.4",
+    "dotenv": "^6.2.0",
+    "ejs": "^3.0.1",
+    "express": "^4.16.2"
   },
   "devDependencies": {
     "nodemon": "^2.0.4"

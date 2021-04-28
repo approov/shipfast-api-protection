@@ -16,18 +16,21 @@ Show_Help() {
     printf "\t./shipfast logs api\n"
     printf "\t./shipfast restart api\n"
     printf "\t./shipfast down api\n"
+    printf "\t./shipfast shell api sh\n"
 
     printf "\n Shipraider Web:\n"
     printf "\t./shipfast up web\n"
     printf "\t./shipfast logs web\n"
     printf "\t./shipfast restart web\n"
     printf "\t./shipfast down web\n"
+    printf "\t./shipfast shell web-api-key sh\n"
 
     printf "\n Android Studio:\n"
     printf "\t./shipfast up editor\n"
     printf "\t./shipfast logs editor\n"
     printf "\t./shipfast restart editor\n"
     printf "\t./shipfast down editor\n"
+    printf "\t./shipfast shell editor zsh\n"
 
     printf "\n Cache:\n"
     printf "\t./shipfast cache api delete v1 authorization-token-here\n"
@@ -155,7 +158,7 @@ Logs() {
 
 Run_Shell() {
     local docker_compose_service="${1? Missing docker composer service name.}"
-    local shell="${2? Missing shell to use, e.g: zsh}"
+    local shell="${2? Missing shell to use, e.g: sh}"
     shift 2
 
     local container_name="dev.${docker_compose_service}"

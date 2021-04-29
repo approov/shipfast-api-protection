@@ -130,6 +130,7 @@ Start_Web_Server() {
     ${DOCKER_COMPOSE} up -d web-api-key
     ${DOCKER_COMPOSE} up -d web-static-hmac
     ${DOCKER_COMPOSE} up -d web-dynamic-hmac
+    ${DOCKER_COMPOSE} up -d web-certificate-pinning
     ${DOCKER_COMPOSE} up -d web-approov
 }
 
@@ -146,6 +147,9 @@ Destroy_Web_Server() {
 
     ${DOCKER_COMPOSE} stop web-dynamic-hmac
     ${DOCKER_COMPOSE} rm -f web-dynamic-hmac
+
+    ${DOCKER_COMPOSE} stop web-certificate-pinning
+    ${DOCKER_COMPOSE} rm -f web-certificate-pinning
 
     ${DOCKER_COMPOSE} stop web-approov
     ${DOCKER_COMPOSE} rm -f web-approov

@@ -58,3 +58,19 @@ body {
     border-color: #3f51b5;
     background-color: #303f9f;
 }
+
+.panel-pinning > .panel-heading {
+    /*background-color: #646435;*/
+    background-color: #868646;
+    color: #fff;
+}
+
+
+.btn-pinning {
+    background-color: #646435;
+    color: #fff;
+}
+
+.gratuity-row.alert-pinning {
+    background-color: #b2bb92;
+}

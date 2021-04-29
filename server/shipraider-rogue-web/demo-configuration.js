@@ -49,8 +49,10 @@ const STAGES = {
     HMAC_STATIC_SECRET_PROTECTION: 1,
     // The demo which introduces API request signing by HMAC using a dynamic secret in code
     HMAC_DYNAMIC_SECRET_PROTECTION: 2,
+    // The ShipFast mobile app is using certificate pinning via the network security config file
+    CERTIFICATE_PINNING_PROTECTION: 3,
     // The demo which uses CriticalBlue Approov protection by authenticating the app
-    APPROOV_APP_AUTH_PROTECTION: 3
+    APPROOV_APP_AUTH_PROTECTION: 4
 }
 
 // The color scheme to be used in a per demo stage basis
@@ -58,12 +60,14 @@ const BOOTSTRAP_COLOR_CLASSES = {
     API_KEY_PROTECTION: "info",
     HMAC_STATIC_SECRET_PROTECTION: "warning",
     HMAC_DYNAMIC_SECRET_PROTECTION: "danger",
+    CERTIFICATE_PINNING_PROTECTION: "pinning",
     APPROOV_APP_AUTH_PROTECTION: "success"
 }
 
 // The map for the ShipFast API version to be used per demo stage
 const SHIPFAST_API_VERSIONS = {
     API_KEY_PROTECTION: "v1",
+    CERTIFICATE_PINNING_PROTECTION: "v1",
     HMAC_STATIC_SECRET_PROTECTION: "v2",
     HMAC_DYNAMIC_SECRET_PROTECTION: "v3",
     APPROOV_APP_AUTH_PROTECTION: "v4"

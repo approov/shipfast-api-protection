@@ -118,6 +118,6 @@ The blog series, as a whole, shows a gradual improvement in API security by ensu
 * [Approov Blog](https://blog.approov.io)
 * [Approov Resources](https://approov.io/resource/)
 * [Approov Customer Stories](https://approov.io/customer)
-* [Approov Support](https://approov.zendesk.com/hc/en-gb/requests/new)
+* [Approov Support](https://approov.io/contact)
 * [About Us](https://approov.io/company)
 * [Contact Us](https://approov.io/contact)

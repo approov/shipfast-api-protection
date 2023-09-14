@@ -7,7 +7,7 @@ set -eu
 #
 # ./bin/add-pin.bash \
 #   qXHiE7hFX2Kj4ZCtnr8u8yffl8w9CTv6kE0U5j0o1BB= \
-#   fake-mitm-attack.shipfast-api.pdm.approov.io \
+#   fake-mitm-attack.shipfast-api.example.com \
 #   ~/tokens/administration.tok
 #
 Main() {

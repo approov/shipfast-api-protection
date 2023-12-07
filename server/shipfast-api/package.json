@@ -10,17 +10,18 @@
   "author": "Simon Rigg",
   "license": "GPL",
   "dependencies": {
+    "chalk": "^4.1.2",
     "cors": "^2.8.4",
     "dotenv": "^6.2.0",
     "express": "^4.15.5",
-    "express-jwt": "^6.0.0",
+    "express-jwt": "^8.4.1",
     "faker": "^4.1.0",
-    "jwks-rsa": "^1.2.0",
+    "jwks-rsa": "^3.1.0",
     "mersenne-twister": "^1.1.0",
     "node-cache": "^5.1.1",
     "random-location": "^1.1.2"
   },
   "devDependencies": {
-    "nodemon": "^2.0.4"
+    "nodemon": "^3.0.2"
   }
 }

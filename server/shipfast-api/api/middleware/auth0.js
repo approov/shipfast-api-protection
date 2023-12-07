@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const jwt = require('express-jwt')
+const jwt = require('express-jwt').expressjwt
 const jwksRsa = require('jwks-rsa')
 const log = require('./../utils/logging')
 const config = require('./../config/auth0')

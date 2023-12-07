@@ -1,4 +1,4 @@
-const jwt = require('express-jwt')
+const jwt = require('express-jwt').expressjwt;
 const crypto = require('crypto')
 const config = require('./../config/approov')
 const log = require('./../utils/logging')

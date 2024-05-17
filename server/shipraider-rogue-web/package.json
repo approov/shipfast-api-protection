@@ -13,10 +13,11 @@
     "chalk": "^4.1.0",
     "cors": "^2.8.4",
     "dotenv": "^6.2.0",
-    "ejs": "^3.0.1",
-    "express": "^4.16.2"
+    "ejs": "^3.1.10",
+    "express": "^4.19.2"
   },
   "devDependencies": {
-    "nodemon": "^3.0.2"
+    "nodemon": "^3.0.2",
+    "jose": "^4.15.5"
   }
 }

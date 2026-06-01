@@ -1,6 +1,6 @@
 # ShipFast API Protection Walkthrough
 
-Welcome! This repository is part of [this series](https://blog.approov.io/tag/a-series-shipfast) of blog posts on practical API security techniques. The series walks you through the process of defending a mobile API backend against various exploits which an attacker may use to gain access to the data it holds. In this demonstration scenario, the attack allows real users of the system to gain an unfair business advantage at the expense of the company.
+Welcome! This repository is part of [this series](https://approov.io/blog/practical-api-security-walkthrough-part-1) of blog posts on practical API security techniques. The series walks you through the process of defending a mobile API backend against various exploits which an attacker may use to gain access to the data it holds. In this demonstration scenario, the attack allows real users of the system to gain an unfair business advantage at the expense of the company.
 
 ## The Repository Structure
 
@@ -14,10 +14,10 @@ We have kept all 3 projects in the same repository and structured the code to in
 
 After setting the scene in the first blog post, successive entries show how security measures may be strengthened (or bypassed) using links to the code in this GitHub repository where appropriate. The blog series may be summarized by referring to the main security method under discussion in each one:
 
-1. [*API Keys*](https://blog.approov.io/practical-api-security-walkthrough-part-1)
-2. [*Static HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-2)
-3. [*Dynamic HMAC Secret*](https://blog.approov.io/practical-api-security-walkthrough-part-3)
-4. [*Approov Protection*](https://blog.approov.io/practical-api-security-walkthrough-part-4)
+1. [*API Keys*](https://approov.io/blog/practical-api-security-walkthrough-part-1)
+2. [*Static HMAC Secret*](https://approov.io/blog/practical-api-security-walkthrough-part-2)
+3. [*Dynamic HMAC Secret*](https://approov.io/blog/practical-api-security-walkthrough-part-3)
+4. [*Approov Protection*](https://approov.io/blog/practical-api-security-walkthrough-part-4)
 
 We provide freely available deployments of the two services and APKs for you to download and install, so you can work with them as you read the blog. The following sections give a brief summary of the services we have deployed, the apps we provide, where to find the associated code in this repository, and where the changes for each blog post are located.
 
@@ -73,11 +73,11 @@ API keys are very simple to implement in both the server and the client. [This a
 
 #### The First Attack
 
-Unfortunately, bypassing the API Key protection is also easy, as it is a secret communicated on every request. The [second blog](https://blog.approov.io/practical-api-security-walkthrough-part-2) in the series starts off by showing how to extract the API key with a MitM(Man in the Middle) attack. The key is then [added to the Shipraider website](/server/shipraider-rogue-web/views/pages/index.ejs#L27) to be [used](/server/shipraider-rogue-web/public/js/shipraider.js#L51) in the requests it makes to the ShipFast API.
+Unfortunately, bypassing the API Key protection is also easy, as it is a secret communicated on every request. The [second blog](https://approov.io/blog/practical-api-security-walkthrough-part-2) in the series starts off by showing how to extract the API key with a MitM(Man in the Middle) attack. The key is then [added to the Shipraider website](/server/shipraider-rogue-web/views/pages/index.ejs#L27) to be [used](/server/shipraider-rogue-web/public/js/shipraider.js#L51) in the requests it makes to the ShipFast API.
 
 ### Static HMAC
 
-To improve protection, the [second blog post](https://blog.approov.io/practical-api-security-walkthrough-part-2) introduces an HMAC to digitally sign API requests and therefore prevent them from being hijacked or tampered. It is better than an API Key as the *secret part* is never explicitly sent from the client to the server and in this version it is statically embedded in the code.
+To improve protection, the [second blog post](https://approov.io/blog/practical-api-security-walkthrough-part-2) introduces an HMAC to digitally sign API requests and therefore prevent them from being hijacked or tampered. It is better than an API Key as the *secret part* is never explicitly sent from the client to the server and in this version it is statically embedded in the code.
 
 The HMAC implementation is a little more elaborate than the API key implementation, but it's still simple. You can check [this code](/server/shipfast-api/api/middleware/static-hmac.js#L15) for the API server implementation, and [this code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L252) for the mobile app implementation.
 
@@ -87,7 +87,7 @@ However, if the HMAC secret is hard-coded, then it is still easy for an attacker
 
 ### Dynamic HMAC
 
-The second attack scenario revealed that using a static secret for the HMAC algorithm is a weak point. The next defense is to use a dynamic secret; one that is computed at runtime. The [third blog post](https://blog.approov.io/practical-api-security-walkthrough-part-3) explains how to combine a static secret with dynamic data to yield a dynamic secret with which to initialize the HMAC algorithm.
+The second attack scenario revealed that using a static secret for the HMAC algorithm is a weak point. The next defense is to use a dynamic secret; one that is computed at runtime. The [third blog post](https://approov.io/blog/practical-api-security-walkthrough-part-3) explains how to combine a static secret with dynamic data to yield a dynamic secret with which to initialize the HMAC algorithm.
 
 The implementation for the mobile app can be seen in these [lines of code](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/api/RestAPI.kt#L259) while the API server equivalent can be seen [here](server/shipfast-api/api/middleware/dynamic-hmac.js#L16).
 
@@ -97,7 +97,7 @@ Computing the HMAC secret at runtime makes it harder to bypass but not impossibl
 
 ### Approov Mobile App Attestation
 
-The [fourth blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4), introduces the final security measure in the series. Mobile app attestation is the API security concept implemented in Approov. In a nutshell, Approov checks the whole app and the environment in which it runs before enabling access to the API - *the App is the key*. It gives you a high degree of confidence that your API accesses are locked-down to legitimate instances of your app. This approach is described in more detail in our [product overview](https://approov.io/product) page and in the associated [white paper](https://approov.io/download/Approov-Whitepaper-Security-Trust-Gap.pdf).
+The [fourth blog post](https://approov.io/blog/practical-api-security-walkthrough-part-4), introduces the final security measure in the series. Mobile app attestation is the API security concept implemented in Approov. In a nutshell, Approov checks the whole app and the environment in which it runs before enabling access to the API - *the App is the key*. It gives you a high degree of confidence that your API accesses are locked-down to legitimate instances of your app. This approach is described in more detail in our [product overview](https://approov.io/mobile-app-security/rasp/) page and in the associated [white paper](https://approov.io/download/Approov-Whitepaper-Security-Trust-Gap.pdf).
 
 The Approov integration is as simple as it can be for mobile app developers. Add the [Approoov SDK](https://approov.io/docs/latest/approov-usage-documentation/#sdk-integration) to your build, hopefully using one of the [quickstart integration examples]](https://approov.io/docs/latest/approov-integration-examples/mobile-app/) to speed up the process and then call the SDK to obtain an Approov token to include on API requests. You can see this in the ShipFast app in [ShipFastApp.kt](/app/android/kotlin/ShipFast/app/src/main/java/com/criticalblue/shipfast/ShipFastApp.kt), search for the lines that are preceded by `// *** UNCOMMENT THE CODE BELOW FOR APPROOV ***`.
 
@@ -105,7 +105,7 @@ The API server integration is also simple: use one of the many [JWT libraries](h
 
 ## Advanced Usage
 
-The [Advanced Usage](/docs/ADVANCED_USAGE.md) document describes the build and deployment steps for each of the components that make up the ShipFast and ShipRaider services. To follow the blog series, it is normally sufficient to use the services and apps deployed and maintained by the Approov team, in which case you don't need to follow that document. However, you will need it if you attempt the optional pentesting challenge, described at the end of the [last blog post](https://blog.approov.io/practical-api-security-walkthrough-part-4).
+The [Advanced Usage](/docs/ADVANCED_USAGE.md) document describes the build and deployment steps for each of the components that make up the ShipFast and ShipRaider services. To follow the blog series, it is normally sufficient to use the services and apps deployed and maintained by the Approov team, in which case you don't need to follow that document. However, you will need it if you attempt the optional pentesting challenge, described at the end of the [last blog post](https://approov.io/blog/practical-api-security-walkthrough-part-4).
 
 ## Useful Links
 
@@ -114,10 +114,9 @@ The blog series, as a whole, shows a gradual improvement in API security by ensu
 * [Approov Free Trial](https://approov.io/signup)(no credit card needed)
 * [Approov QuickStarts](https://approov.io/docs/latest/approov-integration-examples/)
 * [Approov Live Demo](https://approov.io/product/demo)
-* [Approov Docs](https://approov.io/docs)
-* [Approov Blog](https://blog.approov.io)
-* [Approov Resources](https://approov.io/resource/)
+* [Approov Docs](https://ext.approov.io/docs/latest/)
+* [Approov Blog](https://approov.io/blog)
 * [Approov Customer Stories](https://approov.io/customer)
-* [Approov Support](https://approov.io/contact)
+* [Approov Support](https://approov.io/info/technical-support)
 * [About Us](https://approov.io/company)
 * [Contact Us](https://approov.io/contact)
